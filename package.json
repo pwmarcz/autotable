@@ -1,0 +1,14 @@
+{
+  "name": "autotable",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Paweł Marczewski <pwmarcz@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "parcel": "^1.12.4"
+  },
+  "dependencies": {
+    "normalize.css": "^8.0.1",
+    "pixi.js": "^5.2.3"
+  }
+}
