@@ -2,6 +2,9 @@ export const TILE_WIDTH = 6;
 export const TILE_HEIGHT = 9;
 export const TILE_DEPTH = 4;
 
+export const WORLD_WIDTH = 100;
+export const WORLD_HEIGHT = 100;
+
 export class World {
   constructor() {
     this.slots = [];

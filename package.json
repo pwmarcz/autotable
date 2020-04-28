@@ -9,6 +9,6 @@
   },
   "dependencies": {
     "normalize.css": "^8.0.1",
-    "pixi.js": "^5.2.3"
+    "three": "^0.115.0"
   }
 }
