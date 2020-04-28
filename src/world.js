@@ -14,8 +14,8 @@ export class World {
 
     this.things = [];
     this.things.push({ type: 'tile', index: 0, slotIndex: 0 });
-    this.things.push({ type: 'tile', index: 1, slotIndex: 2 });
-    this.things.push({ type: 'tile', index: 2, slotIndex: 4 });
+    this.things.push({ type: 'tile', index: 1, slotIndex: 1 });
+    this.things.push({ type: 'tile', index: 2, slotIndex: 2 });
   }
 
   thingParams(i) {

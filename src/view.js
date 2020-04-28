@@ -48,19 +48,39 @@ export class View {
       const graphics = new PIXI.Graphics();
       container.addChild(graphics);
 
+      const margin = 0.08;
+
       graphics.lineStyle(0.2, 0xaaaaaa);
       graphics.beginFill(0xcccccc);
-      graphics.drawRoundedRect(0, 0, TILE_WIDTH, TILE_HEIGHT + TILE_DEPTH * this.shorten, 0.5);
+      graphics.drawRoundedRect(
+        margin, margin,
+        TILE_WIDTH - 2*margin,
+        TILE_HEIGHT + TILE_DEPTH * this.shorten - 2*margin,
+        0.5);
 
       graphics.lineStyle(0);
       graphics.beginFill(0xffd003);
-      graphics.drawRoundedRect(0, 0, TILE_WIDTH, TILE_DEPTH * this.shorten, 0.5);
+      graphics.drawRoundedRect(
+        margin,
+        margin,
+        TILE_WIDTH - 2*margin,
+        TILE_DEPTH * this.shorten - 2*margin,
+        0.5);
       graphics.beginFill(0xffffff);
-      graphics.drawRoundedRect(0, TILE_DEPTH * this.shorten * 0.5,
-        TILE_WIDTH, TILE_DEPTH * this.shorten * 0.5, 0.5);
+      graphics.drawRoundedRect(
+        margin,
+        TILE_DEPTH * this.shorten * 0.3 + margin,
+        TILE_WIDTH - 2*margin,
+        TILE_DEPTH * this.shorten * 0.7 - 2*margin,
+        0.5);
 
       graphics.beginFill(0xe6e6e6);
-      graphics.drawRoundedRect(0, TILE_DEPTH * this.shorten, TILE_WIDTH, TILE_HEIGHT, 0.5);
+      graphics.drawRoundedRect(
+        margin,
+        TILE_DEPTH * this.shorten + margin,
+        TILE_WIDTH - 2*margin,
+        TILE_HEIGHT - 2*margin,
+        0.5);
 
       const sprite = new PIXI.Sprite(this.textures[thing.index]);
       container.addChild(sprite);
