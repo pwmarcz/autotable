@@ -5,36 +5,42 @@ import * as THREE from 'three';
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import { World } from './world';
-import { Object3D, Scene, Camera, Renderer, Texture } from 'three';
+import { Object3D, Scene, Camera, WebGLRenderer, Texture } from 'three';
 
 export class View {
   world: World;
 
+  main: Element;
   scene: Scene;
   camera: Camera;
-  renderer: Renderer;
+  renderer: WebGLRenderer;
 
   objects: Array<Object3D>;
   tileTexture: Texture;
 
+  width: number;
+  height: number;
+  static RATIO = 1.5;
+
   constructor(main: Element, world: World) {
+    this.main = main;
     this.world = world;
     this.objects = [];
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.OrthographicCamera(
-      0, World.WIDTH,
-      World.WIDTH * 600 / 800, 0,
+      -2, World.WIDTH + 2,
+      (World.WIDTH + 4) / View.RATIO, 0,
       0.1, 1000);
-    this.camera.position.set(0, -5, 5);
+    this.camera.position.set(0, -8, 2);
     this.camera.rotateX(Math.PI * 0.3);
 
-    this.camera = new THREE.PerspectiveCamera(30, 800 / 600, 0.1, 1000);
-    this.camera.position.set(World.WIDTH/2, -World.WIDTH*0.8, 120);
-    this.camera.rotateX(Math.PI * 0.25);
+    // this.camera = new THREE.PerspectiveCamera(30, 800 / 600, 0.1, 1000);
+    // this.camera.position.set(World.WIDTH/2, -World.WIDTH*0.8, 120);
+    // this.camera.rotateX(Math.PI * 0.25);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
-    this.renderer.setSize(800, 600);
+    this.renderer.setSize(this.width, this.height);
     main.appendChild(this.renderer.domElement);
 
     const tableGeometry = new THREE.PlaneGeometry(World.WIDTH, World.HEIGHT);
@@ -44,10 +50,14 @@ export class View {
     this.scene.add(tableMesh);
 
     this.tileTexture = new THREE.TextureLoader().load(tilesPng);
+    // this.tileTexture.minFilter = THREE.LinearMipmapNearestFilter;
+    // this.tileTexture.minFilter = THREE.LinearFilter;
+    // this.tileTexture.generateMipmaps = false;
+    this.tileTexture.anisotropy = this.renderer.getMaxAnisotropy();
 
     this.objects = [];
     for (let i = 0; i < this.world.things.length; i++) {
-      const obj = this.makeTileObject(i);
+      const obj = this.makeTileObject(this.world.things[i].index);
       obj.visible = false;
       this.objects.push(obj);
       this.scene.add(obj);
@@ -57,15 +67,6 @@ export class View {
     const dirLight = new THREE.DirectionalLight(0x3333333);
     this.scene.add(dirLight);
     dirLight.position.set(0, 0, 999);
-
-    // this.controls = new OrbitControls( this.camera, this.renderer.domElement );
-
-    // this.camera.position.x = World.WIDTH / 2;
-    // this.camera.position.z = 45;
-    // this.camera.position.y = -World.WIDTH / 3;
-    // this.camera.rotateX(Math.PI * 0.3);
-
-
   }
 
   makeTileObject(index: number): Object3D {
@@ -118,6 +119,8 @@ export class View {
   draw(): void {
     requestAnimationFrame(this.draw.bind(this));
 
+    this.updateViewport();
+
     // this.controls.update();
 
     for (let i = 0; i < this.world.things.length; i++) {
@@ -129,5 +132,20 @@ export class View {
     }
 
     this.renderer.render(this.scene, this.camera);
+  }
+
+  updateViewport(): void {
+    if (this.main.clientWidth !== this.width ||
+      this.main.clientHeight !== this.height) {
+
+      this.width = this.main.clientWidth;
+      this.height = this.main.clientHeight;
+      if (this.width / this.height > View.RATIO) {
+        this.width = this.height * View.RATIO;
+      } else {
+        this.height = this.width / View.RATIO;
+      }
+      this.renderer.setSize(this.width, this.height);
+    }
   }
 }

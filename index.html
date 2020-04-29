@@ -1,20 +1,23 @@
 <html>
 <head>
     <style>
-        .container {
-            width: 800px;
-            margin: 0 auto;
+        #main {
+            position:fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #222;
         }
 
-        #main {
-            margin-top: 10px;
+        #main canvas {
+            display: block;
+            margin: auto;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="main"></div>
-    </div>
+    <div id="main"></div>
     <script src="./src/index.ts"></script>
 </body>
 </html>
