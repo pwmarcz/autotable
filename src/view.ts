@@ -35,9 +35,11 @@ export class View {
     this.camera.position.set(0, -8, 2);
     this.camera.rotateX(Math.PI * 0.3);
 
-    // this.camera = new THREE.PerspectiveCamera(30, 800 / 600, 0.1, 1000);
-    // this.camera.position.set(World.WIDTH/2, -World.WIDTH*0.8, 120);
-    // this.camera.rotateX(Math.PI * 0.25);
+    if (/perspective/.exec(window.location.href)) {
+      this.camera = new THREE.PerspectiveCamera(30, 800 / 600, 0.1, 1000);
+      this.camera.position.set(World.WIDTH/2, -World.WIDTH*0.8, World.WIDTH * 0.9);
+      this.camera.rotateX(Math.PI * 0.3);
+    }
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(this.width, this.height);
