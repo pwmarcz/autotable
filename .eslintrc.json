@@ -1,6 +1,6 @@
 {
     "extends": [
-        "eslint:recommended"
+        "plugin:@typescript-eslint/recommended"
     ],
     "env": {
         "browser": true,
@@ -16,6 +16,14 @@
         "semi": "error",
         "eqeqeq": "error",
         "prefer-const": "warn",
-        "no-console": "warn"
+        "no-console": "warn",
+        "@typescript-eslint/explicit-function-return-type": ["warn", { "allowExpressions": true }],
+        "@typescript-eslint/explicit-member-accessibility": "off",
+        "@typescript-eslint/indent": "off",
+        "@typescript-eslint/no-use-before-define": "off",
+        "@typescript-eslint/no-unused-vars": ["warn", { "args": "none" }],
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "@typescript-eslint/no-namespace": "off",
+        "@typescript-eslint/ban-ts-ignore": "off"
     }
 }
