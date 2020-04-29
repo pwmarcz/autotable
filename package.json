@@ -5,7 +5,8 @@
   "author": "Paweł Marczewski <pwmarcz@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "parcel": "^1.12.4"
+    "parcel": "^1.12.4",
+    "typescript": "^3.8.3"
   },
   "dependencies": {
     "normalize.css": "^8.0.1",
