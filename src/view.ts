@@ -55,7 +55,7 @@ export class View {
     // this.tileTexture.minFilter = THREE.LinearMipmapNearestFilter;
     // this.tileTexture.minFilter = THREE.LinearFilter;
     // this.tileTexture.generateMipmaps = false;
-    this.tileTexture.anisotropy = this.renderer.getMaxAnisotropy();
+    this.tileTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
 
     this.objects = [];
     for (let i = 0; i < this.world.things.length; i++) {
@@ -72,50 +72,56 @@ export class View {
   }
 
   makeTileObject(index: number): Object3D {
-    const backGeometry = new THREE.BoxGeometry(
+    const geometry = new THREE.BoxGeometry(
       World.TILE_WIDTH,
       World.TILE_HEIGHT,
-      World.TILE_DEPTH * 0.4);
-    const frontGeometry = new THREE.BoxGeometry(
-      World.TILE_WIDTH,
-      World.TILE_HEIGHT,
-      World.TILE_DEPTH * 0.6);
+      World.TILE_DEPTH
+    );
 
-    for (let i = 0; i < 12; i++) {
-      for (let j = 0; j < 3; j++) {
-        frontGeometry.faceVertexUvs[0][i][j].set(0, 0);
-      }
+    function setFace(ia: number, ib: number,
+      u0: number, v0: number, w: number, h: number): void {
+
+      u0 /= 256;
+      v0 /= 256;
+      const u1 = u0 + w/256;
+      const v1 = v0 + h/256;
+
+      geometry.faceVertexUvs[0][ia][0].set(u0, v0);
+      geometry.faceVertexUvs[0][ia][1].set(u0, v1);
+      geometry.faceVertexUvs[0][ia][2].set(u1, v0);
+
+      geometry.faceVertexUvs[0][ib][0].set(u0, v1);
+      geometry.faceVertexUvs[0][ib][1].set(u1, v1);
+      geometry.faceVertexUvs[0][ib][2].set(u1, v0);
     }
+
+    // const u0 = 224 / 256;
+    // const v0 = 188 / 256;
+    // const u1 = 256 / 256;
+    // const v1 = 235 / 256;
 
     const i = index % 8;
     const j = Math.floor(index / 8);
-    const u0 = i / 8;
-    const u1 = (i + 1) / 8;
-    const v0 = 1 - (j * 47/256);
-    const v1 = 1 - (j + 1) * 47/256;
 
-    frontGeometry.faceVertexUvs[0][8][0].set(u0, v0);
-    frontGeometry.faceVertexUvs[0][8][1].set(u0, v1);
-    frontGeometry.faceVertexUvs[0][8][2].set(u1, v0);
+    // long side
+    setFace(0, 1, 216, 21, -24, 47);
+    setFace(2, 3, 192, 21, 24, 47);
 
-    frontGeometry.faceVertexUvs[0][9][0].set(u0, v1);
-    frontGeometry.faceVertexUvs[0][9][1].set(u1, v1);
-    frontGeometry.faceVertexUvs[0][9][2].set(u1, v0);
+    // short side
+    setFace(4, 5, 160, 68, 32, -24);
+    setFace(6, 7, 160, 44, 32, 24);
 
-    const backMaterial = new THREE.MeshStandardMaterial({color: 0xffd003});
+    // back
+    setFace(10, 11, 224, 21, 32, 47);
+
+    // front
+    setFace(8, 9, i * 32, 256 - j * 47, 32, -47);
+
     const frontMaterial = new THREE.MeshStandardMaterial({color: 0xeeeeee, map: this.tileTexture });
 
-    const backMesh = new THREE.Mesh(backGeometry, backMaterial);
-    const frontMesh = new THREE.Mesh(frontGeometry, frontMaterial);
+    const mesh = new THREE.Mesh(geometry, frontMaterial);
 
-    backMesh.position.set (0, 0, World.TILE_DEPTH * -0.3);
-    frontMesh.position.set (0, 0, World.TILE_DEPTH * 0.2);
-
-    const tileGroup = new THREE.Group();
-    tileGroup.add(backMesh);
-    tileGroup.add(frontMesh);
-    tileGroup.scale.setScalar(0.97);
-    return tileGroup;
+    return mesh;
   }
 
   draw(): void {
