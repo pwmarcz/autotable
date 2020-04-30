@@ -1,5 +1,5 @@
 // @ts-ignore
-import tilesPng from '../img/tiles-bare.png';
+import tilesPng from '../img/tiles.auto.png';
 
 import * as THREE from 'three';
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -87,12 +87,12 @@ export class View {
       }
     }
 
-    const i = index % 9;
-    const j = Math.floor(index / 9);
-    const u0 = i / 9;
-    const u1 = (i + 1) / 9;
-    const v0 = 1 - (j / 4);
-    const v1 = 1 - (j + 1) / 4;
+    const i = index % 8;
+    const j = Math.floor(index / 8);
+    const u0 = i / 8;
+    const u1 = (i + 1) / 8;
+    const v0 = 1 - (j * 47/256);
+    const v1 = 1 - (j + 1) * 47/256;
 
     frontGeometry.faceVertexUvs[0][8][0].set(u0, v0);
     frontGeometry.faceVertexUvs[0][8][1].set(u0, v1);
