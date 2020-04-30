@@ -142,12 +142,17 @@ export class View {
 
       this.width = this.main.clientWidth;
       this.height = this.main.clientHeight;
+
+      let renderWidth: number, renderHeight: number;
+
       if (this.width / this.height > View.RATIO) {
-        this.width = this.height * View.RATIO;
+        renderWidth = Math.floor(this.height * View.RATIO);
+        renderHeight = Math.floor(this.height);
       } else {
-        this.height = this.width / View.RATIO;
+        renderWidth = Math.floor(this.width);
+        renderHeight = Math.floor(this.width / View.RATIO);
       }
-      this.renderer.setSize(this.width, this.height);
+      this.renderer.setSize(renderWidth, renderHeight);
     }
   }
 }
