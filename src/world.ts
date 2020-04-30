@@ -91,12 +91,11 @@ export class World {
     }
 
     this.things = [];
-    let i = 0;
     for (const slotName in this.slots) {
       if (/^meld/.exec(slotName))
         continue;
+      const i = Math.floor(Math.random() * 34);
       this.things.push({ type: 'tile', index: i, slotName });
-      i = (i + 5) % 36;
     }
   }
 
