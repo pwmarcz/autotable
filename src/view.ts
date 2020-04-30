@@ -117,9 +117,11 @@ export class View {
     // front
     setFace(8, 9, i * 32, 256 - j * 47, 32, -47);
 
+    const bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
+
     const frontMaterial = new THREE.MeshStandardMaterial({color: 0xeeeeee, map: this.tileTexture });
 
-    const mesh = new THREE.Mesh(geometry, frontMaterial);
+    const mesh = new THREE.Mesh(bufferGeometry, frontMaterial);
 
     return mesh;
   }
