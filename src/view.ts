@@ -107,7 +107,7 @@ export class View {
         color: 0,
       });
       const mesh = new Mesh(geometry, material);
-      mesh.position.set(shadow.position.x, shadow.position.y, 0.05);
+      mesh.position.set(shadow.position.x, shadow.position.y, 0.1);
       this.scene.add(mesh);
     }
 
@@ -303,7 +303,7 @@ export class View {
     for (const shadow of this.world.toRenderShadows()) {
       const obj = this.shadows[i++];
       obj.visible = true;
-      obj.position.set(shadow.position.x, shadow.position.y, 0.01);
+      obj.position.set(shadow.position.x, shadow.position.y, 0.2);
       obj.scale.set(shadow.width, shadow.height, 1);
     }
   }
