@@ -119,7 +119,7 @@ export class View {
 
     const bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
 
-    const frontMaterial = new THREE.MeshStandardMaterial({color: 0xeeeeee, map: this.tileTexture });
+    const frontMaterial = new THREE.MeshLambertMaterial({color: 0xeeeeee, map: this.tileTexture });
 
     const mesh = new THREE.Mesh(bufferGeometry, frontMaterial);
 
