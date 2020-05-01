@@ -5,11 +5,11 @@ files: img/tiles.auto.png
 img/tiles.auto.png: img/tiles.svg
 	inkscape $< --export-png=$@ --export-width=512
 
-.PHONY: dist
-dist: files
-	rm -rf dist
-	./node_modules/.bin/parcel build index.html --public-url /autotable/ --cache-dir .cache/dist/
+.PHONY: build
+build: files
+	rm -rf build
+	./node_modules/.bin/parcel build index.html --public-url /autotable/ --cache-dir .cache/build/ --out-dir build/
 
 .PHONY: deploy
-deploy: dist
-	rsync -rva --checksum --delete dist/ pwmarcz.pl:homepage/autotable/
+deploy: build
+	rsync -rva --checksum --delete build/ pwmarcz.pl:homepage/autotable/
