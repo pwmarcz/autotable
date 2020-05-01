@@ -20,7 +20,7 @@ export class View {
 
   objects: Array<Mesh>;
   ghostObjects: Array<Mesh>;
-  raycastObject: Object3D;
+  raycastObjects: Array<Object3D>;
   tileTexture: Texture;
 
   width: number;
@@ -82,13 +82,32 @@ export class View {
       this.scene.add(gobj);
     }
 
-    this.raycastObject = new THREE.Mesh(new THREE.BoxGeometry(
-      World.TILE_WIDTH,
-      World.TILE_HEIGHT,
-      World.TILE_DEPTH)
-    );
-    this.raycastObject.visible = false;
-    this.scene.add(this.raycastObject);
+    for (const shadow of this.world.toRenderShadows()) {
+      const w = Math.max(shadow.width, World.TILE_WIDTH);
+      const h = Math.max(shadow.height, World.TILE_WIDTH);
+
+      const geometry = new THREE.PlaneGeometry(w, h);
+      const material = new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0.1,
+        color: 0,
+      });
+      const mesh = new Mesh(geometry, material);
+      mesh.position.set(shadow.position.x, shadow.position.y, 0.1);
+      this.scene.add(mesh);
+    }
+
+    this.raycastObjects = [];
+    for (let i = 0; i < Object.keys(this.world.slots).length; i++) {
+      const robj = new THREE.Mesh(new THREE.BoxGeometry(
+        World.TILE_WIDTH,
+        World.TILE_HEIGHT,
+        World.TILE_DEPTH)
+      );
+      robj.visible = false;
+      this.raycastObjects.push(robj);
+      this.scene.add(robj);
+    }
 
     this.scene.add(new THREE.AmbientLight(0xcccccc));
     const dirLight = new THREE.DirectionalLight(0x3333333);
@@ -182,17 +201,24 @@ export class View {
     }
 
     this.raycaster.setFromCamera(this.mouse, this.camera);
-    for (const select of this.world.toSelect()) {
-      this.raycastObject.position.copy(select.position);
-      this.raycastObject.rotation.copy(select.rotation);
-      this.raycastObject.updateMatrixWorld();
 
-      if (this.raycaster.intersectObject(this.raycastObject).length > 0) {
-        this.world.onSelect(select.id);
-        return;
-      }
+    const robjs = [];
+    for (let i = 0; i < toSelect.length; i++) {
+      const select = toSelect[i];
+      const robj = this.raycastObjects[i];
+      robj.position.copy(select.position);
+      robj.rotation.copy(select.rotation);
+      robj.updateMatrixWorld();
+      robj.userData.id = select.id;
+      robjs.push(robj);
     }
-    this.world.onSelect(null);
+
+    const intersects = this.raycaster.intersectObjects(robjs);
+    let id = null;
+    if (intersects.length > 0) {
+      id = intersects[0].object.userData.id;
+    }
+    this.world.onSelect(id);
   }
 
   updateRender(): void {

@@ -27,6 +27,12 @@ interface Select extends Place {
   id: string;
 }
 
+interface Shadow {
+  position: Vector2;
+  width: number;
+  height: number;
+}
+
 export class World {
   slots: Record<string, Slot>;
   things: Array<Thing>;
@@ -225,5 +231,23 @@ export class World {
       position: new Vector3(slot.position.x, slot.position.y, maxz/2),
       rotation: slot.rotation,
     };
+  }
+
+  toRenderShadows(): Array<Shadow> {
+    const result = [];
+    for (const slotName in this.slots) {
+      result.push(this.slotShadow(this.slots[slotName]));
+    }
+    return result;
+  }
+
+  slotShadow(slot: Slot): Shadow {
+    const xv = new Vector3(0, 0, World.TILE_DEPTH).applyEuler(slot.rotation);
+    const yv = new Vector3(0, World.TILE_HEIGHT, 0).applyEuler(slot.rotation);
+    const zv = new Vector3(World.TILE_WIDTH, 0, 0).applyEuler(slot.rotation);
+
+    const width = Math.max(Math.abs(xv.x), Math.abs(yv.x), Math.abs(zv.x));
+    const height = Math.max(Math.abs(xv.y), Math.abs(yv.y), Math.abs(zv.y));
+    return {position: slot.position, width, height};
   }
 }
