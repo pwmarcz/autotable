@@ -5,7 +5,7 @@ import * as THREE from 'three';
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import { World } from './world';
-import { Object3D, Scene, Camera, WebGLRenderer, Texture } from 'three';
+import { Object3D, Scene, Camera, WebGLRenderer, Texture, Vector2, Raycaster } from 'three';
 
 export class View {
   world: World;
@@ -14,13 +14,16 @@ export class View {
   scene: Scene;
   camera: Camera;
   renderer: WebGLRenderer;
+  raycaster: Raycaster;
 
   objects: Array<Object3D>;
+  raycastObjects: Array<Object3D>;
   tileTexture: Texture;
 
   width: number;
   height: number;
   static RATIO = 1.5;
+  mouse: Vector2;
 
   constructor(main: Element, world: World) {
     this.main = main;
@@ -41,6 +44,8 @@ export class View {
       this.camera.rotateX(Math.PI * 0.3);
     }
 
+    this.raycaster = new THREE.Raycaster();
+
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(this.width, this.height);
     main.appendChild(this.renderer.domElement);
@@ -58,17 +63,31 @@ export class View {
     this.tileTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
 
     this.objects = [];
+    this.raycastObjects = [];
     for (let i = 0; i < this.world.things.length; i++) {
       const obj = this.makeTileObject(this.world.things[i].index);
       obj.visible = false;
       this.objects.push(obj);
       this.scene.add(obj);
+
+      const robj = new THREE.Mesh(new THREE.BoxGeometry(
+        World.TILE_WIDTH,
+        World.TILE_HEIGHT,
+        World.TILE_DEPTH)
+      );
+      robj.userData.index = i;
+      robj.visible = false;
+      this.raycastObjects.push(robj);
+      this.scene.add(robj);
     }
 
     this.scene.add(new THREE.AmbientLight(0xcccccc));
     const dirLight = new THREE.DirectionalLight(0x3333333);
     this.scene.add(dirLight);
     dirLight.position.set(0, 0, 999);
+
+    this.mouse = new Vector2();
+    this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this));
   }
 
   makeTileObject(index: number): Object3D {
@@ -139,9 +158,28 @@ export class View {
       obj.position.copy(position);;
       obj.rotation.copy(rotation);
       obj.visible = true;
+
+      const robj = this.raycastObjects[i];
+      robj.position.copy(position);;
+      robj.rotation.copy(rotation);
+    }
+
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.raycastObjects);
+    if (intersects.length > 0) {
+      const index = intersects[0].object.userData.index;
+      const object = this.objects[index];
+      object.position.z += 1;
     }
 
     this.renderer.render(this.scene, this.camera);
+  }
+
+  onMouseMove(event: MouseEvent): void {
+    const w = this.renderer.domElement.clientWidth;
+    const h = this.renderer.domElement.clientHeight;
+    this.mouse.x = event.offsetX / w * 2 - 1;
+    this.mouse.y = -event.offsetY / h * 2 + 1;
   }
 
   updateViewport(): void {
