@@ -1,6 +1,10 @@
 <html>
 <head>
     <style>
+        body {
+            color: #ddd;
+        }
+
         #main {
             position:fixed;
             top: 0;
@@ -14,10 +18,26 @@
             display: block;
             margin: auto;
         }
+
+        #settings {
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 0 1em 1em 1em;
+            background: rgba(0,0,0, 0.4);
+            user-select: none;
+        }
     </style>
 </head>
 <body>
     <div id="main"></div>
+    <div id="settings">
+        <p><b>Settings</b></p>
+        <label>
+            <input type="checkbox" id="perspective">
+            Perspective mode
+        </label>
+    </div>
     <script src="./src/index.ts"></script>
 </body>
 </html>

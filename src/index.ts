@@ -11,4 +11,13 @@ const view = new View(main, world);
 window['world'] = world;
 window['view'] = view;
 
+const perspectiveCheckbox = document.getElementById('perspective') as HTMLInputElement;
+perspectiveCheckbox.addEventListener('change', updateSettings);
+updateSettings();
+
+function updateSettings(): void {
+  const perspective = perspectiveCheckbox.checked;
+  view.setPerspective(perspective);
+}
+
 view.draw();

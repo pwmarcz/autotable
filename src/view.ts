@@ -36,18 +36,7 @@ export class View {
     this.objects = [];
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.OrthographicCamera(
-      -4, World.WIDTH + 4,
-      (World.WIDTH + 8) / View.RATIO, 0,
-      0.1, 1000);
-    this.camera.position.set(0, -18, 2);
-    this.camera.rotateX(Math.PI * 0.3);
-
-    if (/perspective/.exec(window.location.href)) {
-      this.camera = new THREE.PerspectiveCamera(30, 800 / 600, 0.1, 1000);
-      this.camera.position.set(World.WIDTH/2, -World.WIDTH*0.8, World.WIDTH * 0.9);
-      this.camera.rotateX(Math.PI * 0.3);
-    }
+    this.camera = this.makeCamera(false);
 
     this.raycaster = new THREE.Raycaster();
 
@@ -141,6 +130,27 @@ export class View {
     this.renderer.domElement.addEventListener('mouseleave', this.onMouseLeave.bind(this));
     this.renderer.domElement.addEventListener('mousedown', this.onMouseDown.bind(this));
     window.addEventListener('mouseup', this.onMouseUp.bind(this));
+  }
+
+  makeCamera(perspective: boolean): THREE.Camera {
+    if (perspective) {
+      const camera = new THREE.PerspectiveCamera(30, 800 / 600, 0.1, 1000);
+      camera.position.set(World.WIDTH/2, -World.WIDTH*0.8, World.WIDTH * 0.9);
+      camera.rotateX(Math.PI * 0.3);
+      return camera;
+    }
+
+    const camera = new THREE.OrthographicCamera(
+      -4, World.WIDTH + 4,
+      (World.WIDTH + 8) / View.RATIO, 0,
+      0.1, 1000);
+    camera.position.set(0, -18, 2);
+    camera.rotateX(Math.PI * 0.3);
+    return camera;
+  }
+
+  setPerspective(perspective: boolean): void {
+    this.camera = this.makeCamera(perspective);
   }
 
   makeTileObject(index: number): Mesh {
