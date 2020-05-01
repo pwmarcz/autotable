@@ -21,6 +21,7 @@ interface Render extends Place {
   thingIndex: number;
   selected: boolean;
   held: boolean;
+  temporary: boolean;
 }
 
 interface Select extends Place {
@@ -36,9 +37,13 @@ interface Shadow {
 export class World {
   slots: Record<string, Slot>;
   things: Array<Thing>;
+
   selected: number | null;
+  tablePos: Vector2 | null;
+
   targetSlot: string | null;
   held: number | null;
+  heldTablePos: Vector2 | null;
 
   static TILE_WIDTH = 6;
   static TILE_HEIGHT = 9;
@@ -130,7 +135,7 @@ export class World {
     this.targetSlot = null;
   }
 
-  onSelect(id: string | null): void {
+  onSelect(id: string | null, tablePos: Vector2 | null): void {
     if (this.held !== null) {
       const slotName = id;
       this.targetSlot = this.slots[slotName] ? slotName : null;
@@ -138,11 +143,13 @@ export class World {
       const index = parseInt(id, 10);
       this.selected = isNaN(index) ? null : index;
     }
+    this.tablePos = tablePos;
   }
 
   onMouseDown(): void {
     if (this.selected !== null) {
       this.held = this.selected;
+      this.heldTablePos = this.tablePos;
     }
     this.selected = null;
     this.targetSlot = null;
@@ -164,11 +171,24 @@ export class World {
       const thing = this.things[i];
       const slot = this.slots[thing.slotName];
       const place = this.slotPlace(slot);
+
+      if (i === this.held && this.tablePos !== null && this.heldTablePos !== null) {
+        place.position.x += this.tablePos.x - this.heldTablePos.x;
+        place.position.y += this.tablePos.y - this.heldTablePos.y;
+
+        if (this.targetSlot !== null) {
+          const slotPlace = this.slotPlace(this.slots[this.targetSlot]);
+          place.rotation = slotPlace.rotation;
+          place.position.z = slotPlace.position.z;
+        }
+      }
+
       result.push({
         ...place,
         thingIndex: i,
         selected: i === this.selected,
         held: i === this.held,
+        temporary: i === this.held && this.targetSlot === null,
       });
     }
     return result;
@@ -176,16 +196,16 @@ export class World {
 
   toRenderGhosts(): Array<Render> {
     const result = [];
-    if (this.targetSlot !== null) {
-      const thingIndex = this.held;
-      const place = this.slotPlace(this.slots[this.targetSlot]);
-      result.push({
-        ...place,
-        thingIndex,
-        selected: false,
-        held: false,
-      });
-    }
+    // if (this.targetSlot !== null) {
+    //   const thingIndex = this.held;
+    //   const place = this.slotPlace(this.slots[this.targetSlot]);
+    //   result.push({
+    //     ...place,
+    //     thingIndex,
+    //     selected: false,
+    //     held: false,
+    //   });
+    // }
     return result;
   }
 
@@ -197,7 +217,7 @@ export class World {
         // TODO cache that
         let occupied = false;
         for (const thing of this.things) {
-          if (thing.slotName === slotName) {
+          if (thing.slotName === slotName && thing !== this.things[this.held]) {
             occupied = true;
             break;
           }
@@ -233,10 +253,18 @@ export class World {
     };
   }
 
-  toRenderShadows(): Array<Shadow> {
+  toRenderPlaces(): Array<Shadow> {
     const result = [];
     for (const slotName in this.slots) {
       result.push(this.slotShadow(this.slots[slotName]));
+    }
+    return result;
+  }
+
+  toRenderShadows(): Array<Shadow> {
+    const result = [];
+    if (this.targetSlot !== null) {
+      result.push(this.slotShadow(this.slots[this.targetSlot]));
     }
     return result;
   }

@@ -20,7 +20,9 @@ export class View {
 
   objects: Array<Mesh>;
   ghostObjects: Array<Mesh>;
+  shadows: Array<Mesh>;
   raycastObjects: Array<Object3D>;
+  raycastTable: Object3D;
   tileTexture: Texture;
 
   width: number;
@@ -72,6 +74,7 @@ export class View {
 
     this.objects = [];
     this.ghostObjects = [];
+    this.shadows = [];
     for (let i = 0; i < this.world.things.length; i++) {
       const obj = this.makeTileObject(this.world.things[i].index);
       this.objects.push(obj);
@@ -80,9 +83,20 @@ export class View {
       const gobj = this.makeGhostObject(this.world.things[i].index);
       this.ghostObjects.push(gobj);
       this.scene.add(gobj);
+
+      const geometry = new THREE.PlaneGeometry(1, 1);
+      const material = new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0.2,
+        color: 0,
+      });
+      const shadow = new Mesh(geometry, material);
+      shadow.visible = false;
+      this.shadows.push(shadow);
+      this.scene.add(shadow);
     }
 
-    for (const shadow of this.world.toRenderShadows()) {
+    for (const shadow of this.world.toRenderPlaces()) {
       const w = Math.max(shadow.width, World.TILE_WIDTH);
       const h = Math.max(shadow.height, World.TILE_WIDTH);
 
@@ -93,7 +107,7 @@ export class View {
         color: 0,
       });
       const mesh = new Mesh(geometry, material);
-      mesh.position.set(shadow.position.x, shadow.position.y, 0.1);
+      mesh.position.set(shadow.position.x, shadow.position.y, 0.05);
       this.scene.add(mesh);
     }
 
@@ -108,6 +122,14 @@ export class View {
       this.raycastObjects.push(robj);
       this.scene.add(robj);
     }
+
+    this.raycastTable = new THREE.Mesh(new THREE.PlaneGeometry(
+      World.WIDTH,
+      World.HEIGHT
+    ));
+    this.raycastTable.visible = false;
+    this.raycastTable.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0);
+    this.scene.add(this.raycastTable);
 
     this.scene.add(new THREE.AmbientLight(0xcccccc));
     const dirLight = new THREE.DirectionalLight(0x3333333);
@@ -189,6 +211,7 @@ export class View {
 
     this.updateRender();
     this.updateRenderGhosts();
+    this.updateRenderShadows();
 
     this.renderer.render(this.scene, this.camera);
     this.updateViewport();
@@ -218,7 +241,15 @@ export class View {
     if (intersects.length > 0) {
       id = intersects[0].object.userData.id;
     }
-    this.world.onSelect(id);
+
+    const intersectsTable = this.raycaster.intersectObject(this.raycastTable);
+    let tablePos = null;
+    if (intersectsTable.length > 0) {
+      const uv = intersectsTable[0].uv;
+      tablePos = new Vector2(uv.x * World.WIDTH, uv.y * World.HEIGHT);
+    }
+
+    this.world.onSelect(id, tablePos);
   }
 
   updateRender(): void {
@@ -233,13 +264,19 @@ export class View {
       obj.rotation.copy(render.rotation);
 
       const material = obj.material as MeshLambertMaterial;
-      if (render.selected || render.held) {
+      if (render.selected) {
         material.emissive.setHex(0x222222);
       } else {
         material.emissive.setHex(0);
       }
       if (render.held) {
-        obj.position.z += 1;
+        obj.position.z += 2;
+      }
+      if (render.temporary) {
+        material.transparent = true;
+        material.opacity = 0.7;
+      } else {
+        material.transparent = false;
       }
     }
   }
@@ -257,6 +294,20 @@ export class View {
     }
   }
 
+  updateRenderShadows(): void {
+    for (const obj of this.shadows) {
+      obj.visible = false;
+    }
+
+    let i = 0;
+    for (const shadow of this.world.toRenderShadows()) {
+      const obj = this.shadows[i++];
+      obj.visible = true;
+      obj.position.set(shadow.position.x, shadow.position.y, 0.01);
+      obj.scale.set(shadow.width, shadow.height, 1);
+    }
+  }
+
   onMouseMove(event: MouseEvent): void {
     const w = this.renderer.domElement.clientWidth;
     const h = this.renderer.domElement.clientHeight;
@@ -267,7 +318,7 @@ export class View {
   }
 
   onMouseLeave(event: MouseEvent): void {
-    this.world.onSelect(null);
+    this.world.onSelect(null, null);
   }
 
   onMouseDown(event: MouseEvent): void {
