@@ -229,10 +229,6 @@ export class View {
 
   updateSelect(): void {
     const toSelect = this.world.toSelect();
-    if (toSelect.length === 0) {
-      return;
-    }
-
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
     const robjs = [];

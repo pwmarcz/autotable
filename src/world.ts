@@ -136,14 +136,52 @@ export class World {
   }
 
   onSelect(id: string | null, tablePos: Vector2 | null): void {
+    this.tablePos = tablePos;
     if (this.held !== null) {
-      const slotName = id;
-      this.targetSlot = this.slots[slotName] ? slotName : null;
+      if (tablePos !== null && this.heldTablePos !== null) {
+        const thing = this.things[this.held];
+        const slot = this.slots[thing.slotName];
+        const place = this.slotPlace(slot);
+        place.position.x += this.tablePos.x - this.heldTablePos.x;
+        place.position.y += this.tablePos.y - this.heldTablePos.y;
+
+        this.targetSlot = this.findSlot(place.position.x, place.position.y);
+      }
     } else {
       const index = parseInt(id, 10);
       this.selected = isNaN(index) ? null : index;
     }
-    this.tablePos = tablePos;
+  }
+
+  findSlot(x: number, y: number): string | null {
+    let bestDistance = World.TILE_DEPTH;
+    let bestSlot = null;
+
+    // Empty slots
+    for (const slotName in this.slots) {
+      // TODO cache that
+      let occupied = false;
+      for (const thing of this.things) {
+        if (thing.slotName === slotName && thing !== this.things[this.held]) {
+          occupied = true;
+          break;
+        }
+      }
+      if (occupied) {
+        continue;
+      }
+
+      const slot = this.slots[slotName];
+      const shadow = this.slotShadow(slot);
+      const dx = Math.abs(x - slot.position.x) - shadow.width/2;
+      const dy = Math.abs(y - slot.position.y) - shadow.height/2;
+      const distance = Math.max(0, dx, dy);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestSlot = slotName;
+      }
+    }
+    return bestSlot;
   }
 
   onMouseDown(): void {
@@ -212,23 +250,7 @@ export class World {
   toSelect(): Array<Select> {
     const result = [];
     if (this.held !== null) {
-      // Empty slots
-      for (const slotName in this.slots) {
-        // TODO cache that
-        let occupied = false;
-        for (const thing of this.things) {
-          if (thing.slotName === slotName && thing !== this.things[this.held]) {
-            occupied = true;
-            break;
-          }
-        }
-        if (occupied) {
-          continue;
-        }
 
-        const place = this.slotPlace(this.slots[slotName]);
-        result.push({...place, id: slotName});
-      }
     } else {
       // Things
       for (let i = 0; i < this.things.length; i++) {
