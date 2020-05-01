@@ -272,10 +272,12 @@ export class View {
 
   onMouseDown(event: MouseEvent): void {
     this.world.onMouseDown();
+    this.updateSelect();
   }
 
   onMouseUp(event: MouseEvent): void {
     this.world.onMouseUp();
+    this.updateSelect();
   }
 
   updateViewport(): void {
