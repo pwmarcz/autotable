@@ -38,7 +38,7 @@ export class View {
       -4, World.WIDTH + 4,
       (World.WIDTH + 8) / View.RATIO, 0,
       0.1, 1000);
-    this.camera.position.set(0, -8, 2);
+    this.camera.position.set(0, -18, 2);
     this.camera.rotateX(Math.PI * 0.3);
 
     if (/perspective/.exec(window.location.href)) {
