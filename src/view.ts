@@ -270,13 +270,15 @@ export class View {
         material.emissive.setHex(0);
       }
       if (render.held) {
-        obj.position.z += 2;
-      }
-      if (render.temporary) {
         material.transparent = true;
-        material.opacity = 0.7;
+        material.opacity = render.temporary ? 0.7 : 1;
+        obj.position.z += 2;
+        obj.renderOrder = 1;
+        material.depthTest = false;
       } else {
         material.transparent = false;
+        obj.renderOrder = 0;
+        material.depthTest = true;
       }
     }
   }
