@@ -7,7 +7,7 @@ import * as THREE from 'three';
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import { World } from './world';
-import { Object3D, Scene, Camera, WebGLRenderer, Texture, Vector2, Raycaster, Mesh } from 'three';
+import { Object3D, Scene, Camera, WebGLRenderer, Texture, Vector2, Raycaster, Mesh, MeshLambertMaterial } from 'three';
 
 export class View {
   world: World;
@@ -19,7 +19,8 @@ export class View {
   raycaster: Raycaster;
 
   objects: Array<Mesh>;
-  raycastObjects: Array<Object3D>;
+  ghostObjects: Array<Mesh>;
+  raycastObject: Object3D;
   tileTexture: Texture;
 
   width: number;
@@ -70,23 +71,24 @@ export class View {
     this.tileTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
 
     this.objects = [];
-    this.raycastObjects = [];
+    this.ghostObjects = [];
     for (let i = 0; i < this.world.things.length; i++) {
       const obj = this.makeTileObject(this.world.things[i].index);
-      obj.visible = false;
       this.objects.push(obj);
       this.scene.add(obj);
 
-      const robj = new THREE.Mesh(new THREE.BoxGeometry(
-        World.TILE_WIDTH,
-        World.TILE_HEIGHT,
-        World.TILE_DEPTH)
-      );
-      robj.userData.index = i;
-      robj.visible = false;
-      this.raycastObjects.push(robj);
-      this.scene.add(robj);
+      const gobj = this.makeGhostObject(this.world.things[i].index);
+      this.ghostObjects.push(gobj);
+      this.scene.add(gobj);
     }
+
+    this.raycastObject = new THREE.Mesh(new THREE.BoxGeometry(
+      World.TILE_WIDTH,
+      World.TILE_HEIGHT,
+      World.TILE_DEPTH)
+    );
+    this.raycastObject.visible = false;
+    this.scene.add(this.raycastObject);
 
     this.scene.add(new THREE.AmbientLight(0xcccccc));
     const dirLight = new THREE.DirectionalLight(0x3333333);
@@ -95,6 +97,9 @@ export class View {
 
     this.mouse = new Vector2();
     this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this));
+    this.renderer.domElement.addEventListener('mouseleave', this.onMouseLeave.bind(this));
+    this.renderer.domElement.addEventListener('mousedown', this.onMouseDown.bind(this));
+    window.addEventListener('mouseup', this.onMouseUp.bind(this));
   }
 
   makeTileObject(index: number): Mesh {
@@ -152,34 +157,78 @@ export class View {
     return mesh;
   }
 
+  makeGhostObject(index: number): Mesh {
+    const obj = this.makeTileObject(index);
+    const material = obj.material as MeshLambertMaterial;
+    material.transparent = true;
+    material.opacity = 0.5;
+    return obj;
+  }
+
   draw(): void {
     requestAnimationFrame(this.draw.bind(this));
 
+    this.updateRender();
+    this.updateRenderGhosts();
+
+    this.renderer.render(this.scene, this.camera);
     this.updateViewport();
+  }
 
-    // this.controls.update();
-
-    for (let i = 0; i < this.world.things.length; i++) {
-      const { position, rotation } = this.world.thingParams(i);
-      const obj = this.objects[i];
-      obj.position.copy(position);;
-      obj.rotation.copy(rotation);
-      obj.visible = true;
-
-      const robj = this.raycastObjects[i];
-      robj.position.copy(position);;
-      robj.rotation.copy(rotation);
+  updateSelect(): void {
+    const toSelect = this.world.toSelect();
+    if (toSelect.length === 0) {
+      return;
     }
 
     this.raycaster.setFromCamera(this.mouse, this.camera);
-    const intersects = this.raycaster.intersectObjects(this.raycastObjects);
-    if (intersects.length > 0) {
-      const index = intersects[0].object.userData.index;
-      const object = this.objects[index];
-      object.position.z += 1;
+    for (const select of this.world.toSelect()) {
+      this.raycastObject.position.copy(select.position);
+      this.raycastObject.rotation.copy(select.rotation);
+      this.raycastObject.updateMatrixWorld();
+
+      if (this.raycaster.intersectObject(this.raycastObject).length > 0) {
+        this.world.onSelect(select.id);
+        return;
+      }
+    }
+    this.world.onSelect(null);
+  }
+
+  updateRender(): void {
+    for (const obj of this.objects) {
+      obj.visible = false;
     }
 
-    this.renderer.render(this.scene, this.camera);
+    for (const render of this.world.toRender()) {
+      const obj = this.objects[render.thingIndex];
+      obj.visible = true;
+      obj.position.copy(render.position);
+      obj.rotation.copy(render.rotation);
+
+      const material = obj.material as MeshLambertMaterial;
+      if (render.selected || render.held) {
+        material.emissive.setHex(0x222222);
+      } else {
+        material.emissive.setHex(0);
+      }
+      if (render.held) {
+        obj.position.z += 1;
+      }
+    }
+  }
+
+  updateRenderGhosts(): void {
+    for (const obj of this.ghostObjects) {
+      obj.visible = false;
+    }
+
+    for (const render of this.world.toRenderGhosts()) {
+      const obj = this.ghostObjects[render.thingIndex];
+      obj.visible = true;
+      obj.position.copy(render.position);
+      obj.rotation.copy(render.rotation);
+    }
   }
 
   onMouseMove(event: MouseEvent): void {
@@ -187,6 +236,20 @@ export class View {
     const h = this.renderer.domElement.clientHeight;
     this.mouse.x = event.offsetX / w * 2 - 1;
     this.mouse.y = -event.offsetY / h * 2 + 1;
+
+    this.updateSelect();
+  }
+
+  onMouseLeave(event: MouseEvent): void {
+    this.world.onSelect(null);
+  }
+
+  onMouseDown(event: MouseEvent): void {
+    this.world.onMouseDown();
+  }
+
+  onMouseUp(event: MouseEvent): void {
+    this.world.onMouseUp();
   }
 
   updateViewport(): void {
