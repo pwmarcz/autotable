@@ -1,11 +1,13 @@
 // @ts-ignore
 import tilesPng from '../img/tiles.auto.png';
+// @ts-ignore
+import tableJpg from '../img/table.jpg';
 
 import * as THREE from 'three';
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import { World } from './world';
-import { Object3D, Scene, Camera, WebGLRenderer, Texture, Vector2, Raycaster } from 'three';
+import { Object3D, Scene, Camera, WebGLRenderer, Texture, Vector2, Raycaster, Mesh } from 'three';
 
 export class View {
   world: World;
@@ -16,7 +18,7 @@ export class View {
   renderer: WebGLRenderer;
   raycaster: Raycaster;
 
-  objects: Array<Object3D>;
+  objects: Array<Mesh>;
   raycastObjects: Array<Object3D>;
   tileTexture: Texture;
 
@@ -32,8 +34,8 @@ export class View {
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.OrthographicCamera(
-      -2, World.WIDTH + 2,
-      (World.WIDTH + 4) / View.RATIO, 0,
+      -4, World.WIDTH + 4,
+      (World.WIDTH + 8) / View.RATIO, 0,
       0.1, 1000);
     this.camera.position.set(0, -8, 2);
     this.camera.rotateX(Math.PI * 0.3);
@@ -50,8 +52,13 @@ export class View {
     this.renderer.setSize(this.width, this.height);
     main.appendChild(this.renderer.domElement);
 
-    const tableGeometry = new THREE.PlaneGeometry(World.WIDTH, World.HEIGHT);
-    const tableMaterial = new THREE.MeshStandardMaterial({ color: 0x005000 });
+    const tableTexture = new THREE.TextureLoader().load(tableJpg);
+    tableTexture.wrapS = THREE.RepeatWrapping;
+    tableTexture.wrapT = THREE.RepeatWrapping;
+    tableTexture.repeat.set(3, 3);
+    const tableGeometry = new THREE.PlaneGeometry(
+      World.WIDTH + World.TILE_DEPTH, World.HEIGHT + World.TILE_DEPTH);
+    const tableMaterial = new THREE.MeshStandardMaterial({ color: 0xeeeeee, map: tableTexture });
     const tableMesh = new THREE.Mesh(tableGeometry, tableMaterial);
     tableMesh.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0);
     this.scene.add(tableMesh);
@@ -90,7 +97,7 @@ export class View {
     this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this));
   }
 
-  makeTileObject(index: number): Object3D {
+  makeTileObject(index: number): Mesh {
     const geometry = new THREE.BoxGeometry(
       World.TILE_WIDTH,
       World.TILE_HEIGHT,
