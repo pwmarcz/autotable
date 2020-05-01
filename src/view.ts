@@ -113,8 +113,8 @@ export class View {
     }
 
     this.raycastTable = new THREE.Mesh(new THREE.PlaneGeometry(
-      World.WIDTH,
-      World.HEIGHT
+      World.WIDTH * 3,
+      World.HEIGHT * 3,
     ));
     this.raycastTable.visible = false;
     this.raycastTable.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0);
@@ -255,8 +255,8 @@ export class View {
     const intersectsTable = this.raycaster.intersectObject(this.raycastTable);
     let tablePos = null;
     if (intersectsTable.length > 0) {
-      const uv = intersectsTable[0].uv;
-      tablePos = new Vector2(uv.x * World.WIDTH, uv.y * World.HEIGHT);
+      const point = intersectsTable[0].point;
+      tablePos = new Vector2(point.x, point.y);
     }
 
     this.world.onSelect(id, tablePos);
