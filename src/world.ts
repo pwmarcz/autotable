@@ -242,7 +242,7 @@ export class World {
         // if (this.hovered !== null) {
         //   this.selected.push(this.hovered);
         // }
-      } else if (this.targetSlots.every(s => s !== null)) {
+      } else if (this.canDrop()) {
         // Successful movement
         for (let i = 0; i < this.held.length; i++) {
           const oldSlotName = this.things[this.held[i]].slotName;
@@ -250,7 +250,7 @@ export class World {
         }
         for (let i = 0; i < this.held.length; i++) {
           this.things[this.held[i]].slotName = this.targetSlots[i]!;
-          this.slots[this.targetSlots[i]!].thingIndex = this.held[0];
+          this.slots[this.targetSlots[i]!].thingIndex = this.held[i];
         }
       }
     }
@@ -258,7 +258,13 @@ export class World {
     this.targetSlots.splice(0);
   }
 
+  canDrop(): boolean {
+    return this.targetSlots.every(s => s !== null);
+  }
+
   toRender(): Array<Render> {
+    const canDrop = this.canDrop();
+
     const result = [];
     for (let i = 0; i < this.things.length; i++) {
       const thing = this.things[i];
@@ -274,7 +280,7 @@ export class World {
       const selected = this.selected.indexOf(i) !== -1;
       const hovered = i === this.hovered ||
         (selected && this.selected.indexOf(this.hovered!) !== -1);
-      const temporary = held && this.targetSlots[heldIndex] === null;
+      const temporary = held && !canDrop;
 
       result.push({
         ...place,
@@ -341,9 +347,9 @@ export class World {
 
   toRenderShadows(): Array<Shadow> {
     const result = [];
-    for (const slotName of this.targetSlots) {
-      if (slotName !== null) {
-        result.push(this.slotShadow(slotName));
+    if (this.canDrop()) {
+      for (const slotName of this.targetSlots) {
+        result.push(this.slotShadow(slotName!));
       }
     }
     return result;
