@@ -21,12 +21,13 @@ interface Place {
 interface Render extends Place {
   thingIndex: number;
   selected: boolean;
+  hovered: boolean;
   held: boolean;
   temporary: boolean;
 }
 
 interface Select extends Place {
-  id: string;
+  id: any;
 }
 
 interface Shadow {
@@ -36,15 +37,16 @@ interface Shadow {
 }
 
 export class World {
-  slots: Record<string, Slot>;
-  things: Array<Thing>;
+  slots: Record<string, Slot> = {};
+  things: Array<Thing> = [];
 
-  selected: Array<number>;
-  tablePos: Vector2 | null;
+  hovered: number | null = null;
+  selected: Array<number> = [];
+  tablePos: Vector2 | null = null;
 
-  targetSlot: string | null;
-  held: number | null;
-  heldTablePos: Vector2 | null;
+  targetSlot: string | null = null;
+  held: number | null = null;
+  heldTablePos: Vector2 | null = null;
 
   static TILE_WIDTH = 6;
   static TILE_HEIGHT = 9;
@@ -53,7 +55,6 @@ export class World {
   static HEIGHT = 174;
 
   constructor() {
-    this.slots = {};
     const baseSlots: Record<string, Slot> = {};
     for (let i = 0; i < 14; i++) {
       baseSlots[`hand.${i}`] = {
@@ -129,7 +130,6 @@ export class World {
       };
     }
 
-    this.things = [];
     for (let i = 0; i < 17; i++) {
       for (let j = 0; j < 4; j++) {
         const index = j * 17 + i;
@@ -138,17 +138,14 @@ export class World {
         this.slots[slotName].thingIndex = index;
       }
     }
-
-    this.selected = [];
-    this.held = null;
-    this.targetSlot = null;
   }
 
-  onSelect(ids: Array<string>): void {
-    this.selected.splice(0);
-    for (const id of ids) {
-      this.selected.push(parseInt(id, 10));
-    }
+  onHover(id: any): void {
+    this.hovered = id as number;
+  }
+
+  onSelect(ids: Array<any>): void {
+    this.selected = ids as Array<number>;
   }
 
   onMove(tablePos: Vector2 | null): void {
@@ -187,13 +184,15 @@ export class World {
     return bestSlot;
   }
 
-  onDragStart(): void {
-    if (this.selected.length > 0) {
-      this.held = this.selected[0];
+  onDragStart(): boolean {
+    if (this.hovered !== null) {
+      this.held = this.hovered;
+      this.hovered = null;
       this.heldTablePos = this.tablePos;
+      this.targetSlot = null;
+      return true;
     }
-    this.selected.splice(0);
-    this.targetSlot = null;
+    return false;
   }
 
   onDragEnd(): void {
@@ -220,12 +219,19 @@ export class World {
         place.position.y += this.tablePos.y - this.heldTablePos.y;
       }
 
+      const selected = this.selected.indexOf(i) !== -1;
+      const hovered = i === this.hovered ||
+        (selected && this.selected.indexOf(this.hovered) !== -1);
+      const held = i === this.held;
+      const temporary = i === this.held && this.targetSlot === null;
+
       result.push({
         ...place,
         thingIndex: i,
-        selected: this.selected.indexOf(i) !== -1,
-        held: i === this.held,
-        temporary: i === this.held && this.targetSlot === null,
+        selected,
+        hovered,
+        held,
+        temporary,
       });
     }
     return result;
@@ -253,7 +259,7 @@ export class World {
       for (let i = 0; i < this.things.length; i++) {
         const thing = this.things[i];
         const place = this.slotPlace(thing.slotName);
-        result.push({...place, id: `${i}`});
+        result.push({...place, id: i});
       }
     }
     return result;

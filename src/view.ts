@@ -5,6 +5,9 @@ import tableJpg from '../img/table.jpg';
 
 import * as THREE from 'three';
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
 
 import { World } from './world';
 import { Object3D, Scene, Camera, WebGLRenderer, Texture, Vector2, Raycaster, Mesh, MeshLambertMaterial } from 'three';
@@ -16,8 +19,12 @@ export class View {
   main: HTMLElement;
   selection: HTMLElement;
 
+  perspective = false;
+
   scene: Scene;
   camera: Camera;
+  composer: EffectComposer;
+  outlinePass: OutlinePass;
   renderer: WebGLRenderer;
   raycaster: Raycaster;
   selectionBox: SelectionBox;
@@ -35,8 +42,6 @@ export class View {
 
   mouse: Vector2;
   selectStart: Vector2 | null;
-  hoverId: string | null;
-  selectedIds: Array<string>;
 
   constructor(main: HTMLElement, selection: HTMLElement, world: World) {
     this.main = main;
@@ -142,9 +147,25 @@ export class View {
     this.renderer.domElement.addEventListener('mousedown', this.onMouseDown.bind(this));
     window.addEventListener('mouseup', this.onMouseUp.bind(this));
 
-    this.hoverId = null;
     this.selectStart = null;
-    this.selectedIds = [];
+
+    this.setupRendering();
+  }
+
+  setupRendering(): void {
+    const w = this.renderer.domElement.clientWidth;
+    const h = this.renderer.domElement.clientHeight;
+
+    this.camera = this.makeCamera(this.perspective);
+    this.selectionBox = new SelectionBox(this.camera);
+    this.composer = new EffectComposer(this.renderer);
+    const renderPass = new RenderPass(this.scene, this.camera);
+    this.outlinePass = new OutlinePass(new Vector2(w, h), this.scene, this.camera);
+    this.outlinePass.visibleEdgeColor.setHex(0xffff99);
+    this.outlinePass.hiddenEdgeColor.setHex(0x333333);
+
+    this.composer.addPass(renderPass);
+    this.composer.addPass(this.outlinePass);
   }
 
   makeCamera(perspective: boolean): THREE.Camera {
@@ -165,8 +186,9 @@ export class View {
   }
 
   setPerspective(perspective: boolean): void {
-    this.camera = this.makeCamera(perspective);
-    this.selectionBox = new SelectionBox(this.camera);
+    this.perspective = perspective;
+    this.setupRendering();
+
   }
 
   makeTileObject(index: number): Mesh {
@@ -239,7 +261,7 @@ export class View {
     this.updateRenderGhosts();
     this.updateRenderShadows();
 
-    this.renderer.render(this.scene, this.camera);
+    this.composer.render();
     this.updateViewport();
   }
 
@@ -284,10 +306,11 @@ export class View {
     }
 
     const intersects = this.raycaster.intersectObjects(robjs);
-    this.hoverId = null;
+    let hovered = null;
     if (intersects.length > 0) {
-      this.hoverId = intersects[0].object.userData.id;
+      hovered = intersects[0].object.userData.id;
     }
+    this.world.onHover(hovered);
 
     const intersectsTable = this.raycaster.intersectObject(this.raycastTable);
     let tablePos = null;
@@ -295,22 +318,16 @@ export class View {
       const point = intersectsTable[0].point;
       tablePos = new Vector2(point.x, point.y);
     }
+    this.world.onMove(tablePos);
 
     if (this.selectStart !== null) {
-      this.selectedIds.splice(0);
+      const selected = [];
       for (const obj of this.selectionBox.select(robjs)) {
         const id = obj.userData.id;
-        this.selectedIds.push(id);
+        selected.push(id);
       }
+      this.world.onSelect(selected);
     }
-
-    const allSelected = [];
-    if (this.hoverId !== null && this.selectedIds.indexOf(this.hoverId)) {
-      allSelected.push(this.hoverId);
-    }
-    allSelected.push(...this.selectedIds);
-    this.world.onSelect(allSelected);
-    this.world.onMove(tablePos);
   }
 
   updateRender(): void {
@@ -318,6 +335,7 @@ export class View {
       obj.visible = false;
     }
 
+    this.outlinePass.selectedObjects = [];
     for (const render of this.world.toRender()) {
       const obj = this.objects[render.thingIndex];
       obj.visible = true;
@@ -325,21 +343,25 @@ export class View {
       obj.rotation.copy(render.rotation);
 
       const material = obj.material as MeshLambertMaterial;
-      if (render.selected) {
-        material.emissive.setHex(0x222222);
-      } else {
-        material.emissive.setHex(0);
+      material.emissive.setHex(0);
+      material.transparent = false;
+      material.depthTest = true;
+      obj.renderOrder = 0;
+
+      if (render.hovered) {
+        material.emissive.setHex(0x111111);
       }
+
+      if (render.selected) {
+        this.outlinePass.selectedObjects.push(obj);
+      }
+
       if (render.held) {
         material.transparent = true;
         material.opacity = render.temporary ? 0.7 : 1;
+        material.depthTest = false;
         obj.position.z += 2;
         obj.renderOrder = 1;
-        material.depthTest = false;
-      } else {
-        material.transparent = false;
-        obj.renderOrder = 0;
-        material.depthTest = true;
       }
     }
   }
@@ -381,14 +403,12 @@ export class View {
   }
 
   onMouseLeave(event: MouseEvent): void {
-    this.hoverId = null;
+    this.world.onHover(null);
     this.world.onMove(null);
   }
 
   onMouseDown(event: MouseEvent): void {
-    if (this.hoverId !== null) {
-      this.world.onDragStart();
-    } else {
+    if (!this.world.onDragStart()) {
       this.selectStart = this.mouse.clone();
     }
     this.updateSelect();
@@ -419,6 +439,8 @@ export class View {
       this.main.style.width = `${renderWidth}px`;
       this.main.style.height = `${renderHeight}px`;
       this.renderer.setSize(renderWidth, renderHeight);
+
+      this.setupRendering();
     }
   }
 }
