@@ -45,7 +45,7 @@ export class World {
   tablePos: Vector2 | null = null;
 
   targetSlot: string | null = null;
-  held: number | null = null;
+  held: Array<number> = [];
   heldTablePos: Vector2 | null = null;
 
   static TILE_WIDTH = 6;
@@ -150,9 +150,9 @@ export class World {
 
   onMove(tablePos: Vector2 | null): void {
     this.tablePos = tablePos;
-    if (this.held !== null) {
+    if (this.held.length > 0) {
       if (tablePos !== null && this.heldTablePos !== null) {
-        const thing = this.things[this.held];
+        const thing = this.things[this.held[0]];
         const place = this.slotPlace(thing.slotName);
         place.position.x += this.tablePos.x - this.heldTablePos.x;
         place.position.y += this.tablePos.y - this.heldTablePos.y;
@@ -169,7 +169,7 @@ export class World {
     // Empty slots
     for (const slotName in this.slots) {
       const slot = this.slots[slotName];
-      if (slot.thingIndex !== null && slot.thingIndex !== this.held) {
+      if (slot.thingIndex !== null && this.held.indexOf(slot.thingIndex) === -1) {
         continue;
       }
       const shadow = this.slotShadow(slotName);
@@ -186,7 +186,14 @@ export class World {
 
   onDragStart(): boolean {
     if (this.hovered !== null) {
-      this.held = this.hovered;
+      this.held.splice(0);
+
+      if (this.selected.indexOf(this.hovered)) {
+        this.held.push(...this.selected);
+      } else {
+        this.held.push(this.hovered);
+        this.selected.splice(0);
+      }
       this.hovered = null;
       this.heldTablePos = this.tablePos;
       this.targetSlot = null;
@@ -196,15 +203,15 @@ export class World {
   }
 
   onDragEnd(): void {
-    if (this.held !== null) {
+    if (this.held.length > 0) {
       if (this.targetSlot !== null) {
-        const oldSlotName = this.things[this.held].slotName;
-        this.things[this.held].slotName = this.targetSlot;
+        const oldSlotName = this.things[this.held[0]].slotName;
+        this.things[this.held[0]].slotName = this.targetSlot;
         this.slots[oldSlotName].thingIndex = null;
-        this.slots[this.targetSlot].thingIndex = this.held;
+        this.slots[this.targetSlot].thingIndex = this.held[0];
       }
     }
-    this.held = null;
+    this.held.splice(0);
     this.targetSlot = null;
   }
 
@@ -213,8 +220,9 @@ export class World {
     for (let i = 0; i < this.things.length; i++) {
       const thing = this.things[i];
       const place = this.slotPlace(thing.slotName);
+      const held = this.held.indexOf(i) !== -1;
 
-      if (i === this.held && this.tablePos !== null && this.heldTablePos !== null) {
+      if (held && this.tablePos !== null && this.heldTablePos !== null) {
         place.position.x += this.tablePos.x - this.heldTablePos.x;
         place.position.y += this.tablePos.y - this.heldTablePos.y;
       }
@@ -222,8 +230,7 @@ export class World {
       const selected = this.selected.indexOf(i) !== -1;
       const hovered = i === this.hovered ||
         (selected && this.selected.indexOf(this.hovered) !== -1);
-      const held = i === this.held;
-      const temporary = i === this.held && this.targetSlot === null;
+      const temporary = held && this.targetSlot === null;
 
       result.push({
         ...place,
@@ -254,7 +261,7 @@ export class World {
 
   toSelect(): Array<Select> {
     const result = [];
-    if (this.held === null) {
+    if (this.held.length === 0) {
       // Things
       for (let i = 0; i < this.things.length; i++) {
         const thing = this.things[i];
