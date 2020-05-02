@@ -3,6 +3,7 @@ import { Vector2, Euler, Vector3, Quaternion } from "three";
 interface Slot {
   position: Vector2;
   rotation: Euler;
+  thingIndex: number | null;
 }
 
 interface Thing {
@@ -61,6 +62,7 @@ export class World {
           World.TILE_DEPTH/2,
         ),
         rotation: new Euler(Math.PI / 2, 0, 0),
+        thingIndex: null,
       };
     }
 
@@ -83,6 +85,7 @@ export class World {
           24 + World.TILE_HEIGHT/2,
         ),
         rotation: new Euler(Math.PI, 0, 0),
+        thingIndex: null,
       };
     }
 
@@ -95,6 +98,7 @@ export class World {
             60 - i * World.TILE_HEIGHT + World.TILE_HEIGHT/2,
           ),
           rotation: new Euler(0, 0, 0),
+          thingIndex: null,
         };
       }
     }
@@ -109,24 +113,29 @@ export class World {
       this.slots[`${slotName}.1`] = {
         position: new Vector2(World.WIDTH - slot.position.y, slot.position.x),
         rotation: new Euler().setFromQuaternion(rot),
+        thingIndex: null,
       };
       rot.premultiply(step);
       this.slots[`${slotName}.2`] = {
         position: new Vector2(World.WIDTH - slot.position.x, World.WIDTH - slot.position.y),
         rotation: new Euler().setFromQuaternion(rot),
+        thingIndex: null,
       };
       rot.premultiply(step);
       this.slots[`${slotName}.3`] = {
         position: new Vector2(slot.position.y, World.WIDTH - slot.position.x),
         rotation: new Euler().setFromQuaternion(rot),
+        thingIndex: null,
       };
     }
 
     this.things = [];
     for (let i = 0; i < 17; i++) {
       for (let j = 0; j < 4; j++) {
+        const index = j * 17 + i;
         const slotName = `wall.${i}.${j}`;
-        this.things.push({ type: 'tile', index: i, slotName });
+        this.things[index] = { type: 'tile', index: i, slotName };
+        this.slots[slotName].thingIndex = index;
       }
     }
 
@@ -140,8 +149,7 @@ export class World {
     if (this.held !== null) {
       if (tablePos !== null && this.heldTablePos !== null) {
         const thing = this.things[this.held];
-        const slot = this.slots[thing.slotName];
-        const place = this.slotPlace(slot);
+        const place = this.slotPlace(thing.slotName);
         place.position.x += this.tablePos.x - this.heldTablePos.x;
         place.position.y += this.tablePos.y - this.heldTablePos.y;
 
@@ -159,20 +167,11 @@ export class World {
 
     // Empty slots
     for (const slotName in this.slots) {
-      // TODO cache that
-      let occupied = false;
-      for (const thing of this.things) {
-        if (thing.slotName === slotName && thing !== this.things[this.held]) {
-          occupied = true;
-          break;
-        }
-      }
-      if (occupied) {
+      const slot = this.slots[slotName];
+      if (slot.thingIndex !== null && slot.thingIndex !== this.held) {
         continue;
       }
-
-      const slot = this.slots[slotName];
-      const shadow = this.slotShadow(slot);
+      const shadow = this.slotShadow(slotName);
       const dx = Math.abs(x - slot.position.x) - shadow.width/2;
       const dy = Math.abs(y - slot.position.y) - shadow.height/2;
       const distance = Math.max(0, dx, dy);
@@ -196,7 +195,10 @@ export class World {
   onMouseUp(): void {
     if (this.held !== null) {
       if (this.targetSlot !== null) {
+        const oldSlotName = this.things[this.held].slotName;
         this.things[this.held].slotName = this.targetSlot;
+        this.slots[oldSlotName].thingIndex = null;
+        this.slots[this.targetSlot].thingIndex = this.held;
       }
     }
     this.held = null;
@@ -207,18 +209,11 @@ export class World {
     const result = [];
     for (let i = 0; i < this.things.length; i++) {
       const thing = this.things[i];
-      const slot = this.slots[thing.slotName];
-      const place = this.slotPlace(slot);
+      const place = this.slotPlace(thing.slotName);
 
       if (i === this.held && this.tablePos !== null && this.heldTablePos !== null) {
         place.position.x += this.tablePos.x - this.heldTablePos.x;
         place.position.y += this.tablePos.y - this.heldTablePos.y;
-
-        // if (this.targetSlot !== null) {
-        //   const slotPlace = this.slotPlace(this.slots[this.targetSlot]);
-        //   place.rotation = slotPlace.rotation;
-        //   place.position.z = slotPlace.position.z;
-        // }
       }
 
       result.push({
@@ -249,20 +244,20 @@ export class World {
 
   toSelect(): Array<Select> {
     const result = [];
-    if (this.held !== null) {
-
-    } else {
+    if (this.held === null) {
       // Things
       for (let i = 0; i < this.things.length; i++) {
         const thing = this.things[i];
-        const place = this.slotPlace(this.slots[thing.slotName]);
+        const place = this.slotPlace(thing.slotName);
         result.push({...place, id: `${i}`});
       }
     }
     return result;
   }
 
-  slotPlace(slot: Slot): Place {
+  slotPlace(slotName: string): Place {
+    const slot = this.slots[slotName];
+
     const xv = new Vector3(0, 0, World.TILE_DEPTH).applyEuler(slot.rotation);
     const yv = new Vector3(0, World.TILE_HEIGHT, 0).applyEuler(slot.rotation);
     const zv = new Vector3(World.TILE_WIDTH, 0, 0).applyEuler(slot.rotation);
@@ -278,7 +273,7 @@ export class World {
   toRenderPlaces(): Array<Shadow> {
     const result = [];
     for (const slotName in this.slots) {
-      result.push(this.slotShadow(this.slots[slotName]));
+      result.push(this.slotShadow(slotName));
     }
     return result;
   }
@@ -286,12 +281,14 @@ export class World {
   toRenderShadows(): Array<Shadow> {
     const result = [];
     if (this.targetSlot !== null) {
-      result.push(this.slotShadow(this.slots[this.targetSlot]));
+      result.push(this.slotShadow(this.targetSlot));
     }
     return result;
   }
 
-  slotShadow(slot: Slot): Shadow {
+  slotShadow(slotName: string): Shadow {
+    const slot = this.slots[slotName];
+
     const xv = new Vector3(0, 0, World.TILE_DEPTH).applyEuler(slot.rotation);
     const yv = new Vector3(0, World.TILE_HEIGHT, 0).applyEuler(slot.rotation);
     const zv = new Vector3(World.TILE_WIDTH, 0, 0).applyEuler(slot.rotation);
