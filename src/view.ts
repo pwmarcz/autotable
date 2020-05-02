@@ -22,12 +22,14 @@ export class View {
   perspective = false;
 
   scene: Scene;
-  camera: Camera;
-  composer: EffectComposer;
-  outlinePass: OutlinePass;
   renderer: WebGLRenderer;
   raycaster: Raycaster;
-  selectionBox: SelectionBox;
+
+  // Setup in setupRendering()
+  camera: Camera = null!;
+  composer: EffectComposer = null!;
+  outlinePass: OutlinePass = null!;
+  selectionBox: SelectionBox = null!;
 
   objects: Array<Mesh>;
   ghostObjects: Array<Mesh>;
@@ -36,8 +38,8 @@ export class View {
   raycastTable: Object3D;
   tileTexture: Texture;
 
-  width: number;
-  height: number;
+  width = 0;
+  height = 0;
   static RATIO = 1.5;
 
   mouse: Vector2;
@@ -50,13 +52,10 @@ export class View {
     this.objects = [];
 
     this.scene = new THREE.Scene();
-    this.camera = this.makeCamera(false);
-    this.selectionBox = new SelectionBox(this.camera);
 
     this.raycaster = new THREE.Raycaster();
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
-    this.renderer.setSize(this.width, this.height);
     main.appendChild(this.renderer.domElement);
 
     const tableTexture = new THREE.TextureLoader().load(tableJpg);
@@ -421,11 +420,11 @@ export class View {
   }
 
   updateViewport(): void {
-    if (this.main.parentElement.clientWidth !== this.width ||
-      this.main.parentElement.clientHeight !== this.height) {
+    if (this.main.parentElement!.clientWidth !== this.width ||
+      this.main.parentElement!.clientHeight !== this.height) {
 
-      this.width = this.main.parentElement.clientWidth;
-      this.height = this.main.parentElement.clientHeight;
+      this.width = this.main.parentElement!.clientWidth;
+      this.height = this.main.parentElement!.clientHeight;
 
       let renderWidth: number, renderHeight: number;
 

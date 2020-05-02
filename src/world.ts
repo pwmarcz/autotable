@@ -151,7 +151,7 @@ export class World {
   onMove(tablePos: Vector2 | null): void {
     this.tablePos = tablePos;
     if (this.held.length > 0) {
-      if (tablePos !== null && this.heldTablePos !== null) {
+      if (this.tablePos !== null && this.heldTablePos !== null) {
         const thing = this.things[this.held[0]];
         const place = this.slotPlace(thing.slotName);
         place.position.x += this.tablePos.x - this.heldTablePos.x;
@@ -229,7 +229,7 @@ export class World {
 
       const selected = this.selected.indexOf(i) !== -1;
       const hovered = i === this.hovered ||
-        (selected && this.selected.indexOf(this.hovered) !== -1);
+        (selected && this.selected.indexOf(this.hovered!) !== -1);
       const temporary = held && this.targetSlot === null;
 
       result.push({
@@ -245,7 +245,7 @@ export class World {
   }
 
   toRenderGhosts(): Array<Render> {
-    const result = [];
+    const result: Array<Render> = [];
     // if (this.targetSlot !== null) {
     //   const thingIndex = this.held;
     //   const place = this.slotPlace(this.slots[this.targetSlot]);

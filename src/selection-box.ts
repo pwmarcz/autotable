@@ -161,7 +161,7 @@ export class SelectionBox {
           object.geometry.computeBoundingBox();
         }
 
-        box.copy(object.geometry.boundingBox);
+        box.copy(object.geometry.boundingBox!);
         box.applyMatrix4(object.matrixWorld);
 
         if (this.frustum.intersectsBox(box)) {
