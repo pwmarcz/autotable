@@ -188,7 +188,7 @@ export class World {
     if (this.hovered !== null) {
       this.held.splice(0);
 
-      if (this.selected.indexOf(this.hovered)) {
+      if (this.selected.indexOf(this.hovered) !== -1) {
         this.held.push(...this.selected);
       } else {
         this.held.push(this.hovered);
