@@ -359,7 +359,7 @@ export class View {
         material.transparent = true;
         material.opacity = render.temporary ? 0.7 : 1;
         material.depthTest = false;
-        obj.position.z += 2;
+        obj.position.z += 1;
         obj.renderOrder = 1;
       }
     }
