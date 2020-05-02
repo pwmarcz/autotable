@@ -44,7 +44,7 @@ export class World {
   selected: Array<number> = [];
   tablePos: Vector2 | null = null;
 
-  targetSlot: string | null = null;
+  targetSlots: Array<string | null> = [];
   held: Array<number> = [];
   heldTablePos: Vector2 | null = null;
 
@@ -150,14 +150,18 @@ export class World {
 
   onMove(tablePos: Vector2 | null): void {
     this.tablePos = tablePos;
-    if (this.held.length > 0) {
-      if (this.tablePos !== null && this.heldTablePos !== null) {
-        const thing = this.things[this.held[0]];
+    if (this.tablePos !== null && this.heldTablePos !== null) {
+      for (let i = 0; i < this.held.length; i++) {
+        this.targetSlots[i] = null;
+      }
+
+      for (let i = 0; i < this.held.length; i++) {
+        const thing = this.things[this.held[i]];
         const place = this.slotPlace(thing.slotName);
         place.position.x += this.tablePos.x - this.heldTablePos.x;
         place.position.y += this.tablePos.y - this.heldTablePos.y;
 
-        this.targetSlot = this.findSlot(place.position.x, place.position.y);
+        this.targetSlots[i] = this.findSlot(place.position.x, place.position.y);
       }
     }
   }
@@ -170,6 +174,10 @@ export class World {
     for (const slotName in this.slots) {
       const slot = this.slots[slotName];
       if (slot.thingIndex !== null && this.held.indexOf(slot.thingIndex) === -1) {
+        continue;
+      }
+      // Already proposed for another thing
+      if (this.targetSlots.indexOf(slotName) !== -1) {
         continue;
       }
       const shadow = this.slotShadow(slotName);
@@ -196,7 +204,12 @@ export class World {
       }
       this.hovered = null;
       this.heldTablePos = this.tablePos;
-      this.targetSlot = null;
+
+      this.targetSlots.length = this.held.length;
+      for (let i = 0; i < this.held.length; i++) {
+        this.targetSlots[i] = null;
+      }
+
       return true;
     }
     return false;
@@ -204,15 +217,19 @@ export class World {
 
   onDragEnd(): void {
     if (this.held.length > 0) {
-      if (this.targetSlot !== null) {
-        const oldSlotName = this.things[this.held[0]].slotName;
-        this.things[this.held[0]].slotName = this.targetSlot;
-        this.slots[oldSlotName].thingIndex = null;
-        this.slots[this.targetSlot].thingIndex = this.held[0];
+      if (this.targetSlots.every(s => s !== null)) {
+        for (let i = 0; i < this.held.length; i++) {
+          const oldSlotName = this.things[this.held[i]].slotName;
+          this.slots[oldSlotName].thingIndex = null;
+        }
+        for (let i = 0; i < this.held.length; i++) {
+          this.things[this.held[i]].slotName = this.targetSlots[i]!;
+          this.slots[this.targetSlots[i]!].thingIndex = this.held[0];
+        }
       }
     }
     this.held.splice(0);
-    this.targetSlot = null;
+    this.targetSlots.splice(0);
   }
 
   toRender(): Array<Render> {
@@ -220,7 +237,8 @@ export class World {
     for (let i = 0; i < this.things.length; i++) {
       const thing = this.things[i];
       const place = this.slotPlace(thing.slotName);
-      const held = this.held.indexOf(i) !== -1;
+      const heldIndex = this.held.indexOf(i);
+      const held = heldIndex !== -1;
 
       if (held && this.tablePos !== null && this.heldTablePos !== null) {
         place.position.x += this.tablePos.x - this.heldTablePos.x;
@@ -230,7 +248,7 @@ export class World {
       const selected = this.selected.indexOf(i) !== -1;
       const hovered = i === this.hovered ||
         (selected && this.selected.indexOf(this.hovered!) !== -1);
-      const temporary = held && this.targetSlot === null;
+      const temporary = held && this.targetSlots[heldIndex] === null;
 
       result.push({
         ...place,
@@ -297,8 +315,10 @@ export class World {
 
   toRenderShadows(): Array<Shadow> {
     const result = [];
-    if (this.targetSlot !== null) {
-      result.push(this.slotShadow(this.targetSlot));
+    for (const slotName of this.targetSlots) {
+      if (slotName !== null) {
+        result.push(this.slotShadow(slotName));
+      }
     }
     return result;
   }
