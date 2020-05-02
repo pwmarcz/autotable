@@ -4,6 +4,9 @@ interface Slot {
   position: Vector2;
   rotation: Euler;
   thingIndex: number | null;
+  tempThingIndex: number | null;
+  shiftNext: string | null;
+  shiftPrev: string | null;
 }
 
 interface Thing {
@@ -55,16 +58,34 @@ export class World {
   static HEIGHT = 174;
 
   constructor() {
-    const baseSlots: Record<string, Slot> = {};
+    this.addSlots();
+
+    for (let i = 0; i < 17; i++) {
+      for (let j = 0; j < 4; j++) {
+        const index = j * 17 + i;
+        const slotName = `wall.${i}.${j}`;
+        this.things[index] = { type: 'tile', index: i, slotName };
+        this.slots[slotName].thingIndex = index;
+      }
+    }
+  }
+
+  addSlots(): void {
+    const defaults = {
+      thingIndex: null,
+      tempThingIndex: null,
+      shiftNext: null,
+      shiftPrev: null,
+    };
     for (let i = 0; i < 14; i++) {
-      baseSlots[`hand.${i}`] = {
+      this.addSlot(`hand.${i}`, {
+        ...defaults,
         position: new Vector2(
           46 + i*World.TILE_WIDTH + World.TILE_WIDTH/2,
           World.TILE_DEPTH/2,
         ),
         rotation: new Euler(Math.PI / 2, 0, 0),
-        thingIndex: null,
-      };
+      });
     }
 
     /*
@@ -80,64 +101,59 @@ export class World {
     */
 
     for (let i = 0; i < 17; i++) {
-      baseSlots[`wall.${i}`] = {
+      this.addSlot(`wall.${i}`, {
+        ...defaults,
         position: new Vector2(
           36 + i * World.TILE_WIDTH + World.TILE_WIDTH / 2,
           24 + World.TILE_HEIGHT/2,
         ),
         rotation: new Euler(Math.PI, 0, 0),
-        thingIndex: null,
-      };
+      });
     }
 
     for (let i = 0; i < 3; i++) {
       for (let j = 0; j < 6; j++) {
         const n = 6 * i + j;
-        baseSlots[`discard.${n}`] = {
+        this.addSlot(`discard.${n}`, {
+          ...defaults,
           position: new Vector2(
             69 + j * World.TILE_WIDTH + World.TILE_WIDTH / 2,
             60 - i * World.TILE_HEIGHT + World.TILE_HEIGHT/2,
           ),
           rotation: new Euler(0, 0, 0),
-          thingIndex: null,
-        };
+        });
       }
     }
+  }
 
-    for (const slotName in baseSlots) {
-      const slot = baseSlots[slotName];
-      const rot = new Quaternion().setFromEuler(slot.rotation);
-      const step = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI/2);
+  addSlot(slotName: string, slot: Slot): void {
+    const rot = new Quaternion();
+    const step = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI/2);
 
-      this.slots[`${slotName}.0`] = slot;
-      rot.premultiply(step);
-      this.slots[`${slotName}.1`] = {
-        position: new Vector2(World.WIDTH - slot.position.y, slot.position.x),
-        rotation: new Euler().setFromQuaternion(rot),
-        thingIndex: null,
-      };
-      rot.premultiply(step);
-      this.slots[`${slotName}.2`] = {
-        position: new Vector2(World.WIDTH - slot.position.x, World.WIDTH - slot.position.y),
-        rotation: new Euler().setFromQuaternion(rot),
-        thingIndex: null,
-      };
-      rot.premultiply(step);
-      this.slots[`${slotName}.3`] = {
-        position: new Vector2(slot.position.y, World.WIDTH - slot.position.x),
-        rotation: new Euler().setFromQuaternion(rot),
-        thingIndex: null,
-      };
-    }
+    this.addRotatedSlot(slotName, '.0', slot, rot);
+    rot.premultiply(step);
+    this.addRotatedSlot(slotName, '.1', slot, rot);
+    rot.premultiply(step);
+    this.addRotatedSlot(slotName, '.2', slot, rot);
+    rot.premultiply(step);
+    this.addRotatedSlot(slotName, '.3', slot, rot);
+  }
 
-    for (let i = 0; i < 17; i++) {
-      for (let j = 0; j < 4; j++) {
-        const index = j * 17 + i;
-        const slotName = `wall.${i}.${j}`;
-        this.things[index] = { type: 'tile', index: i, slotName };
-        this.slots[slotName].thingIndex = index;
-      }
-    }
+  addRotatedSlot(slotName: string, suffix: string, slot: Slot, rot: Quaternion): void {
+    const newSlot = {...slot};
+
+    const pos = new Vector3(
+      slot.position.x - World.WIDTH / 2,
+      slot.position.y - World.HEIGHT / 2,
+    );
+    pos.applyQuaternion(rot);
+    newSlot.position = new Vector2(pos.x + World.WIDTH / 2, pos.y + World.HEIGHT / 2);
+
+    const slotRot = new Quaternion().setFromEuler(slot.rotation);
+    slotRot.premultiply(rot);
+    newSlot.rotation = new Euler().setFromQuaternion(slotRot);
+
+    this.slots[slotName + suffix] = newSlot;
   }
 
   onHover(id: any): void {
