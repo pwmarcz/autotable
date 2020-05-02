@@ -256,13 +256,13 @@ export class View {
 
   draw(): void {
     requestAnimationFrame(this.draw.bind(this));
+    this.updateViewport();
 
     this.updateRender();
     this.updateRenderGhosts();
     this.updateRenderShadows();
 
     this.composer.render();
-    this.updateViewport();
   }
 
   updateSelect(): void {
