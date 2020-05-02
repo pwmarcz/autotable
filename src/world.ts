@@ -141,7 +141,9 @@ export class World {
   }
 
   onHover(id: any): void {
-    this.hovered = id as number;
+    if (this.held.length === 0) {
+      this.hovered = id as number | null;
+    }
   }
 
   onSelect(ids: Array<any>): void {
@@ -202,7 +204,7 @@ export class World {
         this.held.push(this.hovered);
         this.selected.splice(0);
       }
-      this.hovered = null;
+      // this.hovered = null;
       this.heldTablePos = this.tablePos;
 
       this.targetSlots.length = this.held.length;
@@ -217,7 +219,15 @@ export class World {
 
   onDragEnd(): void {
     if (this.held.length > 0) {
-      if (this.targetSlots.every(s => s !== null)) {
+      if (this.heldTablePos !== null && this.tablePos !== null &&
+        // No movement; unselect
+        this.heldTablePos.equals(this.tablePos)) {
+        this.selected.splice(0);
+        // if (this.hovered !== null) {
+        //   this.selected.push(this.hovered);
+        // }
+      } else if (this.targetSlots.every(s => s !== null)) {
+        // Successful movement
         for (let i = 0; i < this.held.length; i++) {
           const oldSlotName = this.things[this.held[i]].slotName;
           this.slots[oldSlotName].thingIndex = null;
