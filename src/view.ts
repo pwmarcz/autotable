@@ -12,7 +12,9 @@ import { Object3D, Scene, Camera, WebGLRenderer, Texture, Vector2, Raycaster, Me
 export class View {
   world: World;
 
-  main: Element;
+  main: HTMLElement;
+  selection: HTMLElement;
+
   scene: Scene;
   camera: Camera;
   renderer: WebGLRenderer;
@@ -28,10 +30,14 @@ export class View {
   width: number;
   height: number;
   static RATIO = 1.5;
-  mouse: Vector2;
 
-  constructor(main: Element, world: World) {
+  mouse: Vector2;
+  selectStart: Vector2 | null;
+  hoverId: string | null;
+
+  constructor(main: HTMLElement, selection: HTMLElement, world: World) {
     this.main = main;
+    this.selection = selection;
     this.world = world;
     this.objects = [];
 
@@ -130,6 +136,9 @@ export class View {
     this.renderer.domElement.addEventListener('mouseleave', this.onMouseLeave.bind(this));
     this.renderer.domElement.addEventListener('mousedown', this.onMouseDown.bind(this));
     window.addEventListener('mouseup', this.onMouseUp.bind(this));
+
+    this.hoverId = null;
+    this.selectStart = null;
   }
 
   makeCamera(perspective: boolean): THREE.Camera {
@@ -231,6 +240,29 @@ export class View {
     const toSelect = this.world.toSelect();
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
+    if (this.selectStart !== null) {
+      const w = this.renderer.domElement.clientWidth;
+      const h = this.renderer.domElement.clientHeight;
+
+      const x1 = Math.min(this.selectStart.x, this.mouse.x);
+      const y1 = Math.min(this.selectStart.y, this.mouse.y);
+      const x2 = Math.max(this.selectStart.x, this.mouse.x);
+      const y2 = Math.max(this.selectStart.y, this.mouse.y);
+
+      const sx1 = (x1 + 1) * w / 2;
+      const sx2 = (x2 + 1) * w / 2;
+      const sy1 = (-y2 + 1) * h / 2;
+      const sy2 = (-y1 + 1) * h / 2;
+
+      this.selection.style.left = `${sx1}px`;
+      this.selection.style.top = `${sy1}px`;
+      this.selection.style.width = `${sx2-sx1}px`;
+      this.selection.style.height = `${sy2-sy1}px`;
+      this.selection.style.visibility = 'visible';
+    } else {
+      this.selection.style.visibility = 'hidden';
+    }
+
     const robjs = [];
     for (let i = 0; i < toSelect.length; i++) {
       const select = toSelect[i];
@@ -243,9 +275,9 @@ export class View {
     }
 
     const intersects = this.raycaster.intersectObjects(robjs);
-    let id = null;
+    this.hoverId = null;
     if (intersects.length > 0) {
-      id = intersects[0].object.userData.id;
+      this.hoverId = intersects[0].object.userData.id;
     }
 
     const intersectsTable = this.raycaster.intersectObject(this.raycastTable);
@@ -255,7 +287,7 @@ export class View {
       tablePos = new Vector2(point.x, point.y);
     }
 
-    this.world.onSelect(id, tablePos);
+    this.world.onSelect(this.hoverId, tablePos);
   }
 
   updateRender(): void {
@@ -326,25 +358,31 @@ export class View {
   }
 
   onMouseLeave(event: MouseEvent): void {
+    this.hoverId = null;
     this.world.onSelect(null, null);
   }
 
   onMouseDown(event: MouseEvent): void {
-    this.world.onMouseDown();
+    if (this.hoverId !== null) {
+      this.world.onMouseDown();
+    } else {
+      this.selectStart = this.mouse.clone();
+    }
     this.updateSelect();
   }
 
   onMouseUp(event: MouseEvent): void {
+    this.selectStart = null;
     this.world.onMouseUp();
     this.updateSelect();
   }
 
   updateViewport(): void {
-    if (this.main.clientWidth !== this.width ||
-      this.main.clientHeight !== this.height) {
+    if (this.main.parentElement.clientWidth !== this.width ||
+      this.main.parentElement.clientHeight !== this.height) {
 
-      this.width = this.main.clientWidth;
-      this.height = this.main.clientHeight;
+      this.width = this.main.parentElement.clientWidth;
+      this.height = this.main.parentElement.clientHeight;
 
       let renderWidth: number, renderHeight: number;
 
@@ -355,6 +393,8 @@ export class View {
         renderWidth = Math.floor(this.width);
         renderHeight = Math.floor(this.width / View.RATIO);
       }
+      this.main.style.width = `${renderWidth}px`;
+      this.main.style.height = `${renderHeight}px`;
       this.renderer.setSize(renderWidth, renderHeight);
     }
   }

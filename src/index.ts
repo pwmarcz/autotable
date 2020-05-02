@@ -3,9 +3,10 @@ import { World } from './world';
 import { View } from './view';
 
 const main = document.getElementById('main');
+const selection = document.getElementById('selection');
 
 const world = new World();
-const view = new View(main, world);
+const view = new View(main, selection, world);
 
 // Debugging
 window['world'] = world;

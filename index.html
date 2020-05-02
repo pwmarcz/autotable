@@ -5,8 +5,8 @@
             color: #ddd;
         }
 
-        #main {
-            position:fixed;
+        #full {
+            position: fixed;
             top: 0;
             bottom: 0;
             left: 0;
@@ -14,13 +14,27 @@
             background-color: #222;
         }
 
-        #main canvas {
+        #main {
             display: block;
             margin: auto;
+            position: relative;
+        }
+
+        #selection {
+            position: absolute;
+            /* top: 100px;
+            left: 100px;
+            width: 200px;
+            height: 200px; */
+            z-index: 1;
+            border: 1px solid rgba(160, 85, 0, 0.8);
+            background-color: rgba(160, 85, 0, 0.2);
+            pointer-events: none;
+            visibility: hidden;
         }
 
         #settings {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
             padding: 0 1em 1em 1em;
@@ -30,13 +44,17 @@
     </style>
 </head>
 <body>
-    <div id="main"></div>
-    <div id="settings">
-        <p><b>Settings</b></p>
-        <label>
-            <input type="checkbox" id="perspective">
-            Perspective mode
-        </label>
+    <div id="full">
+        <div id="main">
+            <div id="selection"></div>
+        </div>
+        <div id="settings">
+            <p><b>Settings</b></p>
+            <label>
+                <input type="checkbox" id="perspective">
+                Perspective mode
+            </label>
+        </div>
     </div>
     <script src="./src/index.ts"></script>
 </body>
