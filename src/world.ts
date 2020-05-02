@@ -214,11 +214,11 @@ export class World {
         place.position.x += this.tablePos.x - this.heldTablePos.x;
         place.position.y += this.tablePos.y - this.heldTablePos.y;
 
-        if (this.targetSlot !== null) {
-          const slotPlace = this.slotPlace(this.slots[this.targetSlot]);
-          place.rotation = slotPlace.rotation;
-          place.position.z = slotPlace.position.z;
-        }
+        // if (this.targetSlot !== null) {
+        //   const slotPlace = this.slotPlace(this.slots[this.targetSlot]);
+        //   place.rotation = slotPlace.rotation;
+        //   place.position.z = slotPlace.position.z;
+        // }
       }
 
       result.push({
