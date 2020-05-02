@@ -39,7 +39,7 @@ export class World {
   slots: Record<string, Slot>;
   things: Array<Thing>;
 
-  selected: number | null;
+  selected: Array<number>;
   tablePos: Vector2 | null;
 
   targetSlot: string | null;
@@ -139,12 +139,19 @@ export class World {
       }
     }
 
-    this.selected = null;
+    this.selected = [];
     this.held = null;
     this.targetSlot = null;
   }
 
-  onSelect(id: string | null, tablePos: Vector2 | null): void {
+  onSelect(ids: Array<string>): void {
+    this.selected.splice(0);
+    for (const id of ids) {
+      this.selected.push(parseInt(id, 10));
+    }
+  }
+
+  onMove(tablePos: Vector2 | null): void {
     this.tablePos = tablePos;
     if (this.held !== null) {
       if (tablePos !== null && this.heldTablePos !== null) {
@@ -155,9 +162,6 @@ export class World {
 
         this.targetSlot = this.findSlot(place.position.x, place.position.y);
       }
-    } else {
-      const index = parseInt(id, 10);
-      this.selected = isNaN(index) ? null : index;
     }
   }
 
@@ -183,16 +187,16 @@ export class World {
     return bestSlot;
   }
 
-  onMouseDown(): void {
-    if (this.selected !== null) {
-      this.held = this.selected;
+  onDragStart(): void {
+    if (this.selected.length > 0) {
+      this.held = this.selected[0];
       this.heldTablePos = this.tablePos;
     }
-    this.selected = null;
+    this.selected.splice(0);
     this.targetSlot = null;
   }
 
-  onMouseUp(): void {
+  onDragEnd(): void {
     if (this.held !== null) {
       if (this.targetSlot !== null) {
         const oldSlotName = this.things[this.held].slotName;
@@ -219,7 +223,7 @@ export class World {
       result.push({
         ...place,
         thingIndex: i,
-        selected: i === this.selected,
+        selected: this.selected.indexOf(i) !== -1,
         held: i === this.held,
         temporary: i === this.held && this.targetSlot === null,
       });

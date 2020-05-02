@@ -8,6 +8,7 @@ import * as THREE from 'three';
 
 import { World } from './world';
 import { Object3D, Scene, Camera, WebGLRenderer, Texture, Vector2, Raycaster, Mesh, MeshLambertMaterial } from 'three';
+import { SelectionBox } from './selection-box';
 
 export class View {
   world: World;
@@ -19,11 +20,12 @@ export class View {
   camera: Camera;
   renderer: WebGLRenderer;
   raycaster: Raycaster;
+  selectionBox: SelectionBox;
 
   objects: Array<Mesh>;
   ghostObjects: Array<Mesh>;
   shadows: Array<Mesh>;
-  raycastObjects: Array<Object3D>;
+  raycastObjects: Array<Mesh>;
   raycastTable: Object3D;
   tileTexture: Texture;
 
@@ -34,6 +36,7 @@ export class View {
   mouse: Vector2;
   selectStart: Vector2 | null;
   hoverId: string | null;
+  selectedIds: Array<string>;
 
   constructor(main: HTMLElement, selection: HTMLElement, world: World) {
     this.main = main;
@@ -43,6 +46,7 @@ export class View {
 
     this.scene = new THREE.Scene();
     this.camera = this.makeCamera(false);
+    this.selectionBox = new SelectionBox(this.camera);
 
     this.raycaster = new THREE.Raycaster();
 
@@ -114,6 +118,7 @@ export class View {
         World.TILE_DEPTH)
       );
       robj.visible = false;
+      robj.geometry.computeBoundingBox();
       this.raycastObjects.push(robj);
       this.scene.add(robj);
     }
@@ -139,6 +144,7 @@ export class View {
 
     this.hoverId = null;
     this.selectStart = null;
+    this.selectedIds = [];
   }
 
   makeCamera(perspective: boolean): THREE.Camera {
@@ -160,6 +166,7 @@ export class View {
 
   setPerspective(perspective: boolean): void {
     this.camera = this.makeCamera(perspective);
+    this.selectionBox = new SelectionBox(this.camera);
   }
 
   makeTileObject(index: number): Mesh {
@@ -259,6 +266,8 @@ export class View {
       this.selection.style.width = `${sx2-sx1}px`;
       this.selection.style.height = `${sy2-sy1}px`;
       this.selection.style.visibility = 'visible';
+
+      this.selectionBox.update(new Vector2(x1, y1), new Vector2(x2, y2));
     } else {
       this.selection.style.visibility = 'hidden';
     }
@@ -287,7 +296,21 @@ export class View {
       tablePos = new Vector2(point.x, point.y);
     }
 
-    this.world.onSelect(this.hoverId, tablePos);
+    if (this.selectStart !== null) {
+      this.selectedIds.splice(0);
+      for (const obj of this.selectionBox.select(robjs)) {
+        const id = obj.userData.id;
+        this.selectedIds.push(id);
+      }
+    }
+
+    const allSelected = [];
+    if (this.hoverId !== null && this.selectedIds.indexOf(this.hoverId)) {
+      allSelected.push(this.hoverId);
+    }
+    allSelected.push(...this.selectedIds);
+    this.world.onSelect(allSelected);
+    this.world.onMove(tablePos);
   }
 
   updateRender(): void {
@@ -359,12 +382,12 @@ export class View {
 
   onMouseLeave(event: MouseEvent): void {
     this.hoverId = null;
-    this.world.onSelect(null, null);
+    this.world.onMove(null);
   }
 
   onMouseDown(event: MouseEvent): void {
     if (this.hoverId !== null) {
-      this.world.onMouseDown();
+      this.world.onDragStart();
     } else {
       this.selectStart = this.mouse.clone();
     }
@@ -373,7 +396,7 @@ export class View {
 
   onMouseUp(event: MouseEvent): void {
     this.selectStart = null;
-    this.world.onMouseUp();
+    this.world.onDragEnd();
     this.updateSelect();
   }
 
