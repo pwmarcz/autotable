@@ -7,6 +7,7 @@ interface Slot {
   tempThingIndex: number | null;
   shiftNext: string | null;
   shiftPrev: string | null;
+  drawShadow: boolean;
 }
 
 interface Thing {
@@ -68,11 +69,12 @@ export class World {
     for (let i = 0; i < 17; i++) {
       for (let j = 0; j < 4; j++) {
         const index = j * 17 + i;
+        const tile = 17 + Math.floor(index / 4);
         const slotName = `wall.${i}.${j}`;
         const place = this.slotPlace(slotName, 0);
         this.things[index] = {
           type: 'tile',
-          index: index % 34,
+          index: tile,
           slotName,
           place,
           rotationIndex: 0,
@@ -88,6 +90,7 @@ export class World {
       tempThingIndex: null,
       shiftNext: null,
       shiftPrev: null,
+      drawShadow: true,
     };
     for (let i = 0; i < 14; i++) {
       this.addSlot(`hand.${i}`, {
@@ -100,17 +103,22 @@ export class World {
       });
     }
 
-    /*
-    for (let i = 0; i < 12; i++) {
-      baseSlots[`meld.${i}`] = {
-        position: new Vector2(
-          174 - (i+1)*World.TILE_WIDTH + World.TILE_WIDTH/2,
-          World.TILE_HEIGHT/2,
-        ),
-        rotation: new Euler(0, 0, 0),
-      };
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 4; j++) {
+        this.addSlot(`meld.${i}.${j}`, {
+          ...defaults,
+          position: new Vector2(
+            174 - (j+1)*World.TILE_WIDTH + World.TILE_WIDTH / 2,
+            i * World.TILE_HEIGHT + World.TILE_HEIGHT / 2,
+          ),
+          rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
+          drawShadow: false,
+        });
+        if (j < 3) {
+          this.addPush(`meld.${i}.${j}`, `meld.${i}.${j+1}`);
+        }
+      }
     }
-    */
 
     for (let i = 0; i < 17; i++) {
       this.addSlot(`wall.${i}`, {
@@ -125,8 +133,7 @@ export class World {
 
     for (let i = 0; i < 3; i++) {
       for (let j = 0; j < 6; j++) {
-        const n = 6 * i + j;
-        this.addSlot(`discard.${n}`, {
+        this.addSlot(`discard.${i}.${j}`, {
           ...defaults,
           position: new Vector2(
             69 + j * World.TILE_WIDTH + World.TILE_WIDTH / 2,
@@ -135,7 +142,7 @@ export class World {
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
         });
         if (j < 5) {
-          this.addPush(`discard.${n}`, `discard.${n+1}`);
+          this.addPush(`discard.${i}.${j}`, `discard.${i}.${j+1}`);
         }
       }
     }
@@ -324,8 +331,10 @@ export class World {
 
   checkPushes(): void {
     for (const [source, target] of this.pushes) {
-      const sourceThingIndex = this.slots[source].thingIndex;
-      const targetThingIndex = this.slots[target].thingIndex;
+      const sourceSlot = this.slots[source];
+      const targetSlot = this.slots[target];
+      const sourceThingIndex = sourceSlot.thingIndex;
+      const targetThingIndex = targetSlot.thingIndex;
 
       if (targetThingIndex === null) {
         continue;
@@ -339,17 +348,23 @@ export class World {
       }
 
       const sourceThing = this.things[sourceThingIndex];
-      const dx = targetThing.place.position.x - sourceThing.place.position.x;
-      const sizex = (targetThing.place.size.x + sourceThing.place.size.x) / 2;
-      const dy = targetThing.place.position.y - sourceThing.place.position.y;
-      const sizey = (targetThing.place.size.y + sourceThing.place.size.y) / 2;
 
-      if (Math.abs(dx) > Math.abs(dy)) {
+      // Relative slot position
+      const sdx = targetSlot.position.x - sourceSlot.position.x;
+      const sdy = targetSlot.position.y - sourceSlot.position.y;
+
+      if (Math.abs(sdx) > Math.abs(sdy)) {
+        const dx = targetThing.place.position.x - sourceThing.place.position.x;
+        const sizex = (targetThing.place.size.x + sourceThing.place.size.x) / 2;
+
         const dist = sizex - Math.abs(dx);
         if (dist > 0) {
           targetThing.place.position.x += dx > 0 ? dist : -dist;
         }
       } else {
+        const dy = targetThing.place.position.y - sourceThing.place.position.y;
+        const sizey = (targetThing.place.size.y + sourceThing.place.size.y) / 2;
+
         const dist = sizey - Math.abs(dy);
         if (dist > 0) {
           targetThing.place.position.y += dy > 0 ? dist : -dist;
@@ -443,7 +458,9 @@ export class World {
   toRenderPlaces(): Array<Place> {
     const result = [];
     for (const slotName in this.slots) {
-      result.push(this.slotPlace(slotName, 0));
+      if (this.slots[slotName].drawShadow) {
+        result.push(this.slotPlace(slotName, 0));
+      }
     }
     return result;
   }
