@@ -140,11 +140,11 @@ export class View {
   setupLights(): void {
     this.scene.add(new THREE.AmbientLight(0x888888));
     const topLight = new THREE.DirectionalLight(0x777777);
-    topLight.position.set(0, 0, 999);
+    topLight.position.set(0, 0, 1);
     this.scene.add(topLight);
 
     const frontLight = new THREE.DirectionalLight(0x4444444);
-    frontLight.position.set(0, -999, 0);
+    frontLight.position.set(0, -1, 0);
     this.scene.add(frontLight);
   }
 
