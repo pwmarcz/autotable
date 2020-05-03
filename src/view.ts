@@ -97,8 +97,8 @@ export class View {
     }
 
     for (const shadow of this.world.toRenderPlaces()) {
-      const w = Math.max(shadow.width, World.TILE_WIDTH);
-      const h = Math.max(shadow.height, World.TILE_WIDTH);
+      const w = Math.max(shadow.size.x, World.TILE_WIDTH);
+      const h = Math.max(shadow.size.y, World.TILE_WIDTH);
 
       const geometry = new THREE.PlaneGeometry(w, h);
       const material = new THREE.MeshBasicMaterial({
@@ -310,8 +310,8 @@ export class View {
     for (const render of this.world.toRender()) {
       const obj = this.objects[render.thingIndex];
       obj.visible = true;
-      obj.position.copy(render.position);
-      obj.rotation.copy(render.rotation);
+      obj.position.copy(render.place.position);
+      obj.rotation.copy(render.place.rotation);
 
       const material = obj.material as MeshLambertMaterial;
       material.emissive.setHex(0);
@@ -345,8 +345,8 @@ export class View {
     for (const render of this.world.toRenderGhosts()) {
       const obj = this.ghostObjects[render.thingIndex];
       obj.visible = true;
-      obj.position.copy(render.position);
-      obj.rotation.copy(render.rotation);
+      obj.position.copy(render.place.position);
+      obj.rotation.copy(render.place.rotation);
     }
   }
 
@@ -360,7 +360,7 @@ export class View {
       const obj = this.shadows[i++];
       obj.visible = true;
       obj.position.set(shadow.position.x, shadow.position.y, 0.2);
-      obj.scale.set(shadow.width, shadow.height, 1);
+      obj.scale.set(shadow.size.x, shadow.size.y, 1);
     }
   }
 

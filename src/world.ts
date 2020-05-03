@@ -13,16 +13,18 @@ interface Thing {
   type: 'tile';
   index: number;
   slotName: string;
+  place: Place;
 }
 
 interface Place {
-  type: 'tile';
   position: Vector3;
   rotation: Euler;
+  size: Vector3;
 }
 
-interface Render extends Place {
+interface Render {
   thingIndex: number;
+  place: Place;
   selected: boolean;
   hovered: boolean;
   held: boolean;
@@ -31,12 +33,6 @@ interface Render extends Place {
 
 interface Select extends Place {
   id: any;
-}
-
-interface Shadow {
-  position: Vector2;
-  width: number;
-  height: number;
 }
 
 export class World {
@@ -64,7 +60,8 @@ export class World {
       for (let j = 0; j < 4; j++) {
         const index = j * 17 + i;
         const slotName = `wall.${i}.${j}`;
-        this.things[index] = { type: 'tile', index: i, slotName };
+        const place = this.slotPlace(slotName);
+        this.things[index] = { type: 'tile', index: i, slotName, place };
         this.slots[slotName].thingIndex = index;
       }
     }
@@ -175,17 +172,16 @@ export class World {
 
       for (let i = 0; i < this.held.length; i++) {
         const thing = this.things[this.held[i]];
-        const place = this.slotPlace(thing.slotName);
-        place.position.x += this.tablePos.x - this.heldTablePos.x;
-        place.position.y += this.tablePos.y - this.heldTablePos.y;
+        const x = thing.place.position.x + this.tablePos.x - this.heldTablePos.x;
+        const y = thing.place.position.y + this.tablePos.y - this.heldTablePos.y;
 
-        this.targetSlots[i] = this.findSlot(place.position.x, place.position.y);
+        this.targetSlots[i] = this.findSlot(x, y);
       }
     }
   }
 
   findSlot(x: number, y: number): string | null {
-    let bestDistance = World.TILE_DEPTH;
+    let bestDistance = World.TILE_DEPTH * 1.5;
     let bestSlot = null;
 
     // Empty slots
@@ -198,10 +194,10 @@ export class World {
       if (this.targetSlots.indexOf(slotName) !== -1) {
         continue;
       }
-      const shadow = this.slotShadow(slotName);
-      const dx = Math.abs(x - slot.position.x) - shadow.width/2;
-      const dy = Math.abs(y - slot.position.y) - shadow.height/2;
-      const distance = Math.max(0, dx, dy);
+      const place = this.slotPlace(slotName);
+      const dx = Math.max(0, Math.abs(x - slot.position.x) - place.size.x / 2);
+      const dy = Math.max(0, Math.abs(y - slot.position.y) - place.size.y / 2);
+      const distance = Math.sqrt(dx*dx + dy*dy);
       if (distance < bestDistance) {
         bestDistance = distance;
         bestSlot = slotName;
@@ -244,19 +240,30 @@ export class World {
         // }
       } else if (this.canDrop()) {
         // Successful movement
-        for (let i = 0; i < this.held.length; i++) {
-          const oldSlotName = this.things[this.held[i]].slotName;
-          this.slots[oldSlotName].thingIndex = null;
-        }
-        for (let i = 0; i < this.held.length; i++) {
-          this.things[this.held[i]].slotName = this.targetSlots[i]!;
-          this.slots[this.targetSlots[i]!].thingIndex = this.held[i];
-        }
+        this.drop();
       }
     }
     this.held.splice(0);
     this.targetSlots.splice(0);
   }
+
+  drop(): void {
+    for (let i = 0; i < this.held.length; i++) {
+      const thingIndex = this.held[i];
+      const thing = this.things[thingIndex];
+      const oldSlotName = thing.slotName;
+      this.slots[oldSlotName].thingIndex = null;
+    }
+    for (let i = 0; i < this.held.length; i++) {
+      const thingIndex = this.held[i];
+      const thing = this.things[thingIndex];
+      const targetSlot = this.targetSlots[i]!;
+
+      thing.slotName = targetSlot;
+      thing.place = this.slotPlace(targetSlot);
+      this.slots[targetSlot].thingIndex = thingIndex;
+    }
+}
 
   canDrop(): boolean {
     return this.targetSlots.every(s => s !== null);
@@ -268,11 +275,12 @@ export class World {
     const result = [];
     for (let i = 0; i < this.things.length; i++) {
       const thing = this.things[i];
-      const place = this.slotPlace(thing.slotName);
+      let place = thing.place;
       const heldIndex = this.held.indexOf(i);
       const held = heldIndex !== -1;
 
       if (held && this.tablePos !== null && this.heldTablePos !== null) {
+        place = {...place, position: place.position.clone()};
         place.position.x += this.tablePos.x - this.heldTablePos.x;
         place.position.y += this.tablePos.y - this.heldTablePos.y;
       }
@@ -283,7 +291,7 @@ export class World {
       const temporary = held && !canDrop;
 
       result.push({
-        ...place,
+        place,
         thingIndex: i,
         selected,
         hovered,
@@ -328,42 +336,34 @@ export class World {
     const xv = new Vector3(0, 0, World.TILE_DEPTH).applyEuler(slot.rotation);
     const yv = new Vector3(0, World.TILE_HEIGHT, 0).applyEuler(slot.rotation);
     const zv = new Vector3(World.TILE_WIDTH, 0, 0).applyEuler(slot.rotation);
+    const maxx = Math.max(Math.abs(xv.x), Math.abs(yv.x), Math.abs(zv.x));
+    const maxy = Math.max(Math.abs(xv.y), Math.abs(yv.y), Math.abs(zv.y));
     const maxz = Math.max(Math.abs(xv.z), Math.abs(yv.z), Math.abs(zv.z));
 
+    const size = new Vector3(maxx, maxy, maxz);
+
     return {
-      type: 'tile',
       position: new Vector3(slot.position.x, slot.position.y, maxz/2),
       rotation: slot.rotation,
+      size,
     };
   }
 
-  toRenderPlaces(): Array<Shadow> {
+  toRenderPlaces(): Array<Place> {
     const result = [];
     for (const slotName in this.slots) {
-      result.push(this.slotShadow(slotName));
+      result.push(this.slotPlace(slotName));
     }
     return result;
   }
 
-  toRenderShadows(): Array<Shadow> {
+  toRenderShadows(): Array<Place> {
     const result = [];
     if (this.canDrop()) {
       for (const slotName of this.targetSlots) {
-        result.push(this.slotShadow(slotName!));
+        result.push(this.slotPlace(slotName!));
       }
     }
     return result;
-  }
-
-  slotShadow(slotName: string): Shadow {
-    const slot = this.slots[slotName];
-
-    const xv = new Vector3(0, 0, World.TILE_DEPTH).applyEuler(slot.rotation);
-    const yv = new Vector3(0, World.TILE_HEIGHT, 0).applyEuler(slot.rotation);
-    const zv = new Vector3(World.TILE_WIDTH, 0, 0).applyEuler(slot.rotation);
-
-    const width = Math.max(Math.abs(xv.x), Math.abs(yv.x), Math.abs(zv.x));
-    const height = Math.max(Math.abs(xv.y), Math.abs(yv.y), Math.abs(zv.y));
-    return {position: slot.position, width, height};
   }
 }
