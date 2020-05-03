@@ -41,8 +41,8 @@ export class View {
   height = 0;
   static RATIO = 1.5;
 
-  mouse: Vector2;
-  selectStart: Vector2 | null;
+  mouse: Vector2 = new Vector2();
+  selectStart: Vector2 | null = null;
 
   constructor(main: HTMLElement, selection: HTMLElement, world: World, assets: Assets) {
     this.main = main;
@@ -63,7 +63,7 @@ export class View {
     this.assets.tableTexture.wrapT = THREE.RepeatWrapping;
     this.assets.tableTexture.repeat.set(3, 3);
     const tableGeometry = new THREE.PlaneGeometry(
-      World.WIDTH + World.TILE_DEPTH, World.HEIGHT + World.TILE_DEPTH);
+      World.WIDTH + World.TILE_HEIGHT, World.HEIGHT + World.TILE_HEIGHT);
     const tableMaterial = new THREE.MeshStandardMaterial({ color: 0xeeeeee, map: this.assets.tableTexture });
     const tableMesh = new THREE.Mesh(tableGeometry, tableMaterial);
     tableMesh.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0);
@@ -132,6 +132,12 @@ export class View {
     this.raycastTable.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0);
     this.scene.add(this.raycastTable);
 
+    this.setupLights();
+    this.setupEvents();
+    this.setupRendering();
+  }
+
+  setupLights(): void {
     this.scene.add(new THREE.AmbientLight(0x888888));
     const topLight = new THREE.DirectionalLight(0x777777);
     topLight.position.set(0, 0, 999);
@@ -140,16 +146,14 @@ export class View {
     const frontLight = new THREE.DirectionalLight(0x4444444);
     frontLight.position.set(0, -999, 0);
     this.scene.add(frontLight);
+  }
 
-    this.mouse = new Vector2();
+  setupEvents(): void {
     this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this));
     this.renderer.domElement.addEventListener('mouseleave', this.onMouseLeave.bind(this));
     this.renderer.domElement.addEventListener('mousedown', this.onMouseDown.bind(this));
     window.addEventListener('mouseup', this.onMouseUp.bind(this));
-
-    this.selectStart = null;
-
-    this.setupRendering();
+    window.addEventListener('keypress', this.onKeyPress.bind(this));
   }
 
   setupRendering(): void {
@@ -389,6 +393,12 @@ export class View {
     this.selectStart = null;
     this.world.onDragEnd();
     this.updateSelect();
+  }
+
+  onKeyPress(event: KeyboardEvent): void {
+    if (event.key === 'f') {
+      this.world.onFlip();
+    }
   }
 
   updateViewport(): void {

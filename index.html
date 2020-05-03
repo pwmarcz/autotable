@@ -37,7 +37,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            padding: 0 1em 1em 1em;
+            padding: 0 1em;
             background: rgba(0,0,0, 0.4);
             user-select: none;
         }
@@ -49,11 +49,13 @@
             <div id="selection"></div>
         </div>
         <div id="settings">
-            <p><b>Settings</b></p>
-            <label>
-                <input type="checkbox" id="perspective">
-                Perspective mode
-            </label>
+            <p>
+                <label>
+                    <input type="checkbox" id="perspective">
+                    Perspective mode
+                </label>
+            </p>
+            <p>Press <b>F</b> to flip a tile</p>
         </div>
     </div>
     <script src="./src/index.ts"></script>
