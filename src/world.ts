@@ -1,7 +1,7 @@
 import { Vector2, Euler, Vector3, Quaternion } from "three";
 
 interface Slot {
-  origin: Vector2;
+  origin: Vector3;
   direction: Vector2;
   rotations: Array<Euler>;
   thingIndex: number | null;
@@ -68,19 +68,21 @@ export class World {
     this.addSlots();
 
     for (let i = 0; i < 17; i++) {
-      for (let j = 0; j < 4; j++) {
-        const index = j * 17 + i;
-        const tile = 17 + Math.floor(index / 4);
-        const slotName = `wall.${i}.${j}`;
-        const place = this.slotPlace(slotName, 0);
-        this.things[index] = {
-          type: 'tile',
-          index: tile,
-          slotName,
-          place,
-          rotationIndex: 0,
-        };
-        this.slots[slotName].thingIndex = index;
+      for (let j = 0; j < 2; j++) {
+        for (let k = 0; k < 4; k++) {
+          const index = k * 17 * 2 + j * 17 + i;
+          const tile = Math.floor(index / 4);
+          const slotName = `wall.${i}.${j}.${k}`;
+          const place = this.slotPlace(slotName, 0);
+          this.things[index] = {
+            type: 'tile',
+            index: tile,
+            slotName,
+            place,
+            rotationIndex: 0,
+          };
+          this.slots[slotName].thingIndex = index;
+        }
       }
     }
   }
@@ -96,8 +98,9 @@ export class World {
     for (let i = 0; i < 14; i++) {
       this.addSlot(`hand.${i}`, {
         ...defaults,
-        origin: new Vector2(
+        origin: new Vector3(
           46 + i*World.TILE_WIDTH,
+          0,
           0,
         ),
         direction: new Vector2(1, 1),
@@ -109,9 +112,10 @@ export class World {
       for (let j = 0; j < 4; j++) {
         this.addSlot(`meld.${i}.${j}`, {
           ...defaults,
-          origin: new Vector2(
+          origin: new Vector3(
             174 - (j)*World.TILE_WIDTH,
             i * World.TILE_HEIGHT,
+            0,
           ),
           direction: new Vector2(-1, 1),
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
@@ -124,24 +128,29 @@ export class World {
     }
 
     for (let i = 0; i < 17; i++) {
-      this.addSlot(`wall.${i}`, {
-        ...defaults,
-        origin: new Vector2(
-          36 + i * World.TILE_WIDTH,
-          24,
-        ),
-        direction: new Vector2(1, 1),
-        rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
-      });
+      for (let j = 0; j < 2; j++) {
+        this.addSlot(`wall.${i}.${j}`, {
+          ...defaults,
+          origin: new Vector3(
+            36 + i * World.TILE_WIDTH,
+            24,
+            j * World.TILE_DEPTH,
+          ),
+          direction: new Vector2(1, 1),
+          rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
+          drawShadow: j === 0,
+        });
+      }
     }
 
     for (let i = 0; i < 3; i++) {
       for (let j = 0; j < 6; j++) {
         this.addSlot(`discard.${i}.${j}`, {
           ...defaults,
-          origin: new Vector2(
+          origin: new Vector3(
             69 + j * World.TILE_WIDTH,
             60 - i * World.TILE_HEIGHT,
+            0,
           ),
           direction: new Vector2(1, 1),
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
@@ -178,9 +187,11 @@ export class World {
     const pos = new Vector3(
       slot.origin.x - World.WIDTH / 2,
       slot.origin.y - World.HEIGHT / 2,
+      slot.origin.z,
     );
     pos.applyQuaternion(qPlayer);
-    newSlot.origin = new Vector2(pos.x + World.WIDTH / 2, pos.y + World.HEIGHT / 2);
+    newSlot.origin = new Vector3(
+      pos.x + World.WIDTH / 2, pos.y + World.HEIGHT / 2, pos.z);
 
     const dir = new Vector3(slot.direction.x, slot.direction.y, 0);
     dir.applyQuaternion(qPlayer);
@@ -462,7 +473,7 @@ export class World {
       position: new Vector3(
         slot.origin.x + maxx / 2 * slot.direction.x,
         slot.origin.y + maxy / 2 * slot.direction.y,
-        maxz/2
+        slot.origin.z + maxz/2,
       ),
       rotation: rotation,
       size,

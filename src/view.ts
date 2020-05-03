@@ -146,6 +146,10 @@ export class View {
     const frontLight = new THREE.DirectionalLight(0x4444444);
     frontLight.position.set(0, -1, 0);
     this.scene.add(frontLight);
+
+    const sideLight = new THREE.DirectionalLight(0x4444444);
+    sideLight.position.set(-1, 0, 0);
+    this.scene.add(sideLight);
   }
 
   setupEvents(): void {
@@ -368,7 +372,10 @@ export class View {
     for (const shadow of this.world.toRenderShadows()) {
       const obj = this.shadows[i++];
       obj.visible = true;
-      obj.position.set(shadow.position.x, shadow.position.y, 0.2);
+      obj.position.set(
+        shadow.position.x,
+        shadow.position.y,
+        shadow.position.z - shadow.size.z/2 + 0.2);
       obj.scale.set(shadow.size.x, shadow.size.y, 1);
     }
   }
