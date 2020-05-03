@@ -170,6 +170,11 @@ export class View {
 
     this.composer.addPass(renderPass);
     this.composer.addPass(this.outlinePass);
+
+    // Force outline pass to preload shaders
+    this.outlinePass.selectedObjects.push(this.scene.children[0]);
+    this.composer.render();
+    this.outlinePass.selectedObjects.splice(0);
   }
 
   makeCamera(perspective: boolean): THREE.Camera {
