@@ -34,6 +34,7 @@ interface Render {
   hovered: boolean;
   held: boolean;
   temporary: boolean;
+  bottom: boolean;
 }
 
 interface Select extends Place {
@@ -462,6 +463,12 @@ export class World {
         (selected && this.selected.indexOf(this.hovered!) !== -1);
       const temporary = held && !canDrop;
 
+      const up = this.slots[thing.slotName].up;
+      let bottom = false;
+      if (this.held !== null && up !== null) {
+        bottom = this.slots[up].thingIndex === null;
+      }
+
       result.push({
         place,
         thingIndex: i,
@@ -469,6 +476,7 @@ export class World {
         hovered,
         held,
         temporary,
+        bottom,
       });
     }
     return result;

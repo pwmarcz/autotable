@@ -330,12 +330,17 @@ export class View {
 
       const material = obj.material as MeshLambertMaterial;
       material.emissive.setHex(0);
+      material.color.setHex(0xeeeeee);
       material.transparent = false;
       material.depthTest = true;
       obj.renderOrder = 0;
 
       if (render.hovered) {
         material.emissive.setHex(0x111111);
+      }
+
+      if (render.bottom) {
+        material.color.setHex(0xbbbbbb);
       }
 
       if (render.selected) {
