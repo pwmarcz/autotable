@@ -9,6 +9,7 @@ interface Slot {
 
   down: string | null;
   up: string | null;
+  requires: string | null;
 }
 
 interface Thing {
@@ -93,6 +94,7 @@ export class World {
       drawShadow: true,
       down: null,
       up: null,
+      requires: null,
     };
     for (let i = 0; i < 14; i++) {
       this.addSlot(`hand.${i}`, {
@@ -119,6 +121,7 @@ export class World {
           direction: new Vector2(-1, 1),
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
           drawShadow: false,
+          requires: i > 0 ? `meld.${i-1}.0` : null,
         });
         if (j < 3) {
           this.addPush(`meld.${i}.${j}`, `meld.${i}.${j+1}`);
@@ -210,6 +213,9 @@ export class World {
     if (slot.up !== null) {
       newSlot.up = slot.up + suffix;
     }
+    if (slot.requires !== null) {
+      newSlot.requires = slot.requires + suffix;
+    }
 
     this.slots[slotName + suffix] = newSlot;
   }
@@ -276,6 +282,11 @@ export class World {
       if (this.targetSlots.indexOf(slotName) !== -1) {
         continue;
       }
+      // The slot requires other slots to be occupied first
+      if (slot.requires !== null && this.slots[slot.requires].thingIndex === null) {
+        continue;
+      }
+
       const place = this.slotPlace(slotName, 0);
       const dx = Math.max(0, Math.abs(x - place.position.x) - place.size.x / 2);
       const dy = Math.max(0, Math.abs(y - place.position.y) - place.size.y / 2);
