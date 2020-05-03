@@ -1,7 +1,8 @@
-import { Vector2, Euler, Vector3, Quaternion } from "three";
+import { Vector2, Euler, Vector3, Quaternion, MathUtils } from "three";
 
 interface Slot {
-  position: Vector2;
+  origin: Vector2;
+  direction: Vector2;
   rotations: Array<Euler>;
   thingIndex: number | null;
   tempThingIndex: number | null;
@@ -95,10 +96,11 @@ export class World {
     for (let i = 0; i < 14; i++) {
       this.addSlot(`hand.${i}`, {
         ...defaults,
-        position: new Vector2(
-          46 + i*World.TILE_WIDTH + World.TILE_WIDTH/2,
-          World.TILE_DEPTH/2,
+        origin: new Vector2(
+          46 + i*World.TILE_WIDTH,
+          0,
         ),
+        direction: new Vector2(1, 1),
         rotations: [Rotation.STANDING, Rotation.FACE_UP],
       });
     }
@@ -107,10 +109,11 @@ export class World {
       for (let j = 0; j < 4; j++) {
         this.addSlot(`meld.${i}.${j}`, {
           ...defaults,
-          position: new Vector2(
-            174 - (j+1)*World.TILE_WIDTH + World.TILE_WIDTH / 2,
-            i * World.TILE_HEIGHT + World.TILE_HEIGHT / 2,
+          origin: new Vector2(
+            174 - (j)*World.TILE_WIDTH,
+            i * World.TILE_HEIGHT,
           ),
+          direction: new Vector2(-1, 1),
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
           drawShadow: false,
         });
@@ -123,10 +126,11 @@ export class World {
     for (let i = 0; i < 17; i++) {
       this.addSlot(`wall.${i}`, {
         ...defaults,
-        position: new Vector2(
-          36 + i * World.TILE_WIDTH + World.TILE_WIDTH / 2,
-          24 + World.TILE_HEIGHT/2,
+        origin: new Vector2(
+          36 + i * World.TILE_WIDTH,
+          24,
         ),
+        direction: new Vector2(1, 1),
         rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
       });
     }
@@ -135,10 +139,11 @@ export class World {
       for (let j = 0; j < 6; j++) {
         this.addSlot(`discard.${i}.${j}`, {
           ...defaults,
-          position: new Vector2(
-            69 + j * World.TILE_WIDTH + World.TILE_WIDTH / 2,
-            60 - i * World.TILE_HEIGHT + World.TILE_HEIGHT/2,
+          origin: new Vector2(
+            69 + j * World.TILE_WIDTH,
+            60 - i * World.TILE_HEIGHT,
           ),
+          direction: new Vector2(1, 1),
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
         });
         if (j < 5) {
@@ -171,11 +176,15 @@ export class World {
     const newSlot = {...slot};
 
     const pos = new Vector3(
-      slot.position.x - World.WIDTH / 2,
-      slot.position.y - World.HEIGHT / 2,
+      slot.origin.x - World.WIDTH / 2,
+      slot.origin.y - World.HEIGHT / 2,
     );
     pos.applyQuaternion(qPlayer);
-    newSlot.position = new Vector2(pos.x + World.WIDTH / 2, pos.y + World.HEIGHT / 2);
+    newSlot.origin = new Vector2(pos.x + World.WIDTH / 2, pos.y + World.HEIGHT / 2);
+
+    const dir = new Vector3(slot.direction.x, slot.direction.y, 0);
+    dir.applyQuaternion(qPlayer);
+    newSlot.direction = new Vector2(dir.x, dir.y);
 
     newSlot.rotations = slot.rotations.map(rot => {
       const q = new Quaternion().setFromEuler(rot);
@@ -228,8 +237,8 @@ export class World {
         continue;
       }
       const place = this.slotPlace(slotName, 0);
-      const dx = Math.max(0, Math.abs(x - slot.position.x) - place.size.x / 2);
-      const dy = Math.max(0, Math.abs(y - slot.position.y) - place.size.y / 2);
+      const dx = Math.max(0, Math.abs(x - place.position.x) - place.size.x / 2);
+      const dy = Math.max(0, Math.abs(y - place.position.y) - place.size.y / 2);
       const distance = Math.sqrt(dx*dx + dy*dy);
       if (distance < bestDistance) {
         bestDistance = distance;
@@ -350,24 +359,24 @@ export class World {
       const sourceThing = this.things[sourceThingIndex];
 
       // Relative slot position
-      const sdx = targetSlot.position.x - sourceSlot.position.x;
-      const sdy = targetSlot.position.y - sourceSlot.position.y;
+      const sdx = targetSlot.origin.x - sourceSlot.origin.x;
+      const sdy = targetSlot.origin.y - sourceSlot.origin.y;
 
       if (Math.abs(sdx) > Math.abs(sdy)) {
         const dx = targetThing.place.position.x - sourceThing.place.position.x;
         const sizex = (targetThing.place.size.x + sourceThing.place.size.x) / 2;
 
-        const dist = sizex - Math.abs(dx);
+        const dist = sizex - Math.sign(sdx) * dx;
         if (dist > 0) {
-          targetThing.place.position.x += dx > 0 ? dist : -dist;
+          targetThing.place.position.x += Math.sign(sdx) * dist;
         }
       } else {
         const dy = targetThing.place.position.y - sourceThing.place.position.y;
         const sizey = (targetThing.place.size.y + sourceThing.place.size.y) / 2;
 
-        const dist = sizey - Math.abs(dy);
+        const dist = sizey - Math.sign(sdy) * Math.abs(dy);
         if (dist > 0) {
-          targetThing.place.position.y += dy > 0 ? dist : -dist;
+          targetThing.place.position.y += Math.sign(sdy) * dist;
         }
       }
     }
@@ -449,7 +458,11 @@ export class World {
     const size = new Vector3(maxx, maxy, maxz);
 
     return {
-      position: new Vector3(slot.position.x, slot.position.y, maxz/2),
+      position: new Vector3(
+        slot.origin.x + maxx / 2 * slot.direction.x,
+        slot.origin.y + maxy / 2 * slot.direction.y,
+        maxz/2
+      ),
       rotation: rotation,
       size,
     };
