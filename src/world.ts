@@ -10,6 +10,7 @@ interface Slot {
   down: string | null;
   up: string | null;
   requires: string | null;
+  canFlipMultiple: boolean;
 }
 
 interface Thing {
@@ -95,6 +96,7 @@ export class World {
       down: null,
       up: null,
       requires: null,
+      canFlipMultiple: false,
     };
     for (let i = 0; i < 14; i++) {
       this.addSlot(`hand.${i}`, {
@@ -106,6 +108,7 @@ export class World {
         ),
         direction: new Vector2(1, 1),
         rotations: [Rotation.STANDING, Rotation.FACE_UP],
+        canFlipMultiple: true,
       });
     }
 
@@ -347,6 +350,10 @@ export class World {
 
     if (this.selected.length > 0) {
       for (const thingIndex of this.selected) {
+        const slotName = this.things[thingIndex].slotName;
+        if (this.selected.length > 1 && !this.slots[slotName].canFlipMultiple) {
+          continue;
+        }
         this.flip(thingIndex);
       }
       this.selected.splice(0);
