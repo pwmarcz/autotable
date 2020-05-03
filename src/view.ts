@@ -1,7 +1,4 @@
-// @ts-ignore
-import tilesPng from '../img/tiles.auto.png';
-// @ts-ignore
-import tableJpg from '../img/table.jpg';
+
 
 import * as THREE from 'three';
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -10,14 +7,17 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
 
 import { World } from './world';
-import { Object3D, Scene, Camera, WebGLRenderer, Texture, Vector2, Raycaster, Mesh, MeshLambertMaterial } from 'three';
+import { Object3D, Scene, Camera, WebGLRenderer, Vector2, Raycaster, Mesh, MeshLambertMaterial, BufferGeometry } from 'three';
 import { SelectionBox } from './selection-box';
+import { Assets } from './assets';
 
 export class View {
   world: World;
 
   main: HTMLElement;
   selection: HTMLElement;
+
+  assets: Assets;
 
   perspective = false;
 
@@ -36,7 +36,6 @@ export class View {
   shadows: Array<Mesh>;
   raycastObjects: Array<Mesh>;
   raycastTable: Object3D;
-  tileTexture: Texture;
 
   width = 0;
   height = 0;
@@ -45,11 +44,13 @@ export class View {
   mouse: Vector2;
   selectStart: Vector2 | null;
 
-  constructor(main: HTMLElement, selection: HTMLElement, world: World) {
+  constructor(main: HTMLElement, selection: HTMLElement, world: World, assets: Assets) {
     this.main = main;
     this.selection = selection;
     this.world = world;
     this.objects = [];
+
+    this.assets = assets;
 
     this.scene = new THREE.Scene();
 
@@ -58,22 +59,18 @@ export class View {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     main.appendChild(this.renderer.domElement);
 
-    const tableTexture = new THREE.TextureLoader().load(tableJpg);
-    tableTexture.wrapS = THREE.RepeatWrapping;
-    tableTexture.wrapT = THREE.RepeatWrapping;
-    tableTexture.repeat.set(3, 3);
+    this.assets.tableTexture.wrapS = THREE.RepeatWrapping;
+    this.assets.tableTexture.wrapT = THREE.RepeatWrapping;
+    this.assets.tableTexture.repeat.set(3, 3);
     const tableGeometry = new THREE.PlaneGeometry(
       World.WIDTH + World.TILE_DEPTH, World.HEIGHT + World.TILE_DEPTH);
-    const tableMaterial = new THREE.MeshStandardMaterial({ color: 0xeeeeee, map: tableTexture });
+    const tableMaterial = new THREE.MeshStandardMaterial({ color: 0xeeeeee, map: this.assets.tableTexture });
     const tableMesh = new THREE.Mesh(tableGeometry, tableMaterial);
     tableMesh.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0);
     this.scene.add(tableMesh);
 
-    this.tileTexture = new THREE.TextureLoader().load(tilesPng);
-    // this.tileTexture.minFilter = THREE.LinearMipmapNearestFilter;
-    // this.tileTexture.minFilter = THREE.LinearFilter;
-    // this.tileTexture.generateMipmaps = false;
-    this.tileTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+    this.assets.tileTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+    this.assets.tileTexture.flipY = false;
 
     this.objects = [];
     this.ghostObjects = [];
@@ -135,10 +132,14 @@ export class View {
     this.raycastTable.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0);
     this.scene.add(this.raycastTable);
 
-    this.scene.add(new THREE.AmbientLight(0xcccccc));
-    const dirLight = new THREE.DirectionalLight(0x3333333);
-    this.scene.add(dirLight);
-    dirLight.position.set(0, 0, 999);
+    this.scene.add(new THREE.AmbientLight(0x888888));
+    const topLight = new THREE.DirectionalLight(0x777777);
+    topLight.position.set(0, 0, 999);
+    this.scene.add(topLight);
+
+    const frontLight = new THREE.DirectionalLight(0x4444444);
+    frontLight.position.set(0, -999, 0);
+    this.scene.add(frontLight);
 
     this.mouse = new Vector2();
     this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this));
@@ -191,56 +192,27 @@ export class View {
   }
 
   makeTileObject(index: number): Mesh {
-    const geometry = new THREE.BoxGeometry(
-      World.TILE_WIDTH,
-      World.TILE_HEIGHT,
-      World.TILE_DEPTH
-    );
+    const mesh = this.assets.tileMesh.clone();
 
-    function setFace(ia: number, ib: number,
-      u0: number, v0: number, w: number, h: number): void {
+    const material = new THREE.MeshLambertMaterial({color: 0xeeeeee, map: this.assets.tileTexture });
+    mesh.material = material;
 
-      u0 /= 256;
-      v0 /= 256;
-      const u1 = u0 + w/256;
-      const v1 = v0 + h/256;
+    const x = index % 8;
+    const y = Math.floor(index / 8);
 
-      geometry.faceVertexUvs[0][ia][0].set(u0, v0);
-      geometry.faceVertexUvs[0][ia][1].set(u0, v1);
-      geometry.faceVertexUvs[0][ia][2].set(u1, v0);
+    const du = 32 / 256;
+    const dv = 47 / 256;
 
-      geometry.faceVertexUvs[0][ib][0].set(u0, v1);
-      geometry.faceVertexUvs[0][ib][1].set(u1, v1);
-      geometry.faceVertexUvs[0][ib][2].set(u1, v0);
+    // Clone geometry and modify front face
+    const geometry = mesh.geometry.clone() as BufferGeometry;
+    mesh.geometry = geometry;
+    const uvs: Float32Array = geometry.attributes.uv.array as Float32Array;
+    for (let i = 0; i < uvs.length; i += 2) {
+      if (uvs[i] <= du && uvs[i+1] <= dv) {
+        uvs[i] += x * du;
+        uvs[i+1] += y * dv;
+      }
     }
-
-    // const u0 = 224 / 256;
-    // const v0 = 188 / 256;
-    // const u1 = 256 / 256;
-    // const v1 = 235 / 256;
-
-    const i = index % 8;
-    const j = Math.floor(index / 8);
-
-    // long side
-    setFace(0, 1, 216, 21, -24, 47);
-    setFace(2, 3, 192, 21, 24, 47);
-
-    // short side
-    setFace(4, 5, 160, 68, 32, -24);
-    setFace(6, 7, 160, 44, 32, 24);
-
-    // back
-    setFace(10, 11, 224, 21, 32, 47);
-
-    // front
-    setFace(8, 9, i * 32, 256 - j * 47, 32, -47);
-
-    const bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
-
-    const frontMaterial = new THREE.MeshLambertMaterial({color: 0xeeeeee, map: this.tileTexture });
-
-    const mesh = new THREE.Mesh(bufferGeometry, frontMaterial);
 
     return mesh;
   }

@@ -1,18 +1,26 @@
 import 'normalize.css';
 import { World } from './world';
 import { View } from './view';
+import { loadAssets } from './assets';
 
 const main = document.getElementById('main')!;
 const selection = document.getElementById('selection')!;
 
 const world = new World();
-const view = new View(main, selection, world);
 
-// Debugging
-// @ts-ignore
-window.world = world;
-// @ts-ignore
-window.view = view;
+let view: View | null = null;
+
+loadAssets().then(assets => {
+  view = new View(main, selection, world, assets);
+
+  // Debugging
+  // @ts-ignore
+  window.world = world;
+  // @ts-ignore
+  window.view = view;
+
+  view.draw();
+});
 
 const perspectiveCheckbox = document.getElementById('perspective') as HTMLInputElement;
 perspectiveCheckbox.addEventListener('change', updateSettings);
@@ -20,7 +28,7 @@ updateSettings();
 
 function updateSettings(): void {
   const perspective = perspectiveCheckbox.checked;
-  view.setPerspective(perspective);
+  if (view) {
+    view.setPerspective(perspective);
+  }
 }
-
-view.draw();
