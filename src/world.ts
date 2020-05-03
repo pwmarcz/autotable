@@ -72,7 +72,7 @@ export class World {
         for (let k = 0; k < 4; k++) {
           const index = k * 17 * 2 + j * 17 + i;
           const tile = Math.floor(index / 4);
-          const slotName = `wall.${i}.${j}.${k}`;
+          const slotName = `wall.${i+1}.${j}.${k}`;
           const place = this.slotPlace(slotName, 0);
           this.things[index] = {
             type: 'tile',
@@ -127,18 +127,18 @@ export class World {
       }
     }
 
-    for (let i = 0; i < 17; i++) {
+    for (let i = 0; i < 19; i++) {
       for (let j = 0; j < 2; j++) {
         this.addSlot(`wall.${i}.${j}`, {
           ...defaults,
           origin: new Vector3(
-            36 + i * World.TILE_WIDTH,
-            24,
+            30 + i * World.TILE_WIDTH,
+            20,
             j * World.TILE_DEPTH,
           ),
           direction: new Vector2(1, 1),
           rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
-          drawShadow: j === 0,
+          drawShadow: j === 0 && j >= 1 && j < 18,
         });
       }
     }
