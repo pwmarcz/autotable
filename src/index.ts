@@ -19,12 +19,12 @@ loadAssets().then(assets => {
   // @ts-ignore
   window.view = view;
 
+  updateSettings();
   view.draw();
 });
 
 const perspectiveCheckbox = document.getElementById('perspective') as HTMLInputElement;
 perspectiveCheckbox.addEventListener('change', updateSettings);
-updateSettings();
 
 function updateSettings(): void {
   const perspective = perspectiveCheckbox.checked;
