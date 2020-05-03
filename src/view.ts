@@ -189,12 +189,14 @@ export class View {
       return camera;
     }
 
+    const w = World.WIDTH * 1.2;
+    const h = w / View.RATIO;
     const camera = new THREE.OrthographicCamera(
-      -4, World.WIDTH + 4,
-      (World.WIDTH + 8) / View.RATIO, 0,
+      (World.WIDTH - w) / 2, (World.WIDTH + w) / 2,
+      h, 0,
       0.1, 1000);
-    camera.position.set(0, -50, 25);
-    camera.rotateX(Math.PI * 0.3);
+    camera.position.set(0, -40, 25);
+    camera.rotateX(Math.PI * 0.25);
     return camera;
   }
 
