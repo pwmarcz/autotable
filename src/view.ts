@@ -180,7 +180,7 @@ export class View {
       -4, World.WIDTH + 4,
       (World.WIDTH + 8) / View.RATIO, 0,
       0.1, 1000);
-    camera.position.set(0, -18, 2);
+    camera.position.set(0, -50, 25);
     camera.rotateX(Math.PI * 0.3);
     return camera;
   }
