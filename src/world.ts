@@ -45,6 +45,7 @@ const Rotation = {
 
 export class World {
   slots: Record<string, Slot> = {};
+  pushes: Array<[string, string]> = [];
   things: Array<Thing> = [];
 
   hovered: number | null = null;
@@ -71,7 +72,7 @@ export class World {
         const place = this.slotPlace(slotName, 0);
         this.things[index] = {
           type: 'tile',
-          index: i,
+          index: index % 34,
           slotName,
           place,
           rotationIndex: 0,
@@ -133,6 +134,9 @@ export class World {
           ),
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
         });
+        if (j < 5) {
+          this.addPush(`discard.${n}`, `discard.${n+1}`);
+        }
       }
     }
   }
@@ -148,6 +152,12 @@ export class World {
     this.addRotatedSlot(slotName, '.2', slot, qPlayer);
     qPlayer.premultiply(step);
     this.addRotatedSlot(slotName, '.3', slot, qPlayer);
+  }
+
+  addPush(source: string, target: string): void {
+    for (let i = 0; i < 4; i++) {
+      this.pushes.push([`${source}.${i}`, `${target}.${i}`]);
+    }
   }
 
   addRotatedSlot(slotName: string, suffix: string, slot: Slot, qPlayer: Quaternion): void {
@@ -283,6 +293,8 @@ export class World {
 
     thing.rotationIndex = (thing.rotationIndex + 1) % slot.rotations.length;
     thing.place = this.slotPlace(thing.slotName, thing.rotationIndex);
+
+    this.checkPushes();
   }
 
   drop(): void {
@@ -302,10 +314,48 @@ export class World {
       thing.rotationIndex = 0;
       this.slots[targetSlot].thingIndex = thingIndex;
     }
-}
+
+    this.checkPushes();
+  }
 
   canDrop(): boolean {
     return this.targetSlots.every(s => s !== null);
+  }
+
+  checkPushes(): void {
+    for (const [source, target] of this.pushes) {
+      const sourceThingIndex = this.slots[source].thingIndex;
+      const targetThingIndex = this.slots[target].thingIndex;
+
+      if (targetThingIndex === null) {
+        continue;
+      }
+
+      const targetThing = this.things[targetThingIndex];
+      targetThing.place = this.slotPlace(target, targetThing.rotationIndex);
+
+      if (sourceThingIndex === null) {
+        continue;
+      }
+
+      const sourceThing = this.things[sourceThingIndex];
+      const dx = targetThing.place.position.x - sourceThing.place.position.x;
+      const sizex = (targetThing.place.size.x + sourceThing.place.size.x) / 2;
+      const dy = targetThing.place.position.y - sourceThing.place.position.y;
+      const sizey = (targetThing.place.size.y + sourceThing.place.size.y) / 2;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        const dist = sizex - Math.abs(dx);
+        if (dist > 0) {
+          targetThing.place.position.x += dx > 0 ? dist : -dist;
+        }
+      } else {
+        const dist = sizey - Math.abs(dy);
+        if (dist > 0) {
+          targetThing.place.position.y += dy > 0 ? dist : -dist;
+        }
+      }
+    }
   }
 
   toRender(): Array<Render> {
@@ -362,7 +412,7 @@ export class World {
       // Things
       for (let i = 0; i < this.things.length; i++) {
         const thing = this.things[i];
-        const place = this.slotPlace(thing.slotName, thing.rotationIndex);
+        const place = thing.place;
         result.push({...place, id: i});
       }
     }
