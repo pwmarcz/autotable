@@ -1,4 +1,4 @@
-import { Vector2, Euler, Vector3, Quaternion, MathUtils } from "three";
+import { Vector2, Euler, Vector3, Quaternion } from "three";
 
 interface Slot {
   origin: Vector2;
@@ -298,6 +298,7 @@ export class World {
       for (const thingIndex of this.selected) {
         this.flip(thingIndex);
       }
+      this.selected.splice(0);
     } else if (this.hovered !== null) {
       this.flip(this.hovered);
     }
@@ -330,8 +331,8 @@ export class World {
       thing.rotationIndex = 0;
       this.slots[targetSlot].thingIndex = thingIndex;
     }
-
     this.checkPushes();
+    this.selected.splice(0);
   }
 
   canDrop(): boolean {
