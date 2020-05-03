@@ -5,10 +5,10 @@ interface Slot {
   direction: Vector2;
   rotations: Array<Euler>;
   thingIndex: number | null;
-  tempThingIndex: number | null;
-  shiftNext: string | null;
-  shiftPrev: string | null;
   drawShadow: boolean;
+
+  down: string | null;
+  up: string | null;
 }
 
 interface Thing {
@@ -90,10 +90,9 @@ export class World {
   addSlots(): void {
     const defaults = {
       thingIndex: null,
-      tempThingIndex: null,
-      shiftNext: null,
-      shiftPrev: null,
       drawShadow: true,
+      down: null,
+      up: null,
     };
     for (let i = 0; i < 14; i++) {
       this.addSlot(`hand.${i}`, {
@@ -138,7 +137,9 @@ export class World {
           ),
           direction: new Vector2(1, 1),
           rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
-          drawShadow: j === 0 && j >= 1 && j < 18,
+          drawShadow: j === 0 && i >= 1 && i < 18,
+          down: j === 1 ? `wall.${i}.0` : null,
+          up: j === 0 ? `wall.${i}.1` : null,
         });
       }
     }
@@ -203,17 +204,30 @@ export class World {
       return new Euler().setFromQuaternion(q);
     });
 
+    if (slot.down !== null) {
+      newSlot.down = slot.down + suffix;
+    }
+    if (slot.up !== null) {
+      newSlot.up = slot.up + suffix;
+    }
+
     this.slots[slotName + suffix] = newSlot;
   }
 
   onHover(id: any): void {
     if (this.held.length === 0) {
       this.hovered = id as number | null;
+
+      if (this.hovered !== null && !this.canSelect(this.hovered, [])) {
+        this.hovered = null;
+      }
     }
   }
 
   onSelect(ids: Array<any>): void {
     this.selected = ids as Array<number>;
+    this.selected = this.selected.filter(
+      thingIndex => this.canSelect(thingIndex, this.selected));
   }
 
   onMove(tablePos: Vector2 | null): void {
@@ -231,6 +245,21 @@ export class World {
         this.targetSlots[i] = this.findSlot(x, y);
       }
     }
+  }
+
+  canSelect(thingIndex: number, otherSelected: Array<number>): boolean {
+    const slotName = this.things[thingIndex].slotName;
+    const slot = this.slots[slotName];
+
+    if (slot.up !== null) {
+      const upSlot = this.slots[slot.up];
+      if (upSlot.thingIndex !== null &&
+        otherSelected.indexOf(upSlot.thingIndex) === -1) {
+
+        return false;
+      }
+    }
+    return true;
   }
 
   findSlot(x: number, y: number): string | null {
