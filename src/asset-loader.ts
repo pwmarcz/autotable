@@ -1,7 +1,7 @@
 // @ts-ignore
 import jpg from '../img/*.jpg';
 // @ts-ignore
-import glb from '../img/*.glb';
+import glbModels from '../img/models.auto.glb';
 
 import { Texture, Mesh, TextureLoader, Material, LinearEncoding, MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, BufferGeometry } from 'three';
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -72,8 +72,7 @@ export class AssetLoader {
   loadAll(): Promise<void> {
     return Promise.all([
       this.loadTexture(jpg['table'], 'table'),
-      this.loadMesh(glb['tile.auto'], 'tile'),
-      this.loadMesh(glb['stick.auto'], 'stick'),
+      this.loadModels(glbModels),
     ]).then(() => {
       this.textures.table.wrapS = 3;
       this.textures.table.wrapT = 3;
@@ -92,11 +91,18 @@ export class AssetLoader {
     });
   }
 
-  loadMesh(url: string, name: string): Promise<void> {
+  loadModels(url: string): Promise<void> {
     const loader = new GLTFLoader();
     return new Promise(resolve => {
       loader.load(url, (model: GLTF) => {
-        this.meshes[name] = this.processModel(model);
+        for (const obj of model.scene.children) {
+          if ((obj as Mesh).isMesh) {
+            this.meshes[obj.name] = this.processMesh(obj as Mesh);
+          } else {
+            // eslint-disable-next-line no-console
+            console.warn('unrecognized object', obj);
+          }
+        }
         resolve();
       });
     });
@@ -108,9 +114,7 @@ export class AssetLoader {
     return texture;
   }
 
-  processModel(model: GLTF): Mesh {
-    const mesh = model.scene.children[0] as Mesh;
-
+  processMesh(mesh: Mesh): Mesh {
     if (Array.isArray(mesh.material)) {
       mesh.material = mesh.material.map(this.processMaterial.bind(this));
     } else {

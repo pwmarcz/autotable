@@ -1,6 +1,6 @@
 
 .PHONY: files
-files: img/tile.auto.glb img/stick.auto.glb
+files: img/models.auto.glb
 
 img/tiles.auto.png: img/tiles.svg
 	inkscape $< --export-png=$@ --export-width=512
@@ -8,10 +8,7 @@ img/tiles.auto.png: img/tiles.svg
 img/sticks.auto.png: img/sticks.svg
 	inkscape $< --export-png=$@ --export-width=256 --export-height=512
 
-img/stick.auto.glb: img/stick.blend img/sticks.auto.png
-	blender $< --background --python export.py -- $@
-
-img/tile.auto.glb: img/tile.blend img/tiles.auto.png
+img/models.auto.glb: img/models.blend img/sticks.auto.png img/tiles.auto.png
 	blender $< --background --python export.py -- $@
 
 .PHONY: build
