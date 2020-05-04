@@ -105,7 +105,7 @@ export class World {
       }
     }
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       const slotName = `stick.${i}.0`;
       const place = this.slotPlace(slotName, 0);
       this.things.push({
@@ -203,7 +203,7 @@ export class World {
       }
     }
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       this.addSlot(`stick.${i}`, {
         ...defaults,
         type: ThingType.STICK,

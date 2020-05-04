@@ -23,7 +23,7 @@ export class AssetLoader {
   makeStick(index: number): Mesh {
     const mesh = this.cloneMesh(this.meshes.stick);
 
-    const dv = 0.25 * index;
+    const dv = 0.2 * index;
 
     const geometry = mesh.geometry.clone() as BufferGeometry;
     mesh.geometry = geometry;
@@ -121,8 +121,10 @@ export class AssetLoader {
 
   processMaterial(material: Material): Material {
     const map = (material as MeshStandardMaterial).map;
-    if (map !== null)
+    if (map !== null) {
       map.encoding = LinearEncoding;
+      map.anisotropy = 4;
+    }
     return new MeshLambertMaterial({map});
   }
 }
