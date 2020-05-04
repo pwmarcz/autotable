@@ -1,6 +1,13 @@
 import { Vector2, Euler, Vector3, Quaternion } from "three";
 
+export enum ThingType {
+  TILE = 'TILE',
+  STICK = 'STICK',
+}
+
 interface Slot {
+  type: ThingType;
+
   origin: Vector3;
   direction: Vector2;
   rotations: Array<Euler>;
@@ -14,7 +21,7 @@ interface Slot {
 }
 
 interface Thing {
-  type: 'tile';
+  type: ThingType;
   index: number;
   slotName: string;
   rotationIndex: number;
@@ -64,6 +71,16 @@ export class World {
   static TILE_WIDTH = 6;
   static TILE_HEIGHT = 9;
   static TILE_DEPTH = 4;
+
+  static STICK_WIDTH = 20;
+  static STICK_HEIGHT = 2;
+  static STICK_DEPTH = 1;
+
+  static DIMENSIONS = {
+    [ThingType.TILE]: new Vector3(6, 9, 4),
+    [ThingType.STICK]: new Vector3(20, 2, 1),
+  };
+
   static WIDTH = 174;
   static HEIGHT = 174;
 
@@ -77,21 +94,34 @@ export class World {
           const tile = Math.floor(index / 4);
           const slotName = `wall.${i+1}.${j}.${k}`;
           const place = this.slotPlace(slotName, 0);
-          this.things[index] = {
-            type: 'tile',
+          this.things.push({
+            type: ThingType.TILE,
             index: tile,
             slotName,
             place,
             rotationIndex: 0,
-          };
+          });
           this.slots[slotName].thingIndex = index;
         }
       }
+    }
+
+    for (let i = 0; i < 4; i++) {
+      const slotName = `stick.${i}.0`;
+      const place = this.slotPlace(slotName, 0);
+      this.things.push({
+        type: ThingType.STICK,
+        index: i,
+        slotName,
+        place,
+        rotationIndex: 0,
+      });
     }
   }
 
   addSlots(): void {
     const defaults = {
+      type: ThingType.TILE,
       thingIndex: null,
       drawShadow: true,
       down: null,
@@ -168,6 +198,34 @@ export class World {
         }
       }
     }
+
+    for (let i = 0; i < 4; i++) {
+      this.addSlot(`stick.${i}`, {
+        ...defaults,
+        type: ThingType.STICK,
+        origin: new Vector3(
+          8,
+          10 + i * (World.STICK_HEIGHT + 1),
+          0,
+        ),
+        direction: new Vector2(1, 1),
+        rotations: [Rotation.FACE_UP],
+        drawShadow: false,
+      });
+    }
+
+    this.addSlot('riichi', {
+      ...defaults,
+      type: ThingType.STICK,
+      origin: new Vector3(
+        (World.WIDTH - World.STICK_WIDTH) / 2,
+        73,
+        0,
+      ),
+      direction: new Vector2(1, 1),
+      rotations: [Rotation.FACE_UP],
+      drawShadow: false,
+    });
   }
 
   addSlot(slotName: string, slot: Slot): void {
@@ -252,7 +310,7 @@ export class World {
         const x = thing.place.position.x + this.tablePos.x - this.heldTablePos.x;
         const y = thing.place.position.y + this.tablePos.y - this.heldTablePos.y;
 
-        this.targetSlots[i] = this.findSlot(x, y);
+        this.targetSlots[i] = this.findSlot(x, y, thing.type);
       }
     }
   }
@@ -272,13 +330,17 @@ export class World {
     return true;
   }
 
-  findSlot(x: number, y: number): string | null {
+  findSlot(x: number, y: number, thingType: ThingType): string | null {
     let bestDistance = World.TILE_DEPTH * 1.5;
     let bestSlot = null;
 
     // Empty slots
     for (const slotName in this.slots) {
       const slot = this.slots[slotName];
+      if (slot.type !== thingType) {
+        continue;
+      }
+
       if (slot.thingIndex !== null && this.held.indexOf(slot.thingIndex) === -1) {
         continue;
       }
@@ -515,9 +577,11 @@ export class World {
 
     const rotation = slot.rotations[rotationIndex];
 
-    const xv = new Vector3(0, 0, World.TILE_DEPTH).applyEuler(rotation);
-    const yv = new Vector3(0, World.TILE_HEIGHT, 0).applyEuler(rotation);
-    const zv = new Vector3(World.TILE_WIDTH, 0, 0).applyEuler(rotation);
+    const dim = World.DIMENSIONS[slot.type];
+
+    const xv = new Vector3(0, 0, dim.z).applyEuler(rotation);
+    const yv = new Vector3(0, dim.y, 0).applyEuler(rotation);
+    const zv = new Vector3(dim.x, 0, 0).applyEuler(rotation);
     const maxx = Math.max(Math.abs(xv.x), Math.abs(yv.x), Math.abs(zv.x));
     const maxy = Math.max(Math.abs(xv.y), Math.abs(yv.y), Math.abs(zv.y));
     const maxz = Math.max(Math.abs(xv.z), Math.abs(yv.z), Math.abs(zv.z));

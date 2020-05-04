@@ -6,7 +6,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
 
-import { World } from './world';
+import { World, ThingType } from './world';
 import { Object3D, Scene, Camera, WebGLRenderer, Vector2, Raycaster, Mesh, MeshLambertMaterial, BufferGeometry } from 'three';
 import { SelectionBox } from './selection-box';
 import { Assets } from './assets';
@@ -72,15 +72,18 @@ export class View {
     this.assets.tileTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
     this.assets.tileTexture.flipY = false;
 
+    this.assets.stickTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+    this.assets.stickTexture.flipY = false;
+
     this.objects = [];
     this.ghostObjects = [];
     this.shadows = [];
     for (let i = 0; i < this.world.things.length; i++) {
-      const obj = this.makeTileObject(this.world.things[i].index);
+      const obj = this.makeObject(this.world.things[i].type, this.world.things[i].index);
       this.objects.push(obj);
       this.scene.add(obj);
 
-      const gobj = this.makeGhostObject(this.world.things[i].index);
+      const gobj = this.makeGhostObject(this.world.things[i].type, this.world.things[i].index);
       this.ghostObjects.push(gobj);
       this.scene.add(gobj);
 
@@ -97,10 +100,10 @@ export class View {
     }
 
     for (const shadow of this.world.toRenderPlaces()) {
-      const w = Math.max(shadow.size.x, World.TILE_WIDTH);
-      const h = Math.max(shadow.size.y, World.TILE_WIDTH);
+      // const w = Math.max(shadow.size.x, World.TILE_WIDTH);
+      // const h = Math.max(shadow.size.y, World.TILE_WIDTH);
 
-      const geometry = new THREE.PlaneGeometry(w, h);
+      const geometry = new THREE.PlaneGeometry(shadow.size.x, shadow.size.y);
       const material = new THREE.MeshBasicMaterial({
         transparent: true,
         opacity: 0.1,
@@ -113,11 +116,7 @@ export class View {
 
     this.raycastObjects = [];
     for (let i = 0; i < Object.keys(this.world.slots).length; i++) {
-      const robj = new THREE.Mesh(new THREE.BoxGeometry(
-        World.TILE_WIDTH,
-        World.TILE_HEIGHT,
-        World.TILE_DEPTH)
-      );
+      const robj = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1));
       robj.visible = false;
       robj.geometry.computeBoundingBox();
       this.raycastObjects.push(robj);
@@ -206,6 +205,33 @@ export class View {
 
   }
 
+  makeObject(type: ThingType, index: number): Mesh {
+    switch (type) {
+      case ThingType.TILE:
+        return this.makeTileObject(index);
+      case ThingType.STICK:
+        return this.makeStickObject(index);
+    }
+  }
+
+  makeStickObject(index: number): Mesh {
+    const mesh = this.assets.stickMesh.clone();
+
+    const material = new THREE.MeshLambertMaterial({map: this.assets.stickTexture});
+    mesh.material = material;
+
+    const dv = 0.25 * index;
+
+    const geometry = mesh.geometry.clone() as BufferGeometry;
+    mesh.geometry = geometry;
+    const uvs: Float32Array = geometry.attributes.uv.array as Float32Array;
+    for (let i = 0; i < uvs.length; i += 2) {
+      uvs[i+1] += dv;
+    }
+
+    return mesh;
+  }
+
   makeTileObject(index: number): Mesh {
     const mesh = this.assets.tileMesh.clone();
 
@@ -232,8 +258,8 @@ export class View {
     return mesh;
   }
 
-  makeGhostObject(index: number): Mesh {
-    const obj = this.makeTileObject(index);
+  makeGhostObject(type: ThingType, index: number): Mesh {
+    const obj = this.makeObject(type, index);
     const material = obj.material as MeshLambertMaterial;
     material.transparent = true;
     material.opacity = 0.5;
@@ -285,7 +311,7 @@ export class View {
       const select = toSelect[i];
       const robj = this.raycastObjects[i];
       robj.position.copy(select.position);
-      robj.rotation.copy(select.rotation);
+      robj.scale.copy(select.size);
       robj.updateMatrixWorld();
       robj.userData.id = select.id;
       robjs.push(robj);

@@ -1,9 +1,10 @@
 // @ts-ignore
-import tilesImage from '../img/tiles.auto.png';
+import png from '../img/*.png';
 // @ts-ignore
-import tableImage from '../img/table.jpg';
+import jpg from '../img/*.jpg';
 // @ts-ignore
-import tileModel from '../img/tile.gltf';
+import gltf from '../img/*.gltf';
+
 
 import { Texture, Mesh, TextureLoader } from "three";
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -11,17 +12,28 @@ import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 export interface Assets {
   tileTexture: Texture;
   tableTexture: Texture;
+  stickTexture: Texture;
   tileMesh: Mesh;
+  stickMesh: Mesh;
 }
 
 export function loadAssets(): Promise<Assets> {
   return Promise.all([
-    loadTexture(tilesImage),
-    loadTexture(tableImage),
-    loadModel(tileModel)
-  ]).then(([tileTexture, tableTexture, gltf]) => {
-    const tileMesh = gltf.scene.children[0] as Mesh;
-    return { tileTexture, tableTexture, tileMesh } as Assets;
+    loadTexture(png['tiles.auto']),
+    loadTexture(jpg['table']),
+    loadTexture(png['sticks.auto']),
+    loadModel(gltf['tile']),
+    loadModel(gltf['stick']),
+  ]).then(([
+    tileTexture,
+    tableTexture,
+    stickTexture,
+    tileModel,
+    stickModel,
+  ]) => {
+    const tileMesh = tileModel.scene.children[0] as Mesh;
+    const stickMesh = stickModel.scene.children[0] as Mesh;
+    return { tileTexture, tableTexture, stickTexture, tileMesh, stickMesh } as Assets;
   });
 }
 

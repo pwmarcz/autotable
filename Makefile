@@ -1,9 +1,12 @@
 
 .PHONY: files
-files: img/tiles.auto.png
+files: img/tiles.auto.png img/sticks.auto.png
 
 img/tiles.auto.png: img/tiles.svg
 	inkscape $< --export-png=$@ --export-width=512
+
+img/sticks.auto.png: img/sticks.svg
+	inkscape $< --export-png=$@ --export-width=256 --export-height=256
 
 .PHONY: build
 build: files
