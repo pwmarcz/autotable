@@ -101,7 +101,6 @@ export class World {
             place,
             rotationIndex: 0,
           });
-          this.slots[slotName].thingIndex = index;
         }
       }
     }
@@ -116,6 +115,11 @@ export class World {
         place,
         rotationIndex: 0,
       });
+    }
+
+    for (let i = 0; i < this.things.length; i++) {
+      const slotName = this.things[i].slotName;
+      this.slots[slotName].thingIndex = i;
     }
   }
 
