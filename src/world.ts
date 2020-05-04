@@ -327,7 +327,6 @@ export class World {
       const upSlot = this.slots[slot.up];
       if (upSlot.thingIndex !== null &&
         otherSelected.indexOf(upSlot.thingIndex) === -1) {
-          console.log('canSelect false', thingIndex, otherSelected);
 
         return false;
       }
