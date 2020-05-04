@@ -7,9 +7,9 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
 
 import { World, ThingType } from './world';
-import { Object3D, Scene, Camera, WebGLRenderer, Vector2, Raycaster, Mesh, MeshLambertMaterial, BufferGeometry } from 'three';
+import { Object3D, Scene, Camera, WebGLRenderer, Vector2, Raycaster, Mesh, MeshLambertMaterial } from 'three';
 import { SelectionBox } from './selection-box';
-import { Assets } from './assets';
+import { AssetLoader } from './asset-loader';
 
 export class View {
   world: World;
@@ -17,7 +17,7 @@ export class View {
   main: HTMLElement;
   selection: HTMLElement;
 
-  assets: Assets;
+  assetLoader: AssetLoader;
 
   perspective = false;
 
@@ -44,13 +44,13 @@ export class View {
   mouse: Vector2 = new Vector2();
   selectStart: Vector2 | null = null;
 
-  constructor(main: HTMLElement, selection: HTMLElement, world: World, assets: Assets) {
+  constructor(main: HTMLElement, selection: HTMLElement, world: World, assetLoader: AssetLoader) {
     this.main = main;
     this.selection = selection;
     this.world = world;
     this.objects = [];
 
-    this.assets = assets;
+    this.assetLoader = assetLoader;
 
     this.scene = new THREE.Scene();
 
@@ -59,21 +59,12 @@ export class View {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     main.appendChild(this.renderer.domElement);
 
-    this.assets.tableTexture.wrapS = THREE.RepeatWrapping;
-    this.assets.tableTexture.wrapT = THREE.RepeatWrapping;
-    this.assets.tableTexture.repeat.set(3, 3);
-    const tableGeometry = new THREE.PlaneGeometry(
-      World.WIDTH + World.TILE_HEIGHT, World.HEIGHT + World.TILE_HEIGHT);
-    const tableMaterial = new THREE.MeshStandardMaterial({ color: 0xeeeeee, map: this.assets.tableTexture });
-    const tableMesh = new THREE.Mesh(tableGeometry, tableMaterial);
+    const tableMesh = this.assetLoader.makeTable();
     tableMesh.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0);
     this.scene.add(tableMesh);
 
-    this.assets.tileTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
-    this.assets.tileTexture.flipY = false;
-
-    this.assets.stickTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
-    this.assets.stickTexture.flipY = false;
+    // this.assets.stickTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+    // this.assets.stickTexture.flipY = false;
 
     this.objects = [];
     this.ghostObjects = [];
@@ -208,54 +199,10 @@ export class View {
   makeObject(type: ThingType, index: number): Mesh {
     switch (type) {
       case ThingType.TILE:
-        return this.makeTileObject(index);
+        return this.assetLoader.makeTile(index);
       case ThingType.STICK:
-        return this.makeStickObject(index);
+        return this.assetLoader.makeStick(index);
     }
-  }
-
-  makeStickObject(index: number): Mesh {
-    const mesh = this.assets.stickMesh.clone();
-
-    const material = new THREE.MeshLambertMaterial({map: this.assets.stickTexture});
-    mesh.material = material;
-
-    const dv = 0.25 * index;
-
-    const geometry = mesh.geometry.clone() as BufferGeometry;
-    mesh.geometry = geometry;
-    const uvs: Float32Array = geometry.attributes.uv.array as Float32Array;
-    for (let i = 0; i < uvs.length; i += 2) {
-      uvs[i+1] += dv;
-    }
-
-    return mesh;
-  }
-
-  makeTileObject(index: number): Mesh {
-    const mesh = this.assets.tileMesh.clone();
-
-    const material = new THREE.MeshLambertMaterial({color: 0xeeeeee, map: this.assets.tileTexture });
-    mesh.material = material;
-
-    const x = index % 8;
-    const y = Math.floor(index / 8);
-
-    const du = 32 / 256;
-    const dv = 47 / 256;
-
-    // Clone geometry and modify front face
-    const geometry = mesh.geometry.clone() as BufferGeometry;
-    mesh.geometry = geometry;
-    const uvs: Float32Array = geometry.attributes.uv.array as Float32Array;
-    for (let i = 0; i < uvs.length; i += 2) {
-      if (uvs[i] <= du && uvs[i+1] <= dv) {
-        uvs[i] += x * du;
-        uvs[i+1] += y * dv;
-      }
-    }
-
-    return mesh;
   }
 
   makeGhostObject(type: ThingType, index: number): Mesh {

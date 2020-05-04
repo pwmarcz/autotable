@@ -1,7 +1,7 @@
 import 'normalize.css';
 import { World } from './world';
 import { View } from './view';
-import { loadAssets } from './assets';
+import { AssetLoader } from './asset-loader';
 
 const main = document.getElementById('main')!;
 const selection = document.getElementById('selection')!;
@@ -10,8 +10,10 @@ const world = new World();
 
 let view: View | null = null;
 
-loadAssets().then(assets => {
-  view = new View(main, selection, world, assets);
+const assetLoader = new AssetLoader();
+
+assetLoader.loadAll().then(assets => {
+  view = new View(main, selection, world, assetLoader);
 
   // Debugging
   // @ts-ignore
