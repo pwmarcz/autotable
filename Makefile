@@ -8,7 +8,10 @@ img/tiles.auto.png: img/tiles.svg
 img/sticks.auto.png: img/sticks.svg
 	inkscape $< --export-png=$@ --export-width=256 --export-height=512
 
-img/models.auto.glb: img/models.blend img/sticks.auto.png img/tiles.auto.png
+img/center.auto.png: img/center.svg
+	inkscape $< --export-png=$@ --export-width=512 --export-height=512
+
+img/models.auto.glb: img/models.blend img/sticks.auto.png img/tiles.auto.png img/center.auto.png
 	blender $< --background --python export.py -- $@
 
 .PHONY: build

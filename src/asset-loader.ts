@@ -20,6 +20,10 @@ export class AssetLoader {
     return tableMesh;
   }
 
+  makeCenter(): Mesh {
+    return this.cloneMesh(this.meshes.center);
+  }
+
   makeStick(index: number): Mesh {
     const mesh = this.cloneMesh(this.meshes.stick);
 

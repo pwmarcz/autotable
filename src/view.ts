@@ -63,6 +63,10 @@ export class View {
     tableMesh.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0);
     this.scene.add(tableMesh);
 
+    const centerMesh = this.assetLoader.makeCenter();
+    centerMesh.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0.75);
+    this.scene.add(centerMesh);
+
     // this.assets.stickTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
     // this.assets.stickTexture.flipY = false;
 

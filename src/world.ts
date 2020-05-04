@@ -90,8 +90,8 @@ export class World {
     for (let i = 0; i < 17; i++) {
       for (let j = 0; j < 2; j++) {
         for (let k = 0; k < 4; k++) {
-          const index = k * 17 * 2 + j * 17 + i;
-          const tile = Math.floor(index / 4);
+          //const index = k * 17 * 2 + j * 17 + i;
+          const tile = Math.floor(Math.random() * 34);
           const slotName = `wall.${i+1}.${j}.${k}`;
           const place = this.slotPlace(slotName, 0);
           this.things.push({
@@ -105,12 +105,12 @@ export class World {
       }
     }
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       const slotName = `stick.${i}.0`;
       const place = this.slotPlace(slotName, 0);
       this.things.push({
         type: ThingType.STICK,
-        index: i,
+        index: i % 5,
         slotName,
         place,
         rotationIndex: 0,
@@ -203,13 +203,13 @@ export class World {
       }
     }
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       this.addSlot(`stick.${i}`, {
         ...defaults,
         type: ThingType.STICK,
         origin: new Vector3(
           8,
-          10 + i * (World.STICK_HEIGHT + 1),
+          4 + i * (World.STICK_HEIGHT + 1),
           0,
         ),
         direction: new Vector2(1, 1),
@@ -223,8 +223,8 @@ export class World {
       type: ThingType.STICK,
       origin: new Vector3(
         (World.WIDTH - World.STICK_WIDTH) / 2,
-        73,
-        0,
+        71.5,
+        1.5,
       ),
       direction: new Vector2(1, 1),
       rotations: [Rotation.FACE_UP],
@@ -500,7 +500,7 @@ export class World {
         const dy = targetThing.place.position.y - sourceThing.place.position.y;
         const sizey = (targetThing.place.size.y + sourceThing.place.size.y) / 2;
 
-        const dist = sizey - Math.sign(sdy) * Math.abs(dy);
+        const dist = sizey - Math.sign(sdy) * dy;
         if (dist > 0) {
           targetThing.place.position.y += Math.sign(sdy) * dist;
         }
