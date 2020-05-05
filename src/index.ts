@@ -3,17 +3,14 @@ import { World } from './world';
 import { View } from './view';
 import { AssetLoader } from './asset-loader';
 
-const main = document.getElementById('main')!;
-const selection = document.getElementById('selection')!;
-
 const world = new World();
 
 let view: View | null = null;
 
 const assetLoader = new AssetLoader();
 
-assetLoader.loadAll().then(assets => {
-  view = new View(main, selection, world, assetLoader);
+assetLoader.loadAll().then(() => {
+  view = new View(world, assetLoader);
 
   // Debugging
   // @ts-ignore

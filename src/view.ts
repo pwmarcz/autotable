@@ -10,12 +10,15 @@ import { World, ThingType } from './world';
 import { Object3D, Scene, Camera, WebGLRenderer, Vector2, Raycaster, Mesh, MeshLambertMaterial } from 'three';
 import { SelectionBox } from './selection-box';
 import { AssetLoader } from './asset-loader';
+import { Center } from './center';
 
 export class View {
   world: World;
 
   main: HTMLElement;
   selection: HTMLElement;
+
+  center: Center;
 
   assetLoader: AssetLoader;
 
@@ -46,9 +49,9 @@ export class View {
 
   cameraPos = new Animation(150);
 
-  constructor(main: HTMLElement, selection: HTMLElement, world: World, assetLoader: AssetLoader) {
-    this.main = main;
-    this.selection = selection;
+  constructor(world: World, assetLoader: AssetLoader) {
+    this.main = document.getElementById('main')!;
+    this.selection = document.getElementById('selection')!;
     this.world = world;
     this.objects = [];
 
@@ -59,15 +62,15 @@ export class View {
     this.raycaster = new THREE.Raycaster();
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
-    main.appendChild(this.renderer.domElement);
+    this.main.appendChild(this.renderer.domElement);
 
     const tableMesh = this.assetLoader.makeTable();
     tableMesh.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0);
     this.scene.add(tableMesh);
 
-    const centerMesh = this.assetLoader.makeCenter();
-    centerMesh.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0.75);
-    this.scene.add(centerMesh);
+    this.center = new Center(this.assetLoader);
+    this.center.mesh.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0.75);
+    this.scene.add(this.center.mesh);
 
     // this.assets.stickTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
     // this.assets.stickTexture.flipY = false;
@@ -243,6 +246,9 @@ export class View {
     this.updateRender();
     this.updateRenderGhosts();
     this.updateRenderShadows();
+
+    this.center.setScores(this.world.getScores());
+    this.center.draw();
 
     this.composer.render();
   }

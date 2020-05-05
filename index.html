@@ -41,6 +41,16 @@
             background: rgba(0,0,0, 0.4);
             user-select: none;
         }
+
+        #center { display: none; }
+
+        /* https://fontlibrary.org/en/font/segment7 */
+        @font-face {
+            font-family: 'Segment7Standard';
+                src: url('img/Segment7Standard.otf') format('opentype');
+            font-weight: normal;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -57,6 +67,7 @@
             </p>
             <p>Press <b>F</b> to flip a tile</p>
             <p>Press <b>SPACE</b> to look down</p>
+            <canvas id="center"></canvas>
         </div>
     </div>
     <script src="./src/index.ts"></script>

@@ -3,7 +3,8 @@ import jpg from '../img/*.jpg';
 // @ts-ignore
 import glbModels from '../img/models.auto.glb';
 
-import { Texture, Mesh, TextureLoader, Material, LinearEncoding, MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, BufferGeometry } from 'three';
+import { Texture, Mesh, TextureLoader, Material, LinearEncoding,
+   MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, BufferGeometry } from 'three';
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { World } from './world';
 
@@ -77,6 +78,7 @@ export class AssetLoader {
     return Promise.all([
       this.loadTexture(jpg['table'], 'table'),
       this.loadModels(glbModels),
+      (document as any).fonts.load('40px "Segment7Standard"'),
     ]).then(() => {
       this.textures.table.wrapS = 3;
       this.textures.table.wrapT = 3;

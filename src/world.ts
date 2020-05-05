@@ -69,6 +69,8 @@ export class World {
   held: Array<number> = [];
   heldTablePos: Vector2 | null = null;
 
+  scoreSlots: Array<Array<string>> = [[], [], [], []];
+
   static TILE_WIDTH = 6;
   static TILE_HEIGHT = 9;
   static TILE_DEPTH = 4;
@@ -118,7 +120,7 @@ export class World {
     // Debt
     add(4, 2, 0);
     // 10k
-    add(3, 2, 1);
+    add(3, 1, 1);
     // 5k
     add(2, 2, 2);
     // 1k
@@ -240,6 +242,12 @@ export class World {
           rotations: [Rotation.FACE_UP],
           drawShadow: false,
         });
+        for (let k = 0; k < 4; k++) {
+          if (this.scoreSlots[k] === null) {
+            this.scoreSlots[k] = [];
+          }
+          this.scoreSlots[k].push(`stick.${i}.${j}.${k}`);
+        }
       }
     }
 
@@ -648,11 +656,29 @@ export class World {
     }
     return result;
   }
+
+  getScores(): Array<number> {
+    const scores = new Array(4).fill(-20000);
+    const stickScores = [100, 1000, 5000, 10000, 10000];
+
+    for (let i = 0; i < 4; i++) {
+      for (const slotName of this.scoreSlots[i]) {
+        const slot = this.slots[slotName];
+        if (slot.thingIndex !== null) {
+          const thing = this.things[slot.thingIndex];
+          if (thing.type === ThingType.STICK) {
+            scores[i] += stickScores[thing.index];
+          }
+        }
+      }
+    }
+    return scores;
+  }
 }
 
 function shuffle<T>(arr: Array<T>): void {
   for (let i = arr.length - 1; i > 0; i--) {
-    let j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(Math.random() * (i + 1));
     const temp = arr[j];
     arr[j] = arr[i];
     arr[i] = temp;
