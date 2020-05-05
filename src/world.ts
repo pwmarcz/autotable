@@ -110,7 +110,7 @@ export class World {
     const add = (index: number, n: number, slot: number): void => {
       for (let i = 0; i < 4; i++) {
         for (let j = 0; j < n; j++) {
-          this.addThing(ThingType.STICK, index, `stick.${slot}.${j}.0.${i}`);
+          this.addThing(ThingType.STICK, index, `stick.${slot}.${j}.${i}`);
         }
       }
     };
@@ -227,21 +227,19 @@ export class World {
     }
 
     for (let i = 0; i < 6; i++) {
-      for (let j = 0; j < 5; j++) {
-        for (let k = 0; k < 2; k++) {
-          this.addSlot(`stick.${i}.${j}.${k}`, {
-            ...defaults,
-            type: ThingType.STICK,
-            origin: new Vector3(
-              15 + 24 * i + 2*k,
-              -25 - j * (World.STICK_HEIGHT + 1),
-              k * World.STICK_DEPTH,
-            ),
-            direction: new Vector2(1, 1),
-            rotations: [Rotation.FACE_UP],
-            drawShadow: false,
-          });
-        }
+      for (let j = 0; j < 10; j++) {
+        this.addSlot(`stick.${i}.${j}`, {
+          ...defaults,
+          type: ThingType.STICK,
+          origin: new Vector3(
+            15 + 24 * i,
+            -20 - j * (World.STICK_HEIGHT + 1),
+            0,
+          ),
+          direction: new Vector2(1, 1),
+          rotations: [Rotation.FACE_UP],
+          drawShadow: false,
+        });
       }
     }
 

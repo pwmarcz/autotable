@@ -204,7 +204,7 @@ export class View {
 
     const updated = this.cameraPos.update();
 
-    this.camera.position.set(0, -40 * (1 + this.cameraPos.pos), 30);
+    this.camera.position.set(0, -40 - 50 * this.cameraPos.pos, 30);
     this.camera.rotation.set(Math.PI * 0.25, 0, 0);
 
     if (updated) {
