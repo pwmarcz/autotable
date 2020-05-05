@@ -12,6 +12,7 @@ interface Slot {
   direction: Vector2;
   rotations: Array<Euler>;
   thingIndex: number | null;
+
   drawShadow: boolean;
 
   down: string | null;
@@ -86,41 +87,63 @@ export class World {
 
   constructor() {
     this.addSlots();
+    this.addTiles();
+    this.addSticks();
+  }
 
+  addTiles(): void {
+    const tiles = [];
+    for (let i = 0; i < 136; i++) {
+      tiles.push(Math.floor(i / 4));
+    }
+    shuffle(tiles);
     for (let i = 0; i < 17; i++) {
       for (let j = 0; j < 2; j++) {
         for (let k = 0; k < 4; k++) {
-          //const index = k * 17 * 2 + j * 17 + i;
-          const tile = Math.floor(Math.random() * 34);
-          const slotName = `wall.${i+1}.${j}.${k}`;
-          const place = this.slotPlace(slotName, 0);
-          this.things.push({
-            type: ThingType.TILE,
-            index: tile,
-            slotName,
-            place,
-            rotationIndex: 0,
-          });
+          this.addThing(ThingType.TILE, tiles.pop()!, `wall.${i+1}.${j}.${k}`);
         }
       }
     }
+  }
 
-    for (let i = 0; i < 10; i++) {
-      const slotName = `stick.${i}.0`;
-      const place = this.slotPlace(slotName, 0);
-      this.things.push({
-        type: ThingType.STICK,
-        index: i % 5,
-        slotName,
-        place,
-        rotationIndex: 0,
-      });
+  addSticks(): void {
+    const add = (index: number, n: number, slot: number): void => {
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < n; j++) {
+          this.addThing(ThingType.STICK, index, `stick.${slot}.${j}.0.${i}`);
+        }
+      }
+    };
+
+    // Debt
+    add(4, 2, 0);
+    // 10k
+    add(3, 2, 1);
+    // 5k
+    add(2, 2, 2);
+    // 1k
+    add(1, 4, 3);
+    // 100
+    add(0, 5, 4);
+    add(0, 5, 5);
+  }
+
+  addThing(type: ThingType, index: number, slotName: string): void {
+    if (this.slots[slotName] === undefined) {
+      throw `Unknown slot: ${slotName}`;
     }
 
-    for (let i = 0; i < this.things.length; i++) {
-      const slotName = this.things[i].slotName;
-      this.slots[slotName].thingIndex = i;
-    }
+    const thingIndex = this.things.length;
+
+    const place = this.slotPlace(slotName, 0);
+    this.things.push({
+      type,
+      index,
+      slotName,
+      place,
+      rotationIndex: 0,
+    });
+    this.slots[slotName].thingIndex = thingIndex;
   }
 
   addSlots(): void {
@@ -203,19 +226,23 @@ export class World {
       }
     }
 
-    for (let i = 0; i < 10; i++) {
-      this.addSlot(`stick.${i}`, {
-        ...defaults,
-        type: ThingType.STICK,
-        origin: new Vector3(
-          8,
-          4 + i * (World.STICK_HEIGHT + 1),
-          0,
-        ),
-        direction: new Vector2(1, 1),
-        rotations: [Rotation.FACE_UP],
-        drawShadow: false,
-      });
+    for (let i = 0; i < 6; i++) {
+      for (let j = 0; j < 5; j++) {
+        for (let k = 0; k < 2; k++) {
+          this.addSlot(`stick.${i}.${j}.${k}`, {
+            ...defaults,
+            type: ThingType.STICK,
+            origin: new Vector3(
+              15 + 24 * i + 2*k,
+              -25 - j * (World.STICK_HEIGHT + 1),
+              k * World.STICK_DEPTH,
+            ),
+            direction: new Vector2(1, 1),
+            rotations: [Rotation.FACE_UP],
+            drawShadow: false,
+          });
+        }
+      }
     }
 
     this.addSlot('riichi', {
@@ -529,10 +556,11 @@ export class World {
         (selected && this.selected.indexOf(this.hovered!) !== -1);
       const temporary = held && !canDrop;
 
-      const up = this.slots[thing.slotName].up;
+      const slot = this.slots[thing.slotName];
+
       let bottom = false;
-      if (this.held !== null && up !== null) {
-        bottom = this.slots[up].thingIndex === null;
+      if (this.held !== null && slot.up !== null) {
+        bottom = this.slots[slot.up].thingIndex === null;
       }
 
       result.push({
@@ -621,5 +649,14 @@ export class World {
       }
     }
     return result;
+  }
+}
+
+function shuffle<T>(arr: Array<T>): void {
+  for (let i = arr.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    const temp = arr[j];
+    arr[j] = arr[i];
+    arr[i] = temp;
   }
 }

@@ -44,6 +44,8 @@ export class View {
   mouse: Vector2 = new Vector2();
   selectStart: Vector2 | null = null;
 
+  cameraPos = new Animation(150);
+
   constructor(main: HTMLElement, selection: HTMLElement, world: World, assetLoader: AssetLoader) {
     this.main = main;
     this.selection = selection;
@@ -152,6 +154,8 @@ export class View {
     this.renderer.domElement.addEventListener('mousedown', this.onMouseDown.bind(this));
     window.addEventListener('mouseup', this.onMouseUp.bind(this));
     window.addEventListener('keypress', this.onKeyPress.bind(this));
+    window.addEventListener('keydown', this.onKeyDown.bind(this));
+    window.addEventListener('keyup', this.onKeyUp.bind(this));
   }
 
   setupRendering(): void {
@@ -159,6 +163,7 @@ export class View {
     const h = this.renderer.domElement.clientHeight;
 
     this.camera = this.makeCamera(this.perspective);
+    this.adjustCamera();
     this.selectionBox = new SelectionBox(this.camera);
     this.composer = new EffectComposer(this.renderer);
     const renderPass = new RenderPass(this.scene, this.camera);
@@ -189,15 +194,27 @@ export class View {
       (World.WIDTH - w) / 2, (World.WIDTH + w) / 2,
       h, 0,
       0.1, 1000);
-    camera.position.set(0, -40, 25);
-    camera.rotateX(Math.PI * 0.25);
     return camera;
+  }
+
+  adjustCamera(): void {
+    if (this.perspective) {
+      return;
+    }
+
+    const updated = this.cameraPos.update();
+
+    this.camera.position.set(0, -40 * (1 + this.cameraPos.pos), 30);
+    this.camera.rotation.set(Math.PI * 0.25, 0, 0);
+
+    if (updated) {
+      this.updateSelect();
+    }
   }
 
   setPerspective(perspective: boolean): void {
     this.perspective = perspective;
     this.setupRendering();
-
   }
 
   makeObject(type: ThingType, index: number): Mesh {
@@ -220,6 +237,8 @@ export class View {
   draw(): void {
     requestAnimationFrame(this.draw.bind(this));
     this.updateViewport();
+    this.adjustCamera();
+    this.updateSelect();
 
     this.updateRender();
     this.updateRenderGhosts();
@@ -397,6 +416,18 @@ export class View {
     }
   }
 
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.key === ' ') {
+      this.cameraPos.start(1);
+    }
+  }
+
+  onKeyUp(event: KeyboardEvent): void {
+    if (event.key === ' ') {
+      this.cameraPos.start(0);
+    }
+  }
+
   updateViewport(): void {
     if (this.main.parentElement!.clientWidth !== this.width ||
       this.main.parentElement!.clientHeight !== this.height) {
@@ -419,5 +450,36 @@ export class View {
 
       this.setupRendering();
     }
+  }
+}
+
+class Animation {
+  private startTime = 0;
+  private endTime = 1;
+  private startPos = 0;
+  private endPos = 0;
+  private period: number;
+  pos = -1;
+
+  constructor(period: number) {
+    this.period = period;
+  }
+
+  start(endPos: number): void {
+    this.startPos = this.pos;
+    this.startTime = new Date().getTime();
+    this.endPos = endPos;
+    this.endTime = this.startTime + this.period * Math.abs(endPos - this.pos);
+  }
+
+  update(): boolean {
+    if (this.pos === this.endPos) {
+      return false;
+    }
+
+    const now = new Date().getTime();
+    const delta = (now - this.startTime) / (this.endTime - this.startTime);
+    this.pos = this.startPos + (this.endPos - this.startPos) * Math.min(1, delta);
+    return true;
   }
 }
