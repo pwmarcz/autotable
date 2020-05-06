@@ -163,12 +163,12 @@ export class View {
     topLight.position.set(0, 0, 1);
     this.scene.add(topLight);
 
-    const frontLight = new THREE.DirectionalLight(0x4444444);
+    const frontLight = new THREE.DirectionalLight(0x222222);
     frontLight.position.set(0, -1, 0);
     this.scene.add(frontLight);
 
-    const sideLight = new THREE.DirectionalLight(0x4444444);
-    sideLight.position.set(-1, 0, 0);
+    const sideLight = new THREE.DirectionalLight(0x222222);
+    sideLight.position.set(-1, -1, 0);
     this.scene.add(sideLight);
   }
 
