@@ -27,6 +27,7 @@ export class Center {
     this.texture.flipY = false;
     this.texture.rotation = Math.PI;
     this.texture.center = new Vector2(0.5, 0.5);
+    this.texture.anisotropy = 16;
     material.map = this.texture;
   }
 
