@@ -17,6 +17,8 @@ export class Slot {
   direction: Vector2;
   rotations: Array<Euler>;
 
+  places: Array<Place>;
+
   thing: Thing | null = null;
 
   down: string | null;
@@ -47,6 +49,8 @@ export class Slot {
     this.requires = params.requires ?? null;
     this.canFlipMultiple = params.canFlipMultiple ?? false;
     this.drawShadow = params.drawShadow ?? true;
+
+    this.places = this.rotations.map(this.makePlace.bind(this));
   }
 
   rotated(suffix: string, rotation: number, worldWidth: number): Slot {
@@ -85,9 +89,7 @@ export class Slot {
     return slot;
   }
 
-  place(rotationIndex: number): Place {
-    const rotation = this.rotations[rotationIndex];
-
+  makePlace(rotation: Euler): Place {
     const dim = Size[this.type];
 
     const xv = new Vector3(0, 0, dim.z).applyEuler(rotation);
@@ -117,7 +119,8 @@ export class Thing {
   typeIndex: number;
   slot: Slot;
   rotationIndex: number;
-  place: Place;
+  offset: Vector2;
+  // place: Place;
 
   constructor(index: number, type: ThingType, typeIndex: number, slot: Slot) {
     this.index = index;
@@ -125,44 +128,57 @@ export class Thing {
     this.typeIndex = typeIndex;
     this.slot = slot;
     this.rotationIndex = 0;
+    this.offset = new Vector2(0, 0);
 
-    this.place = slot.place(this.rotationIndex);
     this.slot.thing = this;
   }
 
+  place(): Place {
+    const place = this.slot.places[this.rotationIndex];
+    if (this.offset.x === 0 && this.offset.y === 0) {
+      return place;
+    }
+    const position = place.position.clone();
+    position.x += this.offset.x;
+    position.y += this.offset.y;
+    return {...place, position };
+  }
+
   handlePush(source: Thing | null): void {
-    this.place = this.slot.place(this.rotationIndex);
+    this.offset.set(0, 0);
 
     if (source === null) {
       return;
     }
+
+    const place = this.slot.places[this.rotationIndex];
+    const sourcePlace = source.slot.places[source.rotationIndex];
 
     // Relative slot position
     const sdx = this.slot.origin.x - source.slot.origin.x;
     const sdy = this.slot.origin.y - source.slot.origin.y;
 
     if (Math.abs(sdx) > Math.abs(sdy)) {
-      const dx = this.place.position.x - source.place.position.x;
-      const sizex = (this.place.size.x + source.place.size.x) / 2;
+      const dx = place.position.x - sourcePlace.position.x - source.offset.x;
+      const sizex = (place.size.x + sourcePlace.size.x) / 2;
 
       const dist = sizex - Math.sign(sdx) * dx;
       if (dist > 0) {
-        this.place.position.x += Math.sign(sdx) * dist;
+        this.offset.x = Math.sign(sdx) * dist;
       }
     } else {
-      const dy = this.place.position.y - source.place.position.y;
-      const sizey = (this.place.size.y + source.place.size.y) / 2;
+      const dy = place.position.y - sourcePlace.position.y - source.offset.y;
+      const sizey = (place.size.y + sourcePlace.size.y) / 2;
 
       const dist = sizey - Math.sign(sdy) * dy;
       if (dist > 0) {
-        this.place.position.y += Math.sign(sdy) * dist;
+        this.offset.y = Math.sign(sdy) * dist;
       }
     }
   }
 
   flip(): void {
     this.rotationIndex = (this.rotationIndex + 1) % this.slot.rotations.length;
-    this.place = this.slot.place(this.rotationIndex);
   }
 
   moveTo(target: Slot): void {
@@ -175,7 +191,6 @@ export class Thing {
     }
 
     this.slot = target;
-    this.place = target.place(0);
     this.rotationIndex = 0;
     target.thing = this;
   }

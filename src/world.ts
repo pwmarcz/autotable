@@ -237,8 +237,9 @@ export class World {
 
       for (let i = 0; i < this.held.length; i++) {
         const thing = this.held[i];
-        const x = thing.place.position.x + this.tablePos.x - this.heldTablePos.x;
-        const y = thing.place.position.y + this.tablePos.y - this.heldTablePos.y;
+        const place = thing.place();
+        const x = place.position.x + this.tablePos.x - this.heldTablePos.x;
+        const y = place.position.y + this.tablePos.y - this.heldTablePos.y;
 
         this.targetSlots[i] = this.findSlot(x, y, thing.type);
       }
@@ -280,7 +281,7 @@ export class World {
         continue;
       }
 
-      const place = slot.place(0);
+      const place = slot.places[0];
       const dx = Math.max(0, Math.abs(x - place.position.x) - place.size.x / 2);
       const dy = Math.max(0, Math.abs(y - place.position.y) - place.size.y / 2);
       const distance = Math.sqrt(dx*dx + dy*dy);
@@ -381,7 +382,7 @@ export class World {
 
     const result = [];
     for (const thing of this.things) {
-      let place = thing.place;
+      let place = thing.place();
       const held = this.held.indexOf(thing) !== -1;
 
       if (held && this.tablePos !== null && this.heldTablePos !== null) {
@@ -435,7 +436,7 @@ export class World {
     if (this.held.length === 0) {
       // Things
       for (const thing of this.things) {
-        const place = thing.place;
+        const place = thing.place();
         result.push({...place, id: thing.index});
       }
     }
@@ -446,7 +447,7 @@ export class World {
     const result = [];
     for (const slotName in this.slots) {
       if (this.slots[slotName].drawShadow) {
-        result.push(this.slots[slotName].place(0));
+        result.push(this.slots[slotName].places[0]);
       }
     }
     return result;
@@ -456,7 +457,7 @@ export class World {
     const result = [];
     if (this.canDrop()) {
       for (const slot of this.targetSlots) {
-        result.push(slot!.place(0));
+        result.push(slot!.places[0]);
       }
     }
     return result;
