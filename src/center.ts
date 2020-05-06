@@ -8,6 +8,7 @@ export class Center {
   texture: CanvasTexture;
 
   scores: Array<number> = [0, 0, 0, 0];
+  nicks: Array<string> = ['', '', '', ''];
   dirty = true;
 
   constructor(loader: AssetLoader) {
@@ -38,6 +39,15 @@ export class Center {
     }
   }
 
+  setNicks(nicks: Array<string>): void {
+    for (let i = 0; i < 4; i++) {
+      if (nicks[i] !== this.nicks[i]) {
+        this.dirty = true;
+      }
+      this.nicks[i] = nicks[i];
+    }
+  }
+
   draw(): void {
     if (!this.dirty) {
       return;
@@ -52,27 +62,37 @@ export class Center {
     this.ctx.fillStyle = '#000';
     this.ctx.fillRect(offset, offset, width, width);
 
-    this.ctx.font = '40px Segment7Standard, monospace';
-    this.ctx.textAlign = 'right';
     this.ctx.textBaseline = 'middle';
 
     this.ctx.translate(256, 256);
     for (let i = 0; i < 4; i++) {
-      const score = this.scores[i];
-
-      if (score > 0) {
-        this.ctx.fillStyle = '#eee';
-      } else if (0 <= score && score <= 1000) {
-        this.ctx.fillStyle = '#e80';
-      } else {
-        this.ctx.fillStyle = '#e00';
-      }
-
-
-      const scoreText = '' + score;
-      this.ctx.fillText(scoreText, 60, 100);
+      this.drawScore(this.scores[i]);
+      this.drawNick(this.nicks[i]);
       this.ctx.rotate(-Math.PI / 2);
     }
     this.texture.needsUpdate = true;
+  }
+
+  drawScore(score: number): void {
+    this.ctx.textAlign = 'right';
+    this.ctx.font = '40px Segment7Standard, monospace';
+    if (score > 0) {
+      this.ctx.fillStyle = '#eee';
+    } else if (0 <= score && score <= 1000) {
+      this.ctx.fillStyle = '#e80';
+    } else {
+      this.ctx.fillStyle = '#e00';
+    }
+    const scoreText = '' + score;
+    this.ctx.fillText(scoreText, 60, 100);
+  }
+
+  drawNick(nick: string): void {
+    nick = nick.substr(0, 10);
+
+    this.ctx.textAlign = 'center';
+    this.ctx.font = '20px Verdana, Arial';
+    this.ctx.fillStyle = '#afa';
+    this.ctx.fillText(nick, 0, 55);
   }
 }

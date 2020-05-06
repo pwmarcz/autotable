@@ -269,6 +269,7 @@ export class View {
     this.updateRenderShadows();
 
     this.center.setScores(this.world.getScores());
+    this.center.setNicks(this.world.client.getNicks());
     this.center.draw();
 
     this.composer.render();
@@ -442,6 +443,10 @@ export class View {
   }
 
   onKeyDown(event: KeyboardEvent): void {
+    if (document.activeElement?.tagName === 'INPUT') {
+      return;
+    }
+
     if (event.key === 'f') {
       this.world.onFlip();
     }

@@ -77,7 +77,18 @@
             left: 0;
             padding: 0 1em;
             background: rgba(0,0,0, 0.4);
+            color: #ccc;
             user-select: none;
+        }
+
+        input[type=text] {
+            background: black;
+            color: #ddd;
+            border: 1px solid #aaa;
+        }
+
+        #nick {
+            width: 7em;
         }
 
         #center { display: none; }
@@ -92,6 +103,7 @@
     </style>
 </head>
 <body>
+    <canvas id="center"></canvas>
     <div id="full">
         <div id="main">
             <div id="selection"></div>
@@ -109,7 +121,9 @@
             </p>
             <p>Press <b>F</b> to flip a tile</p>
             <p>Press <b>SPACE</b> to look down</p>
-            <canvas id="center"></canvas>
+            <p>Status: <b id="status">not connected</b></p>
+            <p><button id="connect">Connect</button></p>
+            <p>Nick: <input id="nick" type="text"></input></p>
         </div>
     </div>
     <script src="./src/index.ts"></script>

@@ -83,16 +83,14 @@ class Game {
     const client = this.clients[num];
     if (client !== null) {
       const data = JSON.stringify(message);
-      console.log(`< ${this.gameId}.${num} ${data}`);
+      console.log(`send ${this.gameId}.${num} ${data}`);
       client.send(data);
     }
   }
 
   sendAll(num: number, message: Message): void {
     for (let i = 0; i < PLAYERS; i++) {
-      if (i !== num) {
-        this.sendAll(i, message);
-      }
+      this.send(i, message);
     }
   }
 
@@ -111,7 +109,7 @@ class Game {
           throw 'wrong player num';
         }
         this.players[num] = message.player;
-        this.sendOthers(num, message);
+        this.sendAll(num, message);
         break;
       case 'UPDATE':
         for (const thingIndex in message.things) {
@@ -121,7 +119,7 @@ class Game {
         break;
       case 'REPLACE':
         this.things = message.allThings;
-        this.sendOthers(num, message);
+        this.sendAll(num, message);
         break;
     }
   }
@@ -152,9 +150,9 @@ class Server {
 
       client.on('message', data => {
         if (client.game !== null) {
-          console.log(`> ${client.game.gameId}.${client.num} ${data}`);
+          console.log(`recv ${client.game.gameId}.${client.num} ${data}`);
         } else {
-          console.log(`> * ${data}`);
+          console.log(`recv * ${data}`);
         }
 
         const message = JSON.parse(data as string) as Message;

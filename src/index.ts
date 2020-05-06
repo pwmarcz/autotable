@@ -2,8 +2,10 @@ import 'normalize.css';
 import { World } from './world';
 import { View } from './view';
 import { AssetLoader } from './asset-loader';
+import { Client } from './client';
 
-const world = new World();
+const client = new Client('ws://localhost:1235');
+const world = new World(client);
 
 let view: View | null = null;
 

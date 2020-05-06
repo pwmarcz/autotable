@@ -1,6 +1,7 @@
 import { Vector2, Euler, Vector3 } from "three";
 
 import { Place, Slot, Thing, Size, ThingType } from "./places";
+import { Client } from "./client";
 
 interface Render {
   thingIndex: number;
@@ -40,10 +41,14 @@ export class World {
 
   static WIDTH = 174;
 
-  constructor() {
+  client: Client;
+
+  constructor(client: Client) {
     this.addSlots();
     this.addTiles();
     this.addSticks();
+
+    this.client = client;
   }
 
   addTiles(): void {
