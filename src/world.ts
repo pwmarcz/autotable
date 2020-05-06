@@ -25,7 +25,7 @@ const Rotation = {
 
 export class World {
   slots: Record<string, Slot> = {};
-  pushes: Array<[string, string]> = [];
+  pushes: Array<[Slot, Slot]> = [];
   things: Array<Thing> = [];
 
   hovered: Thing | null = null;
@@ -91,17 +91,8 @@ export class World {
     const thingIndex = this.things.length;
     const slot = this.slots[slotName];
 
-    const place = slot.place(0);
-    const thing = {
-      index: thingIndex,
-      type,
-      typeIndex,
-      slot,
-      place,
-      rotationIndex: 0,
-    };
+    const thing = new Thing(thingIndex, type, typeIndex, slot);
     this.things.push(thing);
-    slot.thing = thing;
   }
 
   addSlots(): void {
@@ -132,8 +123,8 @@ export class World {
           drawShadow: false,
           requires: i > 0 ? `meld.${i-1}.0` : null,
         }));
-        if (j < 3) {
-          this.addPush(`meld.${i}.${j}`, `meld.${i}.${j+1}`);
+        if (j > 0) {
+          this.addPush(`meld.${i}.${j-1}`, `meld.${i}.${j}`);
         }
       }
     }
@@ -167,8 +158,8 @@ export class World {
           direction: new Vector2(1, 1),
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
         }));
-        if (j < 5) {
-          this.addPush(`discard.${i}.${j}`, `discard.${i}.${j+1}`);
+        if (j > 0) {
+          this.addPush(`discard.${i}.${j-1}`, `discard.${i}.${j}`);
         }
       }
     }
@@ -217,7 +208,7 @@ export class World {
 
   addPush(source: string, target: string): void {
     for (let i = 0; i < 4; i++) {
-      this.pushes.push([`${source}.${i}`, `${target}.${i}`]);
+      this.pushes.push([this.slots[`${source}.${i}`], this.slots[`${target}.${i}`]]);
     }
   }
 
@@ -352,34 +343,24 @@ export class World {
         if (this.selected.length > 1 && !thing.slot.canFlipMultiple) {
           continue;
         }
-        this.flip(thing);
+        thing.flip();
       }
+      this.checkPushes();
       this.selected.splice(0);
     } else if (this.hovered !== null) {
-      this.flip(this.hovered);
+      this.hovered.flip();
+      this.checkPushes();
     }
-  }
-
-  flip(thing: Thing): void {
-    thing.rotationIndex = (thing.rotationIndex + 1) % thing.slot.rotations.length;
-    thing.place = thing.slot.place(thing.rotationIndex);
-
-    this.checkPushes();
   }
 
   drop(): void {
     for (const thing of this.held) {
-      const oldSlot = thing.slot;
-      oldSlot.thing = null;
+      thing.slot.thing = null;
     }
     for (let i = 0; i < this.held.length; i++) {
       const thing = this.held[i];
       const targetSlot = this.targetSlots[i]!;
-
-      thing.slot = targetSlot;
-      thing.place = targetSlot.place(0);
-      thing.rotationIndex = 0;
-      targetSlot.thing = thing;
+      thing.moveTo(targetSlot);
     }
     this.checkPushes();
     this.selected.splice(0);
@@ -391,42 +372,7 @@ export class World {
 
   checkPushes(): void {
     for (const [source, target] of this.pushes) {
-      const sourceSlot = this.slots[source];
-      const targetSlot = this.slots[target];
-      const sourceThing = sourceSlot.thing;
-      const targetThing = targetSlot.thing;
-
-      if (targetThing === null) {
-        continue;
-      }
-
-      targetThing.place = targetSlot.place(targetThing.rotationIndex);
-
-      if (sourceThing === null) {
-        continue;
-      }
-
-      // Relative slot position
-      const sdx = targetSlot.origin.x - sourceSlot.origin.x;
-      const sdy = targetSlot.origin.y - sourceSlot.origin.y;
-
-      if (Math.abs(sdx) > Math.abs(sdy)) {
-        const dx = targetThing.place.position.x - sourceThing.place.position.x;
-        const sizex = (targetThing.place.size.x + sourceThing.place.size.x) / 2;
-
-        const dist = sizex - Math.sign(sdx) * dx;
-        if (dist > 0) {
-          targetThing.place.position.x += Math.sign(sdx) * dist;
-        }
-      } else {
-        const dy = targetThing.place.position.y - sourceThing.place.position.y;
-        const sizey = (targetThing.place.size.y + sourceThing.place.size.y) / 2;
-
-        const dist = sizey - Math.sign(sdy) * dy;
-        if (dist > 0) {
-          targetThing.place.position.y += Math.sign(sdy) * dist;
-        }
-      }
+      target?.thing?.handlePush(source.thing);
     }
   }
 

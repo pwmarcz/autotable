@@ -111,13 +111,74 @@ export class Slot {
   }
 }
 
-export interface Thing {
+export class Thing {
   index: number;
   type: ThingType;
   typeIndex: number;
   slot: Slot;
   rotationIndex: number;
   place: Place;
+
+  constructor(index: number, type: ThingType, typeIndex: number, slot: Slot) {
+    this.index = index;
+    this.type = type;
+    this.typeIndex = typeIndex;
+    this.slot = slot;
+    this.rotationIndex = 0;
+
+    this.place = slot.place(this.rotationIndex);
+    this.slot.thing = this;
+  }
+
+  handlePush(source: Thing | null): void {
+    this.place = this.slot.place(this.rotationIndex);
+
+    if (source === null) {
+      return;
+    }
+
+    // Relative slot position
+    const sdx = this.slot.origin.x - source.slot.origin.x;
+    const sdy = this.slot.origin.y - source.slot.origin.y;
+
+    if (Math.abs(sdx) > Math.abs(sdy)) {
+      const dx = this.place.position.x - source.place.position.x;
+      const sizex = (this.place.size.x + source.place.size.x) / 2;
+
+      const dist = sizex - Math.sign(sdx) * dx;
+      if (dist > 0) {
+        this.place.position.x += Math.sign(sdx) * dist;
+      }
+    } else {
+      const dy = this.place.position.y - source.place.position.y;
+      const sizey = (this.place.size.y + source.place.size.y) / 2;
+
+      const dist = sizey - Math.sign(sdy) * dy;
+      if (dist > 0) {
+        this.place.position.y += Math.sign(sdy) * dist;
+      }
+    }
+  }
+
+  flip(): void {
+    this.rotationIndex = (this.rotationIndex + 1) % this.slot.rotations.length;
+    this.place = this.slot.place(this.rotationIndex);
+  }
+
+  moveTo(target: Slot): void {
+    if (target.thing !== null) {
+      throw `slot not empty: ${target.name}`;
+    }
+
+    if (this.slot.thing !== null) {
+      this.slot.thing = null;
+    }
+
+    this.slot = target;
+    this.place = target.place(0);
+    this.rotationIndex = 0;
+    target.thing = this;
+  }
 }
 
 export interface Place {
