@@ -82,8 +82,9 @@ class Slot {
 }
 
 interface Thing {
-  type: ThingType;
   index: number;
+  type: ThingType;
+  typeIndex: number;
   slotName: string;
   rotationIndex: number;
   place: Place;
@@ -190,7 +191,7 @@ export class World {
     add(0, 5, 5);
   }
 
-  addThing(type: ThingType, index: number, slotName: string): void {
+  addThing(type: ThingType, typeIndex: number, slotName: string): void {
     if (this.slots[slotName] === undefined) {
       throw `Unknown slot: ${slotName}`;
     }
@@ -199,8 +200,9 @@ export class World {
 
     const place = this.slotPlace(slotName, 0);
     this.things.push({
+      index: thingIndex,
       type,
-      index,
+      typeIndex,
       slotName,
       place,
       rotationIndex: 0,
@@ -673,7 +675,7 @@ export class World {
         if (slot.thingIndex !== null) {
           const thing = this.things[slot.thingIndex];
           if (thing.type === ThingType.STICK) {
-            scores[i] += stickScores[thing.index];
+            scores[i] += stickScores[thing.typeIndex];
           }
         }
       }

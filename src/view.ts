@@ -99,11 +99,11 @@ export class View {
     this.ghostObjects = [];
     this.shadows = [];
     for (let i = 0; i < this.world.things.length; i++) {
-      const obj = this.makeObject(this.world.things[i].type, this.world.things[i].index);
+      const obj = this.makeObject(this.world.things[i].type, this.world.things[i].typeIndex);
       this.objects.push(obj);
       this.scene.add(obj);
 
-      const gobj = this.makeGhostObject(this.world.things[i].type, this.world.things[i].index);
+      const gobj = this.makeGhostObject(this.world.things[i].type, this.world.things[i].typeIndex);
       this.ghostObjects.push(gobj);
       this.scene.add(gobj);
 
