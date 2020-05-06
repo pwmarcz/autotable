@@ -10,7 +10,6 @@ export const Size = {
   STICK: new Vector3(20, 2, 1),
 };
 
-
 class Slot {
   name: string;
   type: ThingType;
@@ -84,6 +83,31 @@ class Slot {
     slot.canFlipMultiple = this.canFlipMultiple;
     slot.drawShadow = this.drawShadow;
     return slot;
+  }
+
+  place(rotationIndex: number): Place {
+    const rotation = this.rotations[rotationIndex];
+
+    const dim = Size[this.type];
+
+    const xv = new Vector3(0, 0, dim.z).applyEuler(rotation);
+    const yv = new Vector3(0, dim.y, 0).applyEuler(rotation);
+    const zv = new Vector3(dim.x, 0, 0).applyEuler(rotation);
+    const maxx = Math.max(Math.abs(xv.x), Math.abs(yv.x), Math.abs(zv.x));
+    const maxy = Math.max(Math.abs(xv.y), Math.abs(yv.y), Math.abs(zv.y));
+    const maxz = Math.max(Math.abs(xv.z), Math.abs(yv.z), Math.abs(zv.z));
+
+    const size = new Vector3(maxx, maxy, maxz);
+
+    return {
+      position: new Vector3(
+        this.origin.x + maxx / 2 * this.direction.x,
+        this.origin.y + maxy / 2 * this.direction.y,
+        this.origin.z + maxz/2,
+      ),
+      rotation: rotation,
+      size,
+    };
   }
 }
 
@@ -190,7 +214,7 @@ export class World {
 
     const thingIndex = this.things.length;
 
-    const place = this.slotPlace(slotName, 0);
+    const place = this.slots[slotName].place(0);
     this.things.push({
       index: thingIndex,
       type,
@@ -390,7 +414,7 @@ export class World {
         continue;
       }
 
-      const place = this.slotPlace(slotName, 0);
+      const place = slot.place(0);
       const dx = Math.max(0, Math.abs(x - place.position.x) - place.size.x / 2);
       const dy = Math.max(0, Math.abs(y - place.position.y) - place.size.y / 2);
       const distance = Math.sqrt(dx*dx + dy*dy);
@@ -467,7 +491,7 @@ export class World {
     const slot = this.slots[thing.slotName];
 
     thing.rotationIndex = (thing.rotationIndex + 1) % slot.rotations.length;
-    thing.place = this.slotPlace(thing.slotName, thing.rotationIndex);
+    thing.place = slot.place(thing.rotationIndex);
 
     this.checkPushes();
   }
@@ -485,7 +509,7 @@ export class World {
       const targetSlot = this.targetSlots[i]!;
 
       thing.slotName = targetSlot;
-      thing.place = this.slotPlace(targetSlot, 0);
+      thing.place = this.slots[targetSlot].place(0);
       thing.rotationIndex = 0;
       this.slots[targetSlot].thingIndex = thingIndex;
     }
@@ -509,7 +533,7 @@ export class World {
       }
 
       const targetThing = this.things[targetThingIndex];
-      targetThing.place = this.slotPlace(target, targetThing.rotationIndex);
+      targetThing.place = targetSlot.place(targetThing.rotationIndex);
 
       if (sourceThingIndex === null) {
         continue;
@@ -610,38 +634,11 @@ export class World {
     return result;
   }
 
-  slotPlace(slotName: string, rotationIndex: number): Place {
-    const slot = this.slots[slotName];
-
-    const rotation = slot.rotations[rotationIndex];
-
-    const dim = Size[slot.type];
-
-    const xv = new Vector3(0, 0, dim.z).applyEuler(rotation);
-    const yv = new Vector3(0, dim.y, 0).applyEuler(rotation);
-    const zv = new Vector3(dim.x, 0, 0).applyEuler(rotation);
-    const maxx = Math.max(Math.abs(xv.x), Math.abs(yv.x), Math.abs(zv.x));
-    const maxy = Math.max(Math.abs(xv.y), Math.abs(yv.y), Math.abs(zv.y));
-    const maxz = Math.max(Math.abs(xv.z), Math.abs(yv.z), Math.abs(zv.z));
-
-    const size = new Vector3(maxx, maxy, maxz);
-
-    return {
-      position: new Vector3(
-        slot.origin.x + maxx / 2 * slot.direction.x,
-        slot.origin.y + maxy / 2 * slot.direction.y,
-        slot.origin.z + maxz/2,
-      ),
-      rotation: rotation,
-      size,
-    };
-  }
-
   toRenderPlaces(): Array<Place> {
     const result = [];
     for (const slotName in this.slots) {
       if (this.slots[slotName].drawShadow) {
-        result.push(this.slotPlace(slotName, 0));
+        result.push(this.slots[slotName].place(0));
       }
     }
     return result;
@@ -651,7 +648,7 @@ export class World {
     const result = [];
     if (this.canDrop()) {
       for (const slotName of this.targetSlots) {
-        result.push(this.slotPlace(slotName!, 0));
+        result.push(this.slots[slotName!].place(0));
       }
     }
     return result;
