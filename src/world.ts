@@ -235,7 +235,7 @@ export class World {
           type: ThingType.STICK,
           origin: new Vector3(
             15 + 24 * i,
-            -20 - j * (World.STICK_HEIGHT + 1),
+            -25 - j * (World.STICK_HEIGHT + 1),
             0,
           ),
           direction: new Vector2(1, 1),

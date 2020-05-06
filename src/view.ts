@@ -7,7 +7,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
 
 import { World, ThingType } from './world';
-import { Object3D, Scene, Camera, WebGLRenderer, Vector2, Raycaster, Mesh, MeshLambertMaterial } from 'three';
+import { Object3D, Scene, Camera, WebGLRenderer, Vector2, Raycaster, Mesh, MeshLambertMaterial, Vector3 } from 'three';
 import { SelectionBox } from './selection-box';
 import { AssetLoader } from './asset-loader';
 import { Center } from './center';
@@ -71,6 +71,26 @@ export class View {
     this.center = new Center(this.assetLoader);
     this.center.mesh.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0.75);
     this.scene.add(this.center.mesh);
+
+    for (let i = 0; i < 4; i++) {
+      for (let j = 0; j < 6; j++) {
+        const trayPos = new Vector3(
+          25 + 24 * j - World.WIDTH / 2,
+          -33 - World.WIDTH / 2,
+          0
+        );
+        trayPos.applyAxisAngle(new Vector3(0, 0, 1), Math.PI * i / 2);
+
+        const tray = this.assetLoader.makeTray();
+        tray.rotation.z = Math.PI * i / 2;
+        tray.position.set(
+          trayPos.x + World.WIDTH / 2,
+          trayPos.y + World.WIDTH / 2,
+          0);
+        this.scene.add(tray);
+      }
+    }
+
 
     // this.assets.stickTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
     // this.assets.stickTexture.flipY = false;
@@ -207,7 +227,7 @@ export class View {
 
     const updated = this.cameraPos.update();
 
-    this.camera.position.set(0, -40 - 50 * this.cameraPos.pos, 30);
+    this.camera.position.set(0, -40 - 53 * this.cameraPos.pos, 30);
     this.camera.rotation.set(Math.PI * 0.25, 0, 0);
 
     if (updated) {

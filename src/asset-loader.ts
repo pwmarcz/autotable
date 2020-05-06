@@ -25,6 +25,12 @@ export class AssetLoader {
     return this.cloneMesh(this.meshes.center);
   }
 
+  makeTray(): Mesh {
+    const mesh = this.cloneMesh(this.meshes.tray);
+    (mesh.material as MeshStandardMaterial).color.setHex(0x363636);
+    return mesh;
+  }
+
   makeStick(index: number): Mesh {
     const mesh = this.cloneMesh(this.meshes.stick);
 
@@ -130,7 +136,8 @@ export class AssetLoader {
   }
 
   processMaterial(material: Material): Material {
-    const map = (material as MeshStandardMaterial).map;
+    const standard = material as MeshStandardMaterial;
+    const map = standard.map;
     if (map !== null) {
       map.encoding = LinearEncoding;
       map.anisotropy = 4;
