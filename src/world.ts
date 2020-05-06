@@ -5,6 +5,12 @@ export enum ThingType {
   STICK = 'STICK',
 }
 
+export const Size = {
+  TILE: new Vector3(6, 9, 4),
+  STICK: new Vector3(20, 2, 1),
+};
+
+
 class Slot {
   name: string;
   type: ThingType;
@@ -132,19 +138,6 @@ export class World {
 
   scoreSlots: Array<Array<string>> = [[], [], [], []];
 
-  static TILE_WIDTH = 6;
-  static TILE_HEIGHT = 9;
-  static TILE_DEPTH = 4;
-
-  static STICK_WIDTH = 20;
-  static STICK_HEIGHT = 2;
-  static STICK_DEPTH = 1;
-
-  static DIMENSIONS = {
-    [ThingType.TILE]: new Vector3(6, 9, 4),
-    [ThingType.STICK]: new Vector3(20, 2, 1),
-  };
-
   static WIDTH = 174;
 
   constructor() {
@@ -214,7 +207,7 @@ export class World {
       this.addSlot(new Slot({
         name: `hand.${i}`,
         origin: new Vector3(
-          46 + i*World.TILE_WIDTH,
+          46 + i*Size.TILE.x,
           0,
           0,
         ),
@@ -228,8 +221,8 @@ export class World {
         this.addSlot(new Slot({
           name: `meld.${i}.${j}`,
           origin: new Vector3(
-            174 - (j)*World.TILE_WIDTH,
-            i * World.TILE_HEIGHT,
+            174 - (j)*Size.TILE.x,
+            i * Size.TILE.y,
             0,
           ),
           direction: new Vector2(-1, 1),
@@ -248,9 +241,9 @@ export class World {
         this.addSlot(new Slot({
           name: `wall.${i}.${j}`,
           origin: new Vector3(
-            30 + i * World.TILE_WIDTH,
+            30 + i * Size.TILE.x,
             20,
-            j * World.TILE_DEPTH,
+            j * Size.TILE.z,
           ),
           rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
           drawShadow: j === 0 && i >= 1 && i < 18,
@@ -265,8 +258,8 @@ export class World {
         this.addSlot(new Slot({
           name: `discard.${i}.${j}`,
           origin: new Vector3(
-            69 + j * World.TILE_WIDTH,
-            60 - i * World.TILE_HEIGHT,
+            69 + j * Size.TILE.x,
+            60 - i * Size.TILE.y,
             0,
           ),
           direction: new Vector2(1, 1),
@@ -285,7 +278,7 @@ export class World {
           type: ThingType.STICK,
           origin: new Vector3(
             15 + 24 * i,
-            -25 - j * (World.STICK_HEIGHT + 1),
+            -25 - j * (Size.STICK.y + 1),
             0,
           ),
           rotations: [Rotation.FACE_UP],
@@ -304,7 +297,7 @@ export class World {
       name: 'riichi',
       type: ThingType.STICK,
       origin: new Vector3(
-        (World.WIDTH - World.STICK_WIDTH) / 2,
+        (World.WIDTH - Size.STICK.x) / 2,
         71.5,
         1.5,
       ),
@@ -375,7 +368,7 @@ export class World {
   }
 
   findSlot(x: number, y: number, thingType: ThingType): string | null {
-    let bestDistance = World.TILE_DEPTH * 1.5;
+    let bestDistance = Size.TILE.z * 1.5;
     let bestSlot = null;
 
     // Empty slots
@@ -622,7 +615,7 @@ export class World {
 
     const rotation = slot.rotations[rotationIndex];
 
-    const dim = World.DIMENSIONS[slot.type];
+    const dim = Size[slot.type];
 
     const xv = new Vector3(0, 0, dim.z).applyEuler(rotation);
     const yv = new Vector3(0, dim.y, 0).applyEuler(rotation);

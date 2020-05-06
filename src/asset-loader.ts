@@ -6,7 +6,7 @@ import glbModels from '../img/models.auto.glb';
 import { Texture, Mesh, TextureLoader, Material, LinearEncoding,
    MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, BufferGeometry } from 'three';
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
-import { World } from './world';
+import { World, Size } from './world';
 
 
 export class AssetLoader {
@@ -15,7 +15,7 @@ export class AssetLoader {
 
   makeTable(): Mesh {
     const tableGeometry = new PlaneGeometry(
-      World.WIDTH + World.TILE_HEIGHT, World.WIDTH + World.TILE_HEIGHT);
+      World.WIDTH + Size.TILE.y, World.WIDTH + Size.TILE.y);
     const tableMaterial = new MeshLambertMaterial({ color: 0xeeeeee, map: this.textures.table });
     const tableMesh = new Mesh(tableGeometry, tableMaterial);
     return tableMesh;
