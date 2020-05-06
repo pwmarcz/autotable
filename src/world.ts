@@ -51,13 +51,13 @@ class Slot {
 
     const pos = new Vector3(
       this.origin.x - World.WIDTH / 2,
-      this.origin.y - World.HEIGHT / 2,
+      this.origin.y - World.WIDTH / 2,
       this.origin.z,
     );
     pos.applyQuaternion(quat);
     const origin = new Vector3(
       pos.x + World.WIDTH / 2,
-      pos.y + World.HEIGHT / 2,
+      pos.y + World.WIDTH / 2,
       pos.z,
     );
 
@@ -146,7 +146,6 @@ export class World {
   };
 
   static WIDTH = 174;
-  static HEIGHT = 174;
 
   constructor() {
     this.addSlots();

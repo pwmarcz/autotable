@@ -15,7 +15,7 @@ export class AssetLoader {
 
   makeTable(): Mesh {
     const tableGeometry = new PlaneGeometry(
-      World.WIDTH + World.TILE_HEIGHT, World.HEIGHT + World.TILE_HEIGHT);
+      World.WIDTH + World.TILE_HEIGHT, World.WIDTH + World.TILE_HEIGHT);
     const tableMaterial = new MeshLambertMaterial({ color: 0xeeeeee, map: this.textures.table });
     const tableMesh = new Mesh(tableGeometry, tableMaterial);
     return tableMesh;

@@ -65,11 +65,11 @@ export class View {
     this.main.appendChild(this.renderer.domElement);
 
     const tableMesh = this.assetLoader.makeTable();
-    tableMesh.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0);
+    tableMesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
     this.scene.add(tableMesh);
 
     this.center = new Center(this.assetLoader);
-    this.center.mesh.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0.75);
+    this.center.mesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0.75);
     this.scene.add(this.center.mesh);
 
     for (let i = 0; i < 4; i++) {
@@ -145,10 +145,10 @@ export class View {
 
     this.raycastTable = new THREE.Mesh(new THREE.PlaneGeometry(
       World.WIDTH * 3,
-      World.HEIGHT * 3,
+      World.WIDTH * 3,
     ));
     this.raycastTable.visible = false;
-    this.raycastTable.position.set(World.WIDTH / 2, World.HEIGHT / 2, 0);
+    this.raycastTable.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
     this.scene.add(this.raycastTable);
 
     this.setupLights();
