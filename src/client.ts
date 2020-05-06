@@ -1,6 +1,6 @@
 /* eslint no-console: 0 */
 
-interface NetPlayer {
+type NetPlayer = any & {
   nick: string;
 }
 
@@ -61,6 +61,10 @@ export class Client {
 
     this.ws.onclose = () => {
       this.status('disconnected');
+
+      if (this.game === null) {
+        window.location.hash = '';
+      }
       this.ws = null;
       this.game = null;
     };

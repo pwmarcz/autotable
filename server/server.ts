@@ -76,7 +76,8 @@ class Game {
 
   leave(num: number): void {
     this.clients[num] = null;
-    // clear player?
+    this.players[num] = null;
+    this.sendAll({ type: 'PLAYER', num, player: null});
   }
 
   send(num: number, message: Message): void {
@@ -88,7 +89,7 @@ class Game {
     }
   }
 
-  sendAll(num: number, message: Message): void {
+  sendAll(message: Message): void {
     for (let i = 0; i < PLAYERS; i++) {
       this.send(i, message);
     }
@@ -109,17 +110,17 @@ class Game {
           throw 'wrong player num';
         }
         this.players[num] = message.player;
-        this.sendAll(num, message);
+        this.sendAll(message);
         break;
       case 'UPDATE':
         for (const thingIndex in message.things) {
           this.things[thingIndex] = message.things[thingIndex];
         }
-        this.sendAll(num, message);
+        this.sendAll(message);
         break;
       case 'REPLACE':
         this.things = message.allThings;
-        this.sendAll(num, message);
+        this.sendAll(message);
         break;
     }
   }
