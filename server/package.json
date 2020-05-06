@@ -8,5 +8,9 @@
   },
   "scripts": {
     "start": "tsc && node dist/server.js"
+  },
+  "dependencies": {
+    "@types/ws": "^7.2.4",
+    "ws": "^7.2.5"
   }
 }
