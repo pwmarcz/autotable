@@ -17,7 +17,7 @@ class Slot {
   direction: Vector2;
   rotations: Array<Euler>;
 
-  thingIndex: number | null = null;
+  thing: Thing | null = null;
 
   down: string | null;
   up: string | null;
@@ -115,7 +115,7 @@ interface Thing {
   index: number;
   type: ThingType;
   typeIndex: number;
-  slotName: string;
+  slot: Slot;
   rotationIndex: number;
   place: Place;
 }
@@ -152,15 +152,15 @@ export class World {
   pushes: Array<[string, string]> = [];
   things: Array<Thing> = [];
 
-  hovered: number | null = null;
-  selected: Array<number> = [];
+  hovered: Thing | null = null;
+  selected: Array<Thing> = [];
   tablePos: Vector2 | null = null;
 
-  targetSlots: Array<string | null> = [];
-  held: Array<number> = [];
+  targetSlots: Array<Slot | null> = [];
+  held: Array<Thing> = [];
   heldTablePos: Vector2 | null = null;
 
-  scoreSlots: Array<Array<string>> = [[], [], [], []];
+  scoreSlots: Array<Array<Slot>> = [[], [], [], []];
 
   static WIDTH = 174;
 
@@ -213,17 +213,19 @@ export class World {
     }
 
     const thingIndex = this.things.length;
+    const slot = this.slots[slotName];
 
-    const place = this.slots[slotName].place(0);
-    this.things.push({
+    const place = slot.place(0);
+    const thing = {
       index: thingIndex,
       type,
       typeIndex,
-      slotName,
+      slot,
       place,
       rotationIndex: 0,
-    });
-    this.slots[slotName].thingIndex = thingIndex;
+    };
+    this.things.push(thing);
+    slot.thing = thing;
   }
 
   addSlots(): void {
@@ -312,7 +314,7 @@ export class World {
           if (this.scoreSlots[k] === null) {
             this.scoreSlots[k] = [];
           }
-          this.scoreSlots[k].push(`stick.${i}.${j}.${k}`);
+          this.scoreSlots[k].push(this.slots[`stick.${i}.${j}.${k}`]);
         }
       }
     }
@@ -345,7 +347,7 @@ export class World {
 
   onHover(id: any): void {
     if (this.held.length === 0) {
-      this.hovered = id as number | null;
+      this.hovered = id && this.things[id as number];
 
       if (this.hovered !== null && !this.canSelect(this.hovered, [])) {
         this.hovered = null;
@@ -354,9 +356,9 @@ export class World {
   }
 
   onSelect(ids: Array<any>): void {
-    this.selected = ids as Array<number>;
+    this.selected = ids.map(id => this.things[id as number]);
     this.selected = this.selected.filter(
-      thingIndex => this.canSelect(thingIndex, this.selected));
+      thing => this.canSelect(thing, this.selected));
   }
 
   onMove(tablePos: Vector2 | null): void {
@@ -367,7 +369,7 @@ export class World {
       }
 
       for (let i = 0; i < this.held.length; i++) {
-        const thing = this.things[this.held[i]];
+        const thing = this.held[i];
         const x = thing.place.position.x + this.tablePos.x - this.heldTablePos.x;
         const y = thing.place.position.y + this.tablePos.y - this.heldTablePos.y;
 
@@ -376,14 +378,11 @@ export class World {
     }
   }
 
-  canSelect(thingIndex: number, otherSelected: Array<number>): boolean {
-    const slotName = this.things[thingIndex].slotName;
-    const slot = this.slots[slotName];
-
-    if (slot.up !== null) {
-      const upSlot = this.slots[slot.up];
-      if (upSlot.thingIndex !== null &&
-        otherSelected.indexOf(upSlot.thingIndex) === -1) {
+  canSelect(thing: Thing, otherSelected: Array<Thing>): boolean {
+    if (thing.slot.up !== null) {
+      const upSlot = this.slots[thing.slot.up];
+      if (upSlot.thing !== null &&
+        otherSelected.indexOf(upSlot.thing) === -1) {
 
         return false;
       }
@@ -391,7 +390,7 @@ export class World {
     return true;
   }
 
-  findSlot(x: number, y: number, thingType: ThingType): string | null {
+  findSlot(x: number, y: number, thingType: ThingType): Slot | null {
     let bestDistance = Size.TILE.z * 1.5;
     let bestSlot = null;
 
@@ -402,15 +401,15 @@ export class World {
         continue;
       }
 
-      if (slot.thingIndex !== null && this.held.indexOf(slot.thingIndex) === -1) {
+      if (slot.thing !== null && this.held.indexOf(slot.thing) === -1) {
         continue;
       }
       // Already proposed for another thing
-      if (this.targetSlots.indexOf(slotName) !== -1) {
+      if (this.targetSlots.indexOf(slot) !== -1) {
         continue;
       }
       // The slot requires other slots to be occupied first
-      if (slot.requires !== null && this.slots[slot.requires].thingIndex === null) {
+      if (slot.requires !== null && this.slots[slot.requires].thing === null) {
         continue;
       }
 
@@ -420,7 +419,7 @@ export class World {
       const distance = Math.sqrt(dx*dx + dy*dy);
       if (distance < bestDistance) {
         bestDistance = distance;
-        bestSlot = slotName;
+        bestSlot = slot;
       }
     }
     return bestSlot;
@@ -473,12 +472,11 @@ export class World {
     }
 
     if (this.selected.length > 0) {
-      for (const thingIndex of this.selected) {
-        const slotName = this.things[thingIndex].slotName;
-        if (this.selected.length > 1 && !this.slots[slotName].canFlipMultiple) {
+      for (const thing of this.selected) {
+        if (this.selected.length > 1 && !thing.slot.canFlipMultiple) {
           continue;
         }
-        this.flip(thingIndex);
+        this.flip(thing);
       }
       this.selected.splice(0);
     } else if (this.hovered !== null) {
@@ -486,32 +484,26 @@ export class World {
     }
   }
 
-  flip(thingIndex: number): void {
-    const thing = this.things[thingIndex];
-    const slot = this.slots[thing.slotName];
-
-    thing.rotationIndex = (thing.rotationIndex + 1) % slot.rotations.length;
-    thing.place = slot.place(thing.rotationIndex);
+  flip(thing: Thing): void {
+    thing.rotationIndex = (thing.rotationIndex + 1) % thing.slot.rotations.length;
+    thing.place = thing.slot.place(thing.rotationIndex);
 
     this.checkPushes();
   }
 
   drop(): void {
-    for (let i = 0; i < this.held.length; i++) {
-      const thingIndex = this.held[i];
-      const thing = this.things[thingIndex];
-      const oldSlotName = thing.slotName;
-      this.slots[oldSlotName].thingIndex = null;
+    for (const thing of this.held) {
+      const oldSlot = thing.slot;
+      oldSlot.thing = null;
     }
     for (let i = 0; i < this.held.length; i++) {
-      const thingIndex = this.held[i];
-      const thing = this.things[thingIndex];
+      const thing = this.held[i];
       const targetSlot = this.targetSlots[i]!;
 
-      thing.slotName = targetSlot;
-      thing.place = this.slots[targetSlot].place(0);
+      thing.slot = targetSlot;
+      thing.place = targetSlot.place(0);
       thing.rotationIndex = 0;
-      this.slots[targetSlot].thingIndex = thingIndex;
+      targetSlot.thing = thing;
     }
     this.checkPushes();
     this.selected.splice(0);
@@ -525,21 +517,18 @@ export class World {
     for (const [source, target] of this.pushes) {
       const sourceSlot = this.slots[source];
       const targetSlot = this.slots[target];
-      const sourceThingIndex = sourceSlot.thingIndex;
-      const targetThingIndex = targetSlot.thingIndex;
+      const sourceThing = sourceSlot.thing;
+      const targetThing = targetSlot.thing;
 
-      if (targetThingIndex === null) {
+      if (targetThing === null) {
         continue;
       }
 
-      const targetThing = this.things[targetThingIndex];
       targetThing.place = targetSlot.place(targetThing.rotationIndex);
 
-      if (sourceThingIndex === null) {
+      if (sourceThing === null) {
         continue;
       }
-
-      const sourceThing = this.things[sourceThingIndex];
 
       // Relative slot position
       const sdx = targetSlot.origin.x - sourceSlot.origin.x;
@@ -569,11 +558,9 @@ export class World {
     const canDrop = this.canDrop();
 
     const result = [];
-    for (let i = 0; i < this.things.length; i++) {
-      const thing = this.things[i];
+    for (const thing of this.things) {
       let place = thing.place;
-      const heldIndex = this.held.indexOf(i);
-      const held = heldIndex !== -1;
+      const held = this.held.indexOf(thing) !== -1;
 
       if (held && this.tablePos !== null && this.heldTablePos !== null) {
         place = {...place, position: place.position.clone()};
@@ -581,21 +568,21 @@ export class World {
         place.position.y += this.tablePos.y - this.heldTablePos.y;
       }
 
-      const selected = this.selected.indexOf(i) !== -1;
-      const hovered = i === this.hovered ||
+      const selected = this.selected.indexOf(thing) !== -1;
+      const hovered = thing === this.hovered ||
         (selected && this.selected.indexOf(this.hovered!) !== -1);
       const temporary = held && !canDrop;
 
-      const slot = this.slots[thing.slotName];
+      const slot = thing.slot;
 
       let bottom = false;
       if (this.held !== null && slot.up !== null) {
-        bottom = this.slots[slot.up].thingIndex === null;
+        bottom = this.slots[slot.up].thing === null;
       }
 
       result.push({
         place,
-        thingIndex: i,
+        thingIndex: thing.index,
         selected,
         hovered,
         held,
@@ -625,10 +612,9 @@ export class World {
     const result = [];
     if (this.held.length === 0) {
       // Things
-      for (let i = 0; i < this.things.length; i++) {
-        const thing = this.things[i];
+      for (const thing of this.things) {
         const place = thing.place;
-        result.push({...place, id: i});
+        result.push({...place, id: thing.index});
       }
     }
     return result;
@@ -647,8 +633,8 @@ export class World {
   toRenderShadows(): Array<Place> {
     const result = [];
     if (this.canDrop()) {
-      for (const slotName of this.targetSlots) {
-        result.push(this.slots[slotName!].place(0));
+      for (const slot of this.targetSlots) {
+        result.push(slot!.place(0));
       }
     }
     return result;
@@ -659,12 +645,10 @@ export class World {
     const stickScores = [100, 1000, 5000, 10000, 10000];
 
     for (let i = 0; i < 4; i++) {
-      for (const slotName of this.scoreSlots[i]) {
-        const slot = this.slots[slotName];
-        if (slot.thingIndex !== null) {
-          const thing = this.things[slot.thingIndex];
-          if (thing.type === ThingType.STICK) {
-            scores[i] += stickScores[thing.typeIndex];
+      for (const slot of this.scoreSlots[i]) {
+        if (slot.thing !== null) {
+          if (slot.thing.type === ThingType.STICK) {
+            scores[i] += stickScores[slot.thing.typeIndex];
           }
         }
       }
