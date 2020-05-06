@@ -437,12 +437,13 @@ export class View {
   }
 
   onKeyPress(event: KeyboardEvent): void {
-    if (event.key === 'f') {
-      this.world.onFlip();
-    }
+
   }
 
   onKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'f') {
+      this.world.onFlip();
+    }
     if (event.key === ' ') {
       this.cameraPos.start(1);
     }
