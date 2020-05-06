@@ -1,4 +1,10 @@
 
+all: files
+
+.PHONY: parcel
+parcel: files
+	./node_modules/.bin/parcel index.html
+
 .PHONY: files
 files: img/models.auto.glb
 
