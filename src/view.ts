@@ -1,13 +1,14 @@
 
 
 import * as THREE from 'three';
+import { Object3D, Scene, Camera, WebGLRenderer, Vector2, Raycaster, Mesh, MeshLambertMaterial, Vector3 } from 'three';
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
 
-import { World, ThingType } from './world';
-import { Object3D, Scene, Camera, WebGLRenderer, Vector2, Raycaster, Mesh, MeshLambertMaterial, Vector3 } from 'three';
+import { World } from './world';
+import { ThingType } from './places';
 import { SelectionBox } from './selection-box';
 import { AssetLoader } from './asset-loader';
 import { Center } from './center';

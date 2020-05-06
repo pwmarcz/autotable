@@ -6,7 +6,8 @@ import glbModels from '../img/models.auto.glb';
 import { Texture, Mesh, TextureLoader, Material, LinearEncoding,
    MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, BufferGeometry } from 'three';
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
-import { World, Size } from './world';
+import { World } from './world';
+import { Size } from './places';
 
 
 export class AssetLoader {
