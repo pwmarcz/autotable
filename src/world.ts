@@ -226,6 +226,19 @@ export class World {
     this.selected = ids.map(id => this.things[id as number]);
     this.selected = this.selected.filter(
       thing => this.canSelect(thing, this.selected));
+
+    if (this.selected.length === 0) {
+      return;
+    }
+
+    // Only allow selecting one thing type at a time
+    const counts: Map<ThingType, number> = new Map();
+    for (const thing of this.selected) {
+      counts.set(thing.type, (counts.get(thing.type) ?? 0) + 1);
+    }
+    const allTypes = Array.from(counts.keys());
+    allTypes.sort((a, b) => counts.get(b)! - counts.get(a)!);
+    this.selected = this.selected.filter(thing => thing.type === allTypes[0]);
   }
 
   onMove(tablePos: Vector2 | null): void {
