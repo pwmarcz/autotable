@@ -214,7 +214,7 @@ export class World {
 
   onHover(id: any): void {
     if (this.held.length === 0) {
-      this.hovered = id && this.things[id as number];
+      this.hovered = id === null ? null : this.things[id as number];
 
       if (this.hovered !== null && !this.canSelect(this.hovered, [])) {
         this.hovered = null;
@@ -332,8 +332,9 @@ export class World {
   onDragEnd(): void {
     if (this.held.length > 0) {
       if (this.heldTablePos !== null && this.tablePos !== null &&
+          this.heldTablePos.equals(this.tablePos)) {
+
         // No movement; unselect
-        this.heldTablePos.equals(this.tablePos)) {
         this.selected.splice(0);
         // if (this.hovered !== null) {
         //   this.selected.push(this.hovered);
