@@ -5,20 +5,80 @@ export enum ThingType {
   STICK = 'STICK',
 }
 
-interface Slot {
+class Slot {
+  name: string;
   type: ThingType;
-
   origin: Vector3;
   direction: Vector2;
   rotations: Array<Euler>;
-  thingIndex: number | null;
 
-  drawShadow: boolean;
+  thingIndex: number | null = null;
 
   down: string | null;
   up: string | null;
   requires: string | null;
   canFlipMultiple: boolean;
+  drawShadow: boolean;
+
+  constructor(params: {
+    name: string;
+    type?: ThingType;
+    origin: Vector3;
+    direction?: Vector2;
+    rotations: Array<Euler>;
+    down?: string | null;
+    up?: string | null;
+    requires?: string | null;
+    canFlipMultiple?: boolean;
+    drawShadow?: boolean;
+  }) {
+    this.name = params.name;
+    this.type = params.type ?? ThingType.TILE;
+    this.origin = params.origin;
+    this.direction = params.direction ?? new Vector2(1, 1);
+    this.rotations = params.rotations;
+    this.down = params.down ?? null;
+    this.up = params.up ?? null;
+    this.requires = params.requires ?? null;
+    this.canFlipMultiple = params.canFlipMultiple ?? false;
+    this.drawShadow = params.drawShadow ?? true;
+  }
+
+  rotated(suffix: string, rotation: number): Slot {
+    const quat = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), rotation);
+
+    const name = this.name + suffix;
+
+    const pos = new Vector3(
+      this.origin.x - World.WIDTH / 2,
+      this.origin.y - World.HEIGHT / 2,
+      this.origin.z,
+    );
+    pos.applyQuaternion(quat);
+    const origin = new Vector3(
+      pos.x + World.WIDTH / 2,
+      pos.y + World.HEIGHT / 2,
+      pos.z,
+    );
+
+    const dir = new Vector3(this.direction.x, this.direction.y, 0);
+    dir.applyQuaternion(quat);
+    const direction = new Vector2(dir.x, dir.y);
+
+    const rotations = this.rotations.map(rot => {
+      const q = new Quaternion().setFromEuler(rot);
+      q.premultiply(quat);
+      return new Euler().setFromQuaternion(q);
+    });
+
+    const slot = new Slot({name, type: this.type, origin, direction, rotations});
+    slot.down = this.down && this.down + suffix;
+    slot.up = this.up && this.up + suffix;
+    slot.requires = this.requires && this.requires + suffix;
+    slot.canFlipMultiple = this.canFlipMultiple;
+    slot.drawShadow = this.drawShadow;
+    return slot;
+  }
 }
 
 interface Thing {
@@ -149,33 +209,23 @@ export class World {
   }
 
   addSlots(): void {
-    const defaults = {
-      type: ThingType.TILE,
-      thingIndex: null,
-      drawShadow: true,
-      down: null,
-      up: null,
-      requires: null,
-      canFlipMultiple: false,
-    };
     for (let i = 0; i < 14; i++) {
-      this.addSlot(`hand.${i}`, {
-        ...defaults,
+      this.addSlot(new Slot({
+        name: `hand.${i}`,
         origin: new Vector3(
           46 + i*World.TILE_WIDTH,
           0,
           0,
         ),
-        direction: new Vector2(1, 1),
         rotations: [Rotation.STANDING, Rotation.FACE_UP],
         canFlipMultiple: true,
-      });
+      }));
     }
 
     for (let i = 0; i < 4; i++) {
       for (let j = 0; j < 4; j++) {
-        this.addSlot(`meld.${i}.${j}`, {
-          ...defaults,
+        this.addSlot(new Slot({
+          name: `meld.${i}.${j}`,
           origin: new Vector3(
             174 - (j)*World.TILE_WIDTH,
             i * World.TILE_HEIGHT,
@@ -185,7 +235,7 @@ export class World {
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
           drawShadow: false,
           requires: i > 0 ? `meld.${i-1}.0` : null,
-        });
+        }));
         if (j < 3) {
           this.addPush(`meld.${i}.${j}`, `meld.${i}.${j+1}`);
         }
@@ -194,26 +244,25 @@ export class World {
 
     for (let i = 0; i < 19; i++) {
       for (let j = 0; j < 2; j++) {
-        this.addSlot(`wall.${i}.${j}`, {
-          ...defaults,
+        this.addSlot(new Slot({
+          name: `wall.${i}.${j}`,
           origin: new Vector3(
             30 + i * World.TILE_WIDTH,
             20,
             j * World.TILE_DEPTH,
           ),
-          direction: new Vector2(1, 1),
           rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
           drawShadow: j === 0 && i >= 1 && i < 18,
           down: j === 1 ? `wall.${i}.0` : null,
           up: j === 0 ? `wall.${i}.1` : null,
-        });
+        }));
       }
     }
 
     for (let i = 0; i < 3; i++) {
       for (let j = 0; j < 6; j++) {
-        this.addSlot(`discard.${i}.${j}`, {
-          ...defaults,
+        this.addSlot(new Slot({
+          name: `discard.${i}.${j}`,
           origin: new Vector3(
             69 + j * World.TILE_WIDTH,
             60 - i * World.TILE_HEIGHT,
@@ -221,7 +270,7 @@ export class World {
           ),
           direction: new Vector2(1, 1),
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
-        });
+        }));
         if (j < 5) {
           this.addPush(`discard.${i}.${j}`, `discard.${i}.${j+1}`);
         }
@@ -230,18 +279,17 @@ export class World {
 
     for (let i = 0; i < 6; i++) {
       for (let j = 0; j < 10; j++) {
-        this.addSlot(`stick.${i}.${j}`, {
-          ...defaults,
+        this.addSlot(new Slot({
+          name: `stick.${i}.${j}`,
           type: ThingType.STICK,
           origin: new Vector3(
             15 + 24 * i,
             -25 - j * (World.STICK_HEIGHT + 1),
             0,
           ),
-          direction: new Vector2(1, 1),
           rotations: [Rotation.FACE_UP],
           drawShadow: false,
-        });
+        }));
         for (let k = 0; k < 4; k++) {
           if (this.scoreSlots[k] === null) {
             this.scoreSlots[k] = [];
@@ -251,72 +299,30 @@ export class World {
       }
     }
 
-    this.addSlot('riichi', {
-      ...defaults,
+    this.addSlot(new Slot({
+      name: 'riichi',
       type: ThingType.STICK,
       origin: new Vector3(
         (World.WIDTH - World.STICK_WIDTH) / 2,
         71.5,
         1.5,
       ),
-      direction: new Vector2(1, 1),
       rotations: [Rotation.FACE_UP],
       drawShadow: false,
-    });
+    }));
   }
 
-  addSlot(slotName: string, slot: Slot): void {
-    const qPlayer = new Quaternion();
-    const step = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI/2);
-
-    this.addRotatedSlot(slotName, '.0', slot, qPlayer);
-    qPlayer.premultiply(step);
-    this.addRotatedSlot(slotName, '.1', slot, qPlayer);
-    qPlayer.premultiply(step);
-    this.addRotatedSlot(slotName, '.2', slot, qPlayer);
-    qPlayer.premultiply(step);
-    this.addRotatedSlot(slotName, '.3', slot, qPlayer);
+  addSlot(slot: Slot): void {
+    for (let i = 0; i < 4; i++) {
+      const rotated = slot.rotated('.' + i, i * Math.PI / 2);
+      this.slots[rotated.name] = rotated;
+    }
   }
 
   addPush(source: string, target: string): void {
     for (let i = 0; i < 4; i++) {
       this.pushes.push([`${source}.${i}`, `${target}.${i}`]);
     }
-  }
-
-  addRotatedSlot(slotName: string, suffix: string, slot: Slot, qPlayer: Quaternion): void {
-    const newSlot = {...slot};
-
-    const pos = new Vector3(
-      slot.origin.x - World.WIDTH / 2,
-      slot.origin.y - World.HEIGHT / 2,
-      slot.origin.z,
-    );
-    pos.applyQuaternion(qPlayer);
-    newSlot.origin = new Vector3(
-      pos.x + World.WIDTH / 2, pos.y + World.HEIGHT / 2, pos.z);
-
-    const dir = new Vector3(slot.direction.x, slot.direction.y, 0);
-    dir.applyQuaternion(qPlayer);
-    newSlot.direction = new Vector2(dir.x, dir.y);
-
-    newSlot.rotations = slot.rotations.map(rot => {
-      const q = new Quaternion().setFromEuler(rot);
-      q.premultiply(qPlayer);
-      return new Euler().setFromQuaternion(q);
-    });
-
-    if (slot.down !== null) {
-      newSlot.down = slot.down + suffix;
-    }
-    if (slot.up !== null) {
-      newSlot.up = slot.up + suffix;
-    }
-    if (slot.requires !== null) {
-      newSlot.requires = slot.requires + suffix;
-    }
-
-    this.slots[slotName + suffix] = newSlot;
   }
 
   onHover(id: any): void {
