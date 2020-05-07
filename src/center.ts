@@ -1,5 +1,6 @@
 import { AssetLoader } from "./asset-loader";
 import { Mesh, CanvasTexture, Vector2, MeshLambertMaterial } from "three";
+import { Client } from "./client";
 
 export class Center {
   mesh: Mesh;
@@ -7,11 +8,11 @@ export class Center {
   ctx: CanvasRenderingContext2D;
   texture: CanvasTexture;
 
-  scores: Array<number> = [0, 0, 0, 0];
-  nicks: Array<string> = ['', '', '', ''];
+  scores: Array<number> = new Array(4).fill(0);
+  nicks: Array<string | null> = new Array(4).fill(null);
   dirty = true;
 
-  constructor(loader: AssetLoader) {
+  constructor(loader: AssetLoader, client: Client) {
     this.mesh = loader.makeCenter();
     this.canvas = document.getElementById('center')! as HTMLCanvasElement;
     this.ctx = this.canvas.getContext('2d')!;
@@ -29,6 +30,13 @@ export class Center {
     this.texture.center = new Vector2(0.5, 0.5);
     this.texture.anisotropy = 16;
     material.map = this.texture;
+
+    client.on<{nick: string}>('players', players => {
+      for (let i = 0; i < 4; i++) {
+        this.nicks[i] = players[i] === null ? null : players[i]!.nick;
+      }
+      this.dirty = true;
+    });
   }
 
   setScores(scores: Array<number>): void {
@@ -37,15 +45,6 @@ export class Center {
         this.dirty = true;
       }
       this.scores[i] = scores[i];
-    }
-  }
-
-  setNicks(nicks: Array<string>): void {
-    for (let i = 0; i < 4; i++) {
-      if (nicks[i] !== this.nicks[i]) {
-        this.dirty = true;
-      }
-      this.nicks[i] = nicks[i];
     }
   }
 
@@ -84,16 +83,23 @@ export class Center {
     } else {
       this.ctx.fillStyle = '#e00';
     }
-    const scoreText = '' + score;
-    this.ctx.fillText(scoreText, 60, 100);
+    const text = '' + score;
+    this.ctx.fillText(text, 60, 100);
   }
 
-  drawNick(nick: string): void {
-    nick = nick.substr(0, 10);
+  drawNick(nick: string | null): void {
+    let text;
+    if (nick === null) {
+      text = '';
+    } else if (nick === '') {
+      text = 'Player';
+    } else {
+      text = nick.substr(0, 10);
+    }
 
     this.ctx.textAlign = 'center';
     this.ctx.font = '20px Verdana, Arial';
     this.ctx.fillStyle = '#afa';
-    this.ctx.fillText(nick, 0, 55);
+    this.ctx.fillText(text, 0, 55);
   }
 }

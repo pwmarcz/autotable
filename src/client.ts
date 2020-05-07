@@ -1,83 +1,94 @@
 /* eslint no-console: 0 */
 
-type NetPlayer = any & {
-  nick: string;
-}
+import { Message, Player } from '../server/protocol';
 
 interface Game {
   gameId: string;
-  num: string;
+  num: number;
   secret: string;
-  players: Array<NetPlayer>;
+  players: Array<Player | null>;
+}
+
+export enum Status {
+  NEW = 'NEW',
+  CONNECTING = 'CONNECTING',
+  JOINING = 'JOINING',
+  JOINED = 'JOINED',
+  DISCONNECTED = 'DISCONNECTED',
 }
 
 export class Client {
-  url: string;
-  ws: WebSocket | null = null;
-
-  nickElement: HTMLInputElement;
-  statusElement: HTMLElement;
-
+  private ws: WebSocket | null = null;
   game: Game | null = null;
+  private joinGameId: string | null = null;
+  private joinSecret: string | null = null;
 
-  player: NetPlayer = { nick: '' };
+  player: Player = {};
 
-  constructor(url: string) {
-    this.url = url;
+  handlers: Record<string, Array<Function>> = {};
 
-    this.nickElement = document.getElementById('nick')! as HTMLInputElement;
-    this.statusElement = document.getElementById('status')!;
-
-    this.nickElement.onchange = this.onNickChange.bind(this);
-    this.nickElement.oninput = this.onNickChange.bind(this);
-
-    this.onNickChange();
-
-    const connectButton = document.getElementById('connect')!;
-    connectButton.addEventListener('click', this.connect.bind(this));
-  }
-
-  onNickChange(): void {
-    this.player.nick = this.nickElement.value;
-    this.sendPlayer();
-  }
-
-  status(s: string): void {
-    this.statusElement.innerText = s;
-  }
-
-  connect(): void {
-    if (this.ws !== null) {
+  connect(url: string, gameId: string | null, secret: string | null): void {
+    if (this.isConnected()) {
       return;
     }
+    this.ws = new WebSocket(url);
+    this.ws.onopen = this.onOpen.bind(this);
+    this.ws.onclose = this.onClose.bind(this);
 
-    this.status('connecting...');
-
-    this.ws = new WebSocket(this.url);
-    this.ws.onopen = () => {
-      this.status('connected');
-      this.onOpen();
-    };
-
-    this.ws.onclose = () => {
-      this.status('disconnected');
-
-      if (this.game === null) {
-        window.location.hash = '';
-      }
-      this.ws = null;
-      this.game = null;
-    };
+    this.joinGameId = gameId;
+    this.joinSecret = secret;
 
     this.ws.onmessage = event => {
-      const message: any = JSON.parse(event.data as string);
+      const message = JSON.parse(event.data as string) as Message;
       console.log('recv', message);
       this.onMessage(message);
     };
+
+    this.event('status', f => f(this.status()));
   }
 
-  send(message: any): void {
-    if (!this.connected()) {
+  on(what: 'status', handler: (status: Status) => void): void;
+  on<T>(what: 'players', handler: (players: Array<T | null>) => void): void;
+
+  on(what: string, handler: Function): void {
+    if (this.handlers[what] === undefined) {
+      this.handlers[what] = [];
+    }
+    this.handlers[what].push(handler);
+  }
+
+  private event(what: string, func: (handler: Function) => void): void {
+    if (this.handlers[what] !== undefined) {
+      for (const handler of this.handlers[what]) {
+        func(handler);
+      }
+    }
+  }
+
+  status(): Status {
+    if (!this.ws) {
+      return Status.NEW;
+    }
+
+    if (this.isConnected() && this.game) {
+      return Status.JOINED;
+    }
+    if (this.isConnected()) {
+      return Status.JOINING;
+    }
+    if (this.ws.readyState === WebSocket.OPEN) {
+      return Status.CONNECTING;
+    }
+    return Status.DISCONNECTED;
+  }
+
+  updatePlayer<T>(player: T): void {
+    Object.assign(this.player, player);
+    this.sendPlayer();
+  }
+
+  private send(message: any): void {
+    if (!this.isConnected()) {
       return;
     }
     console.log('send', message);
@@ -85,28 +96,12 @@ export class Client {
     this.ws!.send(data);
   }
 
-  connected(): boolean {
+  isConnected(): boolean {
     return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
   }
 
-  getNicks(): Array<string> {
-    if (this.game) {
-      return this.game.players.map(player => {
-        if (player === null) {
-          return '';
-        }
-        if (player.nick === '') {
-          return 'Player';
-        }
-        return player.nick;
-      });
-    } else {
-      return ['', '', '', ''];
-    }
-  }
-
-  sendPlayer(): void {
-    if (this.connected() && this.game) {
+  private sendPlayer(): void {
+    if (this.isConnected() && this.game) {
       this.send({
         type: 'PLAYER',
         num: this.game.num,
@@ -115,17 +110,24 @@ export class Client {
     }
   }
 
-  onOpen(): void {
-    const gameId = window.location.hash.substr(1) || null;
-
+  private onOpen(): void {
     this.send({
       type: 'JOIN',
-      gameId,
-      secret: null,
+      gameId: this.joinGameId,
+      secret: this.joinSecret,
     });
+    this.event('status', f => f(this.status()));
   }
 
-  onMessage(message: any): void {
+  private onClose(): void {
+    this.ws = null;
+    this.game = null;
+
+    this.event('status', f => f(this.status()));
+    this.event('players', f => f(new Array(4).fill(null)));
+  }
+
+  private onMessage(message: Message): void {
     switch (message.type) {
       case 'JOINED':
         this.game = {
@@ -136,10 +138,13 @@ export class Client {
         };
         window.location.hash = this.game.gameId;
         this.sendPlayer();
+        this.event('status', f => f(this.status()));
         break;
 
       case 'PLAYER':
         this.game!.players[message.num] = message.player;
+        this.event('players', f => f(this.game!.players));
+        break;
     }
   }
 }

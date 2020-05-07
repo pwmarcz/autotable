@@ -3,8 +3,12 @@ import { World } from './world';
 import { View } from './view';
 import { AssetLoader } from './asset-loader';
 import { Client } from './client';
+import { ClientUi } from './client-ui';
 
-const client = new Client('ws://localhost:1235');
+const client = new Client();
+
+new ClientUi('ws://localhost:1235', client);
+
 const world = new World(client);
 
 let view: View | null = null;
@@ -12,7 +16,7 @@ let view: View | null = null;
 const assetLoader = new AssetLoader();
 
 assetLoader.loadAll().then(() => {
-  view = new View(world, assetLoader);
+  view = new View(world, assetLoader, client);
 
   // Debugging
   // @ts-ignore
