@@ -1,12 +1,14 @@
 /* eslint no-console: 0 */
 
+import { Message } from '../server/protocol';
+
 type NetPlayer = any & {
   nick: string;
 }
 
 interface Game {
   gameId: string;
-  num: string;
+  num: number;
   secret: string;
   players: Array<NetPlayer>;
 }
@@ -70,7 +72,7 @@ export class Client {
     };
 
     this.ws.onmessage = event => {
-      const message: any = JSON.parse(event.data as string);
+      const message = JSON.parse(event.data as string) as Message;
       console.log('recv', message);
       this.onMessage(message);
     };
@@ -125,7 +127,7 @@ export class Client {
     });
   }
 
-  onMessage(message: any): void {
+  onMessage(message: Message): void {
     switch (message.type) {
       case 'JOINED':
         this.game = {

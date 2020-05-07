@@ -1,1 +1,12 @@
-../tsconfig.json
+{
+    "compilerOptions": {
+        "strict": true,
+        "target": "es6",
+        "lib": ["dom", "es6", "es2015.promise"],
+        "esModuleInterop": true,
+        "moduleResolution": "node"
+    },
+    "references": [
+        { "path": "../server" }
+    ]
+}
