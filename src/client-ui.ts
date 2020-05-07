@@ -18,7 +18,6 @@ export class ClientUi {
 
     this.statusElement = document.getElementById('status')! as HTMLElement;
     this.client.on('status', this.onStatus.bind(this));
-    this.onStatus(this.client.status());
     this.onNickChange();
 
     const connectButton = document.getElementById('connect')!;
@@ -57,7 +56,7 @@ export class ClientUi {
         this.statusElement.innerHTML = 'not connected';
         break;
       case Status.DISCONNECTED:
-        this.statusElement.innerText = 'disconnected';
+        this.statusElement.innerText = 'not connected';
         if (!this.success && window.location.hash.length > 1) {
           window.location.hash = '#';
         }

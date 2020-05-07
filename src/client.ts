@@ -55,6 +55,13 @@ export class Client {
       this.handlers[what] = [];
     }
     this.handlers[what].push(handler);
+
+    if (what === 'status') {
+      handler(this.status());
+    }
+    if (what === 'players') {
+      handler(this.players());
+    }
   }
 
   private event(what: string, func: (handler: Function) => void): void {
@@ -80,6 +87,10 @@ export class Client {
       return Status.CONNECTING;
     }
     return Status.DISCONNECTED;
+  }
+
+  players(): Array<Player> {
+    return this.game ? this.game.players : new Array(4).fill(null);
   }
 
   updatePlayer<T>(player: T): void {
@@ -120,11 +131,10 @@ export class Client {
   }
 
   private onClose(): void {
-    this.ws = null;
     this.game = null;
 
     this.event('status', f => f(this.status()));
-    this.event('players', f => f(new Array(4).fill(null)));
+    this.event('players', f => f(this.players()));
   }
 
   private onMessage(message: Message): void {
@@ -143,7 +153,7 @@ export class Client {
 
       case 'PLAYER':
         this.game!.players[message.num] = message.player;
-        this.event('players', f => f(this.game!.players));
+        this.event('players', f => f(this.players()));
         break;
     }
   }
