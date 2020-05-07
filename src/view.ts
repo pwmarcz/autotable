@@ -6,6 +6,7 @@ import { Scene, Camera, WebGLRenderer, Vector2, Raycaster, Mesh, MeshLambertMate
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
+import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import { World } from './world';
 import { ThingType, Size } from './places';
@@ -21,6 +22,8 @@ export class View {
   main: HTMLElement;
   selection: HTMLElement;
   cursors: Array<HTMLElement>;
+
+  stats: Stats;
 
   center: Center;
 
@@ -171,6 +174,11 @@ export class View {
     this.setupLights();
     this.setupEvents();
     this.setupRendering();
+
+    this.stats = Stats();
+    this.stats.dom.style.left = 'auto';
+    this.stats.dom.style.right = '0';
+    this.main.appendChild(this.stats.dom);
   }
 
   onStatus(status: Status): void {
@@ -304,8 +312,9 @@ export class View {
 
     this.center.setScores(this.world.getScores());
     this.center.draw();
-
     this.composer.render();
+
+    this.stats.update();
   }
 
   updateSelect(): void {
