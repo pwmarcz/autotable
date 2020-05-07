@@ -13,6 +13,8 @@ export class ClientUi {
     this.url = this.getUrl();
     this.client = client;
     this.nickElement = document.getElementById('nick')! as HTMLInputElement;
+    this.nickElement.value = localStorage.getItem('autotable.nick') ?? '';
+
     this.nickElement.onchange = this.onNickChange.bind(this);
     this.nickElement.oninput = this.onNickChange.bind(this);
 
@@ -46,6 +48,7 @@ export class ClientUi {
 
   onNickChange(): void {
     this.client.updatePlayer({ nick: this.nickElement.value });
+    localStorage.setItem('autotable.nick', this.nickElement.value);
   }
 
   onStatus(status: Status): void {
