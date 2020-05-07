@@ -51,9 +51,9 @@
             visibility: hidden;
         }
 
-        .cursor.rotate-1 { transform: rotate(90deg); }
-        .cursor.rotate-2 { transform: rotate(180deg); }
-        .cursor.rotate-3 { transform: rotate(270deg); }
+        .cursor.rotate-1 { transform: rotate(-90deg); }
+        .cursor.rotate-2 { transform: rotate(-180deg); }
+        .cursor.rotate-3 { transform: rotate(-270deg); }
 
         /*
         .cursor          { visibility: visible; top: 50%; left: 20%; }
@@ -107,7 +107,7 @@
     <div id="full">
         <div id="main">
             <div id="selection"></div>
-            <div class="cursor"></div>
+            <div class="cursor rotate-0"></div>
             <div class="cursor rotate-1"></div>
             <div class="cursor rotate-2"></div>
             <div class="cursor rotate-3"></div>

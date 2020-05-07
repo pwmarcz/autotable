@@ -1,7 +1,7 @@
 import { Vector2, Euler, Vector3 } from "three";
 
 import { Place, Slot, Thing, Size, ThingType } from "./places";
-import { Client } from "./client";
+import { Client, Status } from "./client";
 
 interface Render {
   thingIndex: number;
@@ -24,6 +24,10 @@ const Rotation = {
   FACE_DOWN: new Euler(Math.PI, 0, 0),
 };
 
+interface WorldPlayer {
+  mouse: { x: number; y: number } | null;
+}
+
 export class World {
   slots: Record<string, Slot> = {};
   pushes: Array<[Slot, Slot]> = [];
@@ -31,13 +35,15 @@ export class World {
 
   hovered: Thing | null = null;
   selected: Array<Thing> = [];
-  tablePos: Vector2 | null = null;
+  mouse: Vector2 | null = null;
 
   targetSlots: Array<Slot | null> = [];
   held: Array<Thing> = [];
-  heldTablePos: Vector2 | null = null;
+  heldMouse: Vector2 | null = null;
 
   scoreSlots: Array<Array<Slot>> = [[], [], [], []];
+  playerNum = 0;
+  playerCursors: Array<Vector2 | null> = new Array(4).fill(null);
 
   static WIDTH = 174;
 
@@ -49,6 +55,26 @@ export class World {
     this.addSticks();
 
     this.client = client;
+
+    this.client.on('status', this.onStatus.bind(this));
+    this.client.on('players', this.onPlayers.bind(this));
+  }
+
+  onStatus(status: Status): void {
+    if (status === Status.JOINED) {
+      this.playerNum = this.client.game!.num;
+    }
+  }
+
+  onPlayers(players: Array<WorldPlayer | null>): void {
+    for (let i = 0; i < 4; i++) {
+      const player = players[i];
+      if (player && player.mouse) {
+        this.playerCursors[i] = new Vector2(player.mouse.x, player.mouse.y);
+      } else {
+        this.playerCursors[i] = null;
+      }
+    }
   }
 
   addTiles(): void {
@@ -246,9 +272,17 @@ export class World {
     this.selected = this.selected.filter(thing => thing.type === allTypes[0]);
   }
 
-  onMove(tablePos: Vector2 | null): void {
-    this.tablePos = tablePos;
-    if (this.tablePos !== null && this.heldTablePos !== null) {
+  onMove(mouse: Vector2 | null): void {
+    if ((this.mouse === null && mouse === null) ||
+        (this.mouse !== null && mouse !== null && this.mouse.equals(mouse))) {
+      return;
+    }
+
+    this.client.updatePlayer({
+      mouse: this.mouse ? {x: this.mouse.x, y: this.mouse.y} : null,
+    });
+    this.mouse = mouse;
+    if (this.mouse !== null && this.heldMouse !== null) {
       for (let i = 0; i < this.held.length; i++) {
         this.targetSlots[i] = null;
       }
@@ -256,8 +290,8 @@ export class World {
       for (let i = 0; i < this.held.length; i++) {
         const thing = this.held[i];
         const place = thing.place();
-        const x = place.position.x + this.tablePos.x - this.heldTablePos.x;
-        const y = place.position.y + this.tablePos.y - this.heldTablePos.y;
+        const x = place.position.x + this.mouse.x - this.heldMouse.x;
+        const y = place.position.y + this.mouse.y - this.heldMouse.y;
 
         this.targetSlots[i] = this.findSlot(x, y, thing.type);
       }
@@ -322,7 +356,7 @@ export class World {
         this.selected.splice(0);
       }
       // this.hovered = null;
-      this.heldTablePos = this.tablePos;
+      this.heldMouse = this.mouse;
 
       this.targetSlots.length = this.held.length;
       for (let i = 0; i < this.held.length; i++) {
@@ -336,8 +370,8 @@ export class World {
 
   onDragEnd(): void {
     if (this.held.length > 0) {
-      if (this.heldTablePos !== null && this.tablePos !== null &&
-          this.heldTablePos.equals(this.tablePos)) {
+      if (this.heldMouse !== null && this.mouse !== null &&
+          this.heldMouse.equals(this.mouse)) {
 
         // No movement; unselect
         this.selected.splice(0);
@@ -404,10 +438,10 @@ export class World {
       let place = thing.place();
       const held = this.held.indexOf(thing) !== -1;
 
-      if (held && this.tablePos !== null && this.heldTablePos !== null) {
+      if (held && this.mouse !== null && this.heldMouse !== null) {
         place = {...place, position: place.position.clone()};
-        place.position.x += this.tablePos.x - this.heldTablePos.x;
-        place.position.y += this.tablePos.y - this.heldTablePos.y;
+        place.position.x += this.mouse.x - this.heldMouse.x;
+        place.position.y += this.mouse.y - this.heldMouse.y;
       }
 
       const selected = this.selected.indexOf(thing) !== -1;

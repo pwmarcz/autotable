@@ -8,7 +8,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
 
 import { World } from './world';
-import { ThingType } from './places';
+import { ThingType, Size } from './places';
 import { SelectionBox } from './selection-box';
 import { AssetLoader } from './asset-loader';
 import { Center } from './center';
@@ -20,6 +20,7 @@ export class View {
 
   main: HTMLElement;
   selection: HTMLElement;
+  cursors: Array<HTMLElement>;
 
   center: Center;
 
@@ -56,6 +57,12 @@ export class View {
   constructor(world: World, assetLoader: AssetLoader, client: Client) {
     this.main = document.getElementById('main')!;
     this.selection = document.getElementById('selection')!;
+    this.cursors = [
+      document.querySelector('.cursor.rotate-0')! as HTMLElement,
+      document.querySelector('.cursor.rotate-1')! as HTMLElement,
+      document.querySelector('.cursor.rotate-2')! as HTMLElement,
+      document.querySelector('.cursor.rotate-3')! as HTMLElement,
+    ];
     this.world = world;
 
     this.client = client;
@@ -293,6 +300,7 @@ export class View {
     this.updateRender();
     this.updateRenderGhosts();
     this.updateRenderShadows();
+    this.updateCursors();
 
     this.center.setScores(this.world.getScores());
     this.center.draw();
@@ -434,6 +442,32 @@ export class View {
         shadow.position.y,
         shadow.position.z - shadow.size.z/2 + 0.2);
       obj.scale.set(shadow.size.x, shadow.size.y, 1);
+    }
+  }
+
+  updateCursors(): void {
+    const w = this.renderer.domElement.clientWidth;
+    const h = this.renderer.domElement.clientHeight;
+
+    for (let i = 0; i < 4; i++) {
+      const j = (4 + i - this.world.playerNum) % 4;
+
+      const cursorElement = this.cursors[j];
+      const cursorPos = this.world.playerCursors[i];
+
+      if (cursorPos && i !== this.world.playerNum) {
+        const v = new Vector3(cursorPos.x, cursorPos.y, Size.TILE.y);
+        this.raycastTable.localToWorld(v);
+        v.project(this.camera);
+
+        const x = Math.floor((v.x + 1) / 2 * w);
+        const y = Math.floor((-v.y + 1) / 2 * h);
+        cursorElement.style.visibility = 'visible';
+        cursorElement.style.left = `${x}px`;
+        cursorElement.style.top = `${y}px`;
+      } else {
+        cursorElement.style.visibility = 'hidden';
+      }
     }
   }
 
