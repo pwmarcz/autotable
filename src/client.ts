@@ -1,12 +1,13 @@
 /* eslint no-console: 0 */
 
-import { Message, Player } from '../server/protocol';
+import { Message, Player, Thing } from '../server/protocol';
 
 interface Game {
   gameId: string;
   num: number;
   secret: string;
   players: Array<Player | null>;
+  things: Array<Thing>;
 }
 
 export enum Status {
@@ -54,7 +55,9 @@ export class Client {
   }
 
   on(what: 'status', handler: (status: Status) => void): void;
-  on<T>(what: 'players', handler: (players: Array<T | null>) => void): void;
+  on<P>(what: 'players', handler: (players: Array<P | null>) => void): void;
+  on<T>(what: 'update', handler: (things: Record<number, T>) => void): void;
+  on<T>(what: 'replace', handler: (things: Array<T>) => void): void;
 
   on(what: string, handler: Function): void {
     if (this.handlers[what] === undefined) {
@@ -99,7 +102,7 @@ export class Client {
     return this.game ? this.game.players : new Array(4).fill(null);
   }
 
-  updatePlayer<T>(player: T): void {
+  updatePlayer<P>(player: P): void {
     Object.assign(this.player, player);
     this.playerDirty = true;
     const now = new Date().getTime();
@@ -108,7 +111,15 @@ export class Client {
     }
   }
 
-  private send(message: any): void {
+  update<T>(things: Record<number, T>): void {
+    this.send({ type: 'UPDATE', things });
+  }
+
+  replace<T>(allThings: Array<T>): void {
+    this.send({ type: 'REPLACE', allThings });
+  }
+
+  private send(message: Message): void {
     if (!this.isConnected()) {
       return;
     }
@@ -170,6 +181,7 @@ export class Client {
           num: message.num,
           secret: message.secret,
           players: new Array(4).fill(null),
+          things: [],
         };
         window.location.hash = this.game.gameId;
         this.sendPlayer();
@@ -179,6 +191,18 @@ export class Client {
       case 'PLAYER':
         this.game!.players[message.num] = message.player;
         this.event('players', f => f(this.players()));
+        break;
+
+      case 'UPDATE':
+        for (const index in message.things) {
+          this.game!.things[index] = message.things[index];
+        }
+        this.event('update', f => f(message.things));
+        break;
+
+      case 'REPLACE':
+        this.game!.things = message.allThings;
+        this.event('replace', f => f(message.allThings));
         break;
     }
   }

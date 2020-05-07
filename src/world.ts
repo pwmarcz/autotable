@@ -24,8 +24,13 @@ const Rotation = {
   FACE_DOWN: new Euler(Math.PI, 0, 0),
 };
 
-interface WorldPlayer {
+interface PlayerInfo {
   mouse: { x: number; y: number } | null;
+}
+
+interface ThingInfo {
+  slotName: string;
+  rotationIndex: number;
 }
 
 export class World {
@@ -58,6 +63,8 @@ export class World {
 
     this.client.on('status', this.onStatus.bind(this));
     this.client.on('players', this.onPlayers.bind(this));
+    this.client.on('update', this.onUpdate.bind(this));
+    this.client.on('replace', this.onReplace.bind(this));
   }
 
   onStatus(status: Status): void {
@@ -66,7 +73,7 @@ export class World {
     }
   }
 
-  onPlayers(players: Array<WorldPlayer | null>): void {
+  onPlayers(players: Array<PlayerInfo | null>): void {
     for (let i = 0; i < 4; i++) {
       const player = players[i];
       if (player && player.mouse) {
@@ -77,18 +84,64 @@ export class World {
     }
   }
 
-  addTiles(): void {
-    const tiles = [];
-    for (let i = 0; i < 136; i++) {
-      tiles.push(Math.floor(i / 4));
+  onUpdate(thingInfos: Record<number, ThingInfo>): void {
+    // TODO conflicts!
+    const indexes = Object.keys(thingInfos).map(k => parseInt(k, 10));
+    indexes.sort((a, b) => a - b);
+
+    for (const thingIndex of indexes) {
+      const thing = this.things[thingIndex];
+      thing.remove();
     }
-    shuffle(tiles);
+    for (const thingIndex of indexes) {
+      const thing = this.things[thingIndex];
+      const thingInfo = thingInfos[thingIndex];
+      const slot = this.slots[thingInfo.slotName];
+      thing.moveTo(slot, thingInfo.rotationIndex);
+    }
+    this.checkPushes();
+  }
+
+  onReplace(allThings: Array<ThingInfo>): void {
+    // TODO conflicts?
+    if (allThings.length === 0) {
+      this.client.replace(this.things.map(this.describeThing.bind(this)));
+    } else {
+      this.onUpdate(allThings);
+    }
+  }
+
+  sendUpdate(things: Array<Thing>): void {
+    const update: Record<number, ThingInfo> = {};
+    for (const thing of things) {
+      update[thing.index] = this.describeThing(thing);
+    }
+    this.client.update(update);
+  }
+
+  describeThing(thing: Thing): ThingInfo {
+    return {
+      slotName: thing.slot.name,
+      rotationIndex: thing.rotationIndex,
+    };
+  }
+
+  addTiles(): void {
+    const slots = [];
+
     for (let i = 0; i < 17; i++) {
       for (let j = 0; j < 2; j++) {
         for (let k = 0; k < 4; k++) {
-          this.addThing(ThingType.TILE, tiles.pop()!, `wall.${i+1}.${j}.${k}`);
+          slots.push(`wall.${i+1}.${j}.${k}`);
         }
       }
+    }
+
+    // Shuffle slots, not tiles - this way tiles are the same for everyone.
+    shuffle(slots);
+    for (let i = 0; i < 136; i++) {
+      const tileIndex = Math.floor(i / 4);
+      this.addThing(ThingType.TILE, tileIndex, slots[i]);
     }
   }
 
@@ -398,24 +451,27 @@ export class World {
           continue;
         }
         thing.flip();
+        this.sendUpdate(this.selected);
       }
       this.checkPushes();
       this.selected.splice(0);
     } else if (this.hovered !== null) {
       this.hovered.flip();
+      this.sendUpdate([this.hovered]);
       this.checkPushes();
     }
   }
 
   drop(): void {
     for (const thing of this.held) {
-      thing.slot.thing = null;
+      thing.remove();
     }
     for (let i = 0; i < this.held.length; i++) {
       const thing = this.held[i];
       const targetSlot = this.targetSlots[i]!;
       thing.moveTo(targetSlot);
     }
+    this.sendUpdate(this.held);
     this.checkPushes();
     this.selected.splice(0);
   }

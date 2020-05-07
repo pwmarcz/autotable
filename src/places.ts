@@ -117,7 +117,7 @@ export class Thing {
   index: number;
   type: ThingType;
   typeIndex: number;
-  slot: Slot;
+  _slot: Slot | null;
   rotationIndex: number;
   offset: Vector2;
   // place: Place;
@@ -126,11 +126,19 @@ export class Thing {
     this.index = index;
     this.type = type;
     this.typeIndex = typeIndex;
-    this.slot = slot;
+    this._slot = slot;
     this.rotationIndex = 0;
     this.offset = new Vector2(0, 0);
 
     this.slot.thing = this;
+  }
+
+  // TODO handle null slot better
+  get slot(): Slot {
+    if (this._slot === null) {
+      throw `no slot: ${this.index}`;
+    }
+    return this._slot;
   }
 
   place(): Place {
@@ -181,17 +189,22 @@ export class Thing {
     this.rotationIndex = (this.rotationIndex + 1) % this.slot.rotations.length;
   }
 
-  moveTo(target: Slot): void {
+  remove(): void {
+    // console.log('remove', this.index, this.slot.name);
+    this.slot.thing = null;
+    this._slot = null;
+  }
+
+  moveTo(target: Slot, rotationIndex?: number): void {
+    // console.log('moveTo', this.index, target.name);
     if (target.thing !== null) {
-      throw `slot not empty: ${target.name}`;
+      throw `slot not empty: ${this.index} ${target.name}`;
     }
-
-    if (this.slot.thing !== null) {
-      this.slot.thing = null;
+    if (this._slot !== null) {
+      throw `not removed: ${this.index} -> ${this.slot.name}`;
     }
-
-    this.slot = target;
-    this.rotationIndex = 0;
+    this._slot = target;
+    this.rotationIndex = rotationIndex ?? 0;
     target.thing = this;
   }
 }
