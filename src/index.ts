@@ -6,8 +6,7 @@ import { Client } from './client';
 import { ClientUi } from './client-ui';
 
 const client = new Client();
-
-new ClientUi('ws://localhost:1235', client);
+new ClientUi(client);
 
 const world = new World(client);
 
@@ -23,6 +22,8 @@ assetLoader.loadAll().then(() => {
   window.world = world;
   // @ts-ignore
   window.view = view;
+  // @ts-ignore
+  window.client = client;
 
   updateSettings();
   view.draw();

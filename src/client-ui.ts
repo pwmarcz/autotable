@@ -9,8 +9,8 @@ export class ClientUi {
 
   success = false;
 
-  constructor(url: string, client: Client) {
-    this.url = url;
+  constructor(client: Client) {
+    this.url = this.getUrl();
     this.client = client;
     this.nickElement = document.getElementById('nick')! as HTMLInputElement;
     this.nickElement.onchange = this.onNickChange.bind(this);
@@ -27,6 +27,22 @@ export class ClientUi {
     if (window.location.hash.length > 1) {
       this.connect();
     }
+  }
+
+  getUrl(): string {
+    // @ts-ignore
+    const env = process.env.NODE_ENV;
+
+    if (env !== 'production') {
+      return 'ws://localhost:1235';
+    }
+
+    let path = window.location.pathname;
+    path = path.substring(1, path.lastIndexOf('/')+1);
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsHost = window.location.host;
+    const wsPath = path + 'ws';
+    return `${wsProtocol}//${wsHost}/${wsPath}`;
   }
 
   onNickChange(): void {
