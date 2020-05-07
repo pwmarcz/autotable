@@ -33,7 +33,11 @@ class Game {
 
     for (let i = 0; i < PLAYERS; i++) {
       if (secret !== null && this.secrets[i] === secret) {
-        this.clients[i]?.close();
+        const client = this.clients[i];
+        if (client) {
+          client.game = null;
+          client.close();
+        }
         num = i;
         break;
       }
@@ -194,7 +198,7 @@ class Server {
         } else {
           game = this.games[message.gameId];
           if (game === undefined) {
-            throw `game not found: {client.gameId}`;
+            throw `game not found: ${message.gameId}`;
           }
         }
         const num = game.join(client, message.secret);

@@ -12,6 +12,7 @@ import { ThingType } from './places';
 import { SelectionBox } from './selection-box';
 import { AssetLoader } from './asset-loader';
 import { Center } from './center';
+import { Client } from './client';
 
 export class View {
   world: World;
@@ -50,7 +51,7 @@ export class View {
 
   cameraPos = new Animation(150);
 
-  constructor(world: World, assetLoader: AssetLoader) {
+  constructor(world: World, assetLoader: AssetLoader, client: Client) {
     this.main = document.getElementById('main')!;
     this.selection = document.getElementById('selection')!;
     this.world = world;
@@ -69,7 +70,7 @@ export class View {
     tableMesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
     this.scene.add(tableMesh);
 
-    this.center = new Center(this.assetLoader);
+    this.center = new Center(this.assetLoader, client);
     this.center.mesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0.75);
     this.scene.add(this.center.mesh);
 
@@ -269,7 +270,6 @@ export class View {
     this.updateRenderShadows();
 
     this.center.setScores(this.world.getScores());
-    this.center.setNicks(this.world.client.getNicks());
     this.center.draw();
 
     this.composer.render();
