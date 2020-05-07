@@ -57,17 +57,17 @@ export class Client {
     this.handlers[what].push(handler);
 
     if (what === 'status') {
-      handler(this.status());
+      setTimeout(() => handler(this.status()), 0);
     }
     if (what === 'players') {
-      handler(this.players());
+      setTimeout(handler(this.players()), 0);
     }
   }
 
   private event(what: string, func: (handler: Function) => void): void {
     if (this.handlers[what] !== undefined) {
       for (const handler of this.handlers[what]) {
-        func(handler);
+        setTimeout(() => func(handler), 0);
       }
     }
   }

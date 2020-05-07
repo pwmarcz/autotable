@@ -1,7 +1,7 @@
 
 
 import * as THREE from 'three';
-import { Object3D, Scene, Camera, WebGLRenderer, Vector2, Raycaster, Mesh, MeshLambertMaterial, Vector3 } from 'three';
+import { Scene, Camera, WebGLRenderer, Vector2, Raycaster, Mesh, MeshLambertMaterial, Vector3, Group } from 'three';
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
@@ -12,10 +12,11 @@ import { ThingType } from './places';
 import { SelectionBox } from './selection-box';
 import { AssetLoader } from './asset-loader';
 import { Center } from './center';
-import { Client } from './client';
+import { Client, Status } from './client';
 
 export class View {
   world: World;
+  client: Client;
 
   main: HTMLElement;
   selection: HTMLElement;
@@ -27,6 +28,7 @@ export class View {
   perspective = false;
 
   scene: Scene;
+  mainGroup: Group;
   renderer: WebGLRenderer;
   raycaster: Raycaster;
 
@@ -40,7 +42,7 @@ export class View {
   ghostObjects: Array<Mesh>;
   shadows: Array<Mesh>;
   raycastObjects: Array<Mesh>;
-  raycastTable: Object3D;
+  raycastTable: Mesh;
 
   width = 0;
   height = 0;
@@ -55,11 +57,17 @@ export class View {
     this.main = document.getElementById('main')!;
     this.selection = document.getElementById('selection')!;
     this.world = world;
+
+    this.client = client;
+    this.client.on('status', this.onStatus.bind(this));
+
     this.objects = [];
 
     this.assetLoader = assetLoader;
 
     this.scene = new THREE.Scene();
+    this.mainGroup = new THREE.Group();
+    this.scene.add(this.mainGroup);
 
     this.raycaster = new THREE.Raycaster();
 
@@ -68,11 +76,11 @@ export class View {
 
     const tableMesh = this.assetLoader.makeTable();
     tableMesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
-    this.scene.add(tableMesh);
+    this.mainGroup.add(tableMesh);
 
     this.center = new Center(this.assetLoader, client);
     this.center.mesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0.75);
-    this.scene.add(this.center.mesh);
+    this.mainGroup.add(this.center.mesh);
 
     for (let i = 0; i < 4; i++) {
       for (let j = 0; j < 6; j++) {
@@ -89,7 +97,7 @@ export class View {
           trayPos.x + World.WIDTH / 2,
           trayPos.y + World.WIDTH / 2,
           0);
-        this.scene.add(tray);
+        this.mainGroup.add(tray);
       }
     }
 
@@ -103,11 +111,11 @@ export class View {
     for (let i = 0; i < this.world.things.length; i++) {
       const obj = this.makeObject(this.world.things[i].type, this.world.things[i].typeIndex);
       this.objects.push(obj);
-      this.scene.add(obj);
+      this.mainGroup.add(obj);
 
       const gobj = this.makeGhostObject(this.world.things[i].type, this.world.things[i].typeIndex);
       this.ghostObjects.push(gobj);
-      this.scene.add(gobj);
+      this.mainGroup.add(gobj);
 
       const geometry = new THREE.PlaneGeometry(1, 1);
       const material = new THREE.MeshBasicMaterial({
@@ -118,7 +126,7 @@ export class View {
       const shadow = new Mesh(geometry, material);
       shadow.visible = false;
       this.shadows.push(shadow);
-      this.scene.add(shadow);
+      this.mainGroup.add(shadow);
     }
 
     for (const shadow of this.world.toRenderPlaces()) {
@@ -133,7 +141,7 @@ export class View {
       });
       const mesh = new Mesh(geometry, material);
       mesh.position.set(shadow.position.x, shadow.position.y, 0.1);
-      this.scene.add(mesh);
+      this.mainGroup.add(mesh);
     }
 
     this.raycastObjects = [];
@@ -142,7 +150,7 @@ export class View {
       robj.visible = false;
       robj.geometry.computeBoundingBox();
       this.raycastObjects.push(robj);
-      this.scene.add(robj);
+      this.mainGroup.add(robj);
     }
 
     this.raycastTable = new THREE.Mesh(new THREE.PlaneGeometry(
@@ -151,11 +159,18 @@ export class View {
     ));
     this.raycastTable.visible = false;
     this.raycastTable.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
-    this.scene.add(this.raycastTable);
+    this.mainGroup.add(this.raycastTable);
 
     this.setupLights();
     this.setupEvents();
     this.setupRendering();
+  }
+
+  onStatus(status: Status): void {
+    if (status === Status.JOINED) {
+      const playerNum = this.client.game!.num;
+      this.updateRotation(playerNum);
+    }
   }
 
   setupLights(): void {
@@ -200,7 +215,7 @@ export class View {
     this.composer.addPass(this.outlinePass);
 
     // Force outline pass to preload shaders
-    this.outlinePass.selectedObjects.push(this.scene.children[0]);
+    this.outlinePass.selectedObjects.push(this.mainGroup.children[0]);
     this.composer.render();
     this.outlinePass.selectedObjects.splice(0);
   }
@@ -235,6 +250,16 @@ export class View {
     if (updated) {
       this.updateSelect();
     }
+  }
+
+  updateRotation(playerNum: number): void {
+    const angle = playerNum * Math.PI/2;
+
+    const adjust = new Vector3(World.WIDTH/2, World.WIDTH/2, 0);
+    adjust.applyAxisAngle(new Vector3(0, 0, 1), -angle);
+
+    this.mainGroup.position.set(World.WIDTH/2, World.WIDTH/2, 0).sub(adjust);
+    this.mainGroup.rotation.set(0, 0, -angle);
   }
 
   setPerspective(perspective: boolean): void {
@@ -325,7 +350,8 @@ export class View {
     const intersectsTable = this.raycaster.intersectObject(this.raycastTable);
     let tablePos = null;
     if (intersectsTable.length > 0) {
-      const point = intersectsTable[0].point;
+      const point = intersectsTable[0].point.clone();
+      this.raycastTable.worldToLocal(point);
       tablePos = new Vector2(point.x, point.y);
     }
     this.world.onMove(tablePos);
