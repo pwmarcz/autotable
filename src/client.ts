@@ -17,6 +17,8 @@ export enum Status {
   DISCONNECTED = 'DISCONNECTED',
 }
 
+const PLAYER_UPDATE_RATE = 100;
+
 export class Client {
   private ws: WebSocket | null = null;
   game: Game | null = null;
@@ -26,6 +28,10 @@ export class Client {
   player: Player = {};
 
   handlers: Record<string, Array<Function>> = {};
+
+  lastPlayerUpdate = 0;
+  playerDirty = false;
+  updateIntervalId: number | null = null;
 
   connect(url: string, gameId: string | null, secret: string | null): void {
     if (this.isConnected()) {
@@ -95,7 +101,11 @@ export class Client {
 
   updatePlayer<T>(player: T): void {
     Object.assign(this.player, player);
-    this.sendPlayer();
+    this.playerDirty = true;
+    const now = new Date().getTime();
+    if (now - this.lastPlayerUpdate > PLAYER_UPDATE_RATE) {
+      this.sendPlayer();
+    }
   }
 
   private send(message: any): void {
@@ -118,6 +128,14 @@ export class Client {
         num: this.game.num,
         player: this.player,
       });
+      this.playerDirty = false;
+      this.lastPlayerUpdate = new Date().getTime();
+    }
+  }
+
+  private checkSendPlayer(): void{
+    if (this.playerDirty) {
+      this.sendPlayer();
     }
   }
 
@@ -128,9 +146,16 @@ export class Client {
       secret: this.joinSecret,
     });
     this.event('status', f => f(this.status()));
+    if (this.updateIntervalId === null) {
+      this.updateIntervalId = setInterval(this.checkSendPlayer.bind(this), PLAYER_UPDATE_RATE);
+    }
   }
 
   private onClose(): void {
+    if (this.updateIntervalId !== null) {
+      clearInterval(this.updateIntervalId);
+    }
+    this.updateIntervalId = null;
     this.game = null;
 
     this.event('status', f => f(this.status()));
