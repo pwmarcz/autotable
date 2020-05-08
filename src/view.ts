@@ -1,15 +1,14 @@
-import { Scene, Camera, WebGLRenderer, Vector2, Mesh, MeshLambertMaterial, Vector3, Group, PlaneGeometry, MeshBasicMaterial, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera } from 'three';
+import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera } from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import { World } from './world';
-import { ThingType, } from './places';
 import { AssetLoader } from './asset-loader';
-import { Center } from './center';
 import { Client, Status } from './client';
 import { MouseUi } from './mouse-ui';
+import { ObjectUi } from './object-ui';
 
 export class View {
   world: World;
@@ -19,8 +18,6 @@ export class View {
 
   stats: Stats;
 
-  center: Center;
-
   assetLoader: AssetLoader;
 
   perspective = false;
@@ -29,20 +26,16 @@ export class View {
   mainGroup: Group;
   renderer: WebGLRenderer;
 
-  // Setup in setupRendering()
   camera: Camera = null!;
   composer: EffectComposer = null!;
   outlinePass: OutlinePass = null!;
-
-  objects: Array<Mesh>;
-  ghostObjects: Array<Mesh>;
-  shadows: Array<Mesh>;
 
   width = 0;
   height = 0;
   static RATIO = 1.5;
 
   mouseUi: MouseUi;
+  objectUi: ObjectUi;
 
   cameraPos = new Animation(150);
 
@@ -53,8 +46,6 @@ export class View {
     this.client = client;
     this.client.on('status', this.onStatus.bind(this));
 
-    this.objects = [];
-
     this.assetLoader = assetLoader;
 
     this.scene = new Scene();
@@ -64,77 +55,8 @@ export class View {
     this.renderer = new WebGLRenderer({ antialias: true });
     this.main.appendChild(this.renderer.domElement);
 
-    const tableMesh = this.assetLoader.makeTable();
-    tableMesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
-    this.mainGroup.add(tableMesh);
-
-    this.center = new Center(this.assetLoader, client);
-    this.center.mesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0.75);
-    this.mainGroup.add(this.center.mesh);
-
-    for (let i = 0; i < 4; i++) {
-      for (let j = 0; j < 6; j++) {
-        const trayPos = new Vector3(
-          25 + 24 * j - World.WIDTH / 2,
-          -33 - World.WIDTH / 2,
-          0
-        );
-        trayPos.applyAxisAngle(new Vector3(0, 0, 1), Math.PI * i / 2);
-
-        const tray = this.assetLoader.makeTray();
-        tray.rotation.z = Math.PI * i / 2;
-        tray.position.set(
-          trayPos.x + World.WIDTH / 2,
-          trayPos.y + World.WIDTH / 2,
-          0);
-        this.mainGroup.add(tray);
-      }
-    }
-
-
-    // this.assets.stickTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
-    // this.assets.stickTexture.flipY = false;
-
-    this.objects = [];
-    this.ghostObjects = [];
-    this.shadows = [];
-    for (let i = 0; i < this.world.things.length; i++) {
-      const obj = this.makeObject(this.world.things[i].type, this.world.things[i].typeIndex);
-      this.objects.push(obj);
-      this.mainGroup.add(obj);
-
-      const gobj = this.makeGhostObject(this.world.things[i].type, this.world.things[i].typeIndex);
-      this.ghostObjects.push(gobj);
-      this.mainGroup.add(gobj);
-
-      const geometry = new PlaneGeometry(1, 1);
-      const material = new MeshBasicMaterial({
-        transparent: true,
-        opacity: 0.2,
-        color: 0,
-      });
-      const shadow = new Mesh(geometry, material);
-      shadow.visible = false;
-      this.shadows.push(shadow);
-      this.mainGroup.add(shadow);
-    }
-
-    for (const shadow of this.world.toRenderPlaces()) {
-      // const w = Math.max(shadow.size.x, World.TILE_WIDTH);
-      // const h = Math.max(shadow.size.y, World.TILE_WIDTH);
-
-      const geometry = new PlaneGeometry(shadow.size.x, shadow.size.y);
-      const material = new MeshBasicMaterial({
-        transparent: true,
-        opacity: 0.1,
-        color: 0,
-      });
-      const mesh = new Mesh(geometry, material);
-      mesh.position.set(shadow.position.x, shadow.position.y, 0.1);
-      this.mainGroup.add(mesh);
-    }
-
     this.mouseUi = new MouseUi(this.world, this.mainGroup);
+    this.objectUi = new ObjectUi(this.world, this.mainGroup, this.assetLoader, this.client);
 
     this.setupLights();
     this.setupEvents();
@@ -247,110 +169,16 @@ export class View {
     this.setupRendering();
   }
 
-  makeObject(type: ThingType, index: number): Mesh {
-    switch (type) {
-      case ThingType.TILE:
-        return this.assetLoader.makeTile(index);
-      case ThingType.STICK:
-        return this.assetLoader.makeStick(index);
-    }
-  }
-
-  makeGhostObject(type: ThingType, index: number): Mesh {
-    const obj = this.makeObject(type, index);
-    const material = obj.material as MeshLambertMaterial;
-    material.transparent = true;
-    material.opacity = 0.5;
-    return obj;
-  }
-
   draw(): void {
     requestAnimationFrame(this.draw.bind(this));
     this.updateViewport();
     this.adjustCamera();
+    this.objectUi.update();
+    this.outlinePass.selectedObjects = this.objectUi.selectedObjects;
     this.mouseUi.update();
-
-    this.updateRender();
-    this.updateRenderGhosts();
-    this.updateRenderShadows();
     this.mouseUi.updateCursors();
-
-    this.center.setScores(this.world.getScores());
-    this.center.draw();
     this.composer.render();
-
     this.stats.update();
-  }
-
-  updateRender(): void {
-    for (const obj of this.objects) {
-      obj.visible = false;
-    }
-
-    this.outlinePass.selectedObjects = [];
-    for (const render of this.world.toRender()) {
-      const obj = this.objects[render.thingIndex];
-      obj.visible = true;
-      obj.position.copy(render.place.position);
-      obj.rotation.copy(render.place.rotation);
-
-      const material = obj.material as MeshLambertMaterial;
-      material.emissive.setHex(0);
-      material.color.setHex(0xeeeeee);
-      material.transparent = false;
-      material.depthTest = true;
-      obj.renderOrder = 0;
-
-      if (render.hovered) {
-        material.emissive.setHex(0x111111);
-      }
-
-      if (render.bottom) {
-        material.color.setHex(0xbbbbbb);
-      }
-
-      if (render.selected) {
-        this.outlinePass.selectedObjects.push(obj);
-      }
-
-      if (render.held) {
-        material.transparent = true;
-        material.opacity = render.temporary ? 0.7 : 1;
-        material.depthTest = false;
-        obj.position.z += 1;
-        obj.renderOrder = 1;
-      }
-    }
-  }
-
-  updateRenderGhosts(): void {
-    for (const obj of this.ghostObjects) {
-      obj.visible = false;
-    }
-
-    for (const render of this.world.toRenderGhosts()) {
-      const obj = this.ghostObjects[render.thingIndex];
-      obj.visible = true;
-      obj.position.copy(render.place.position);
-      obj.rotation.copy(render.place.rotation);
-    }
-  }
-
-  updateRenderShadows(): void {
-    for (const obj of this.shadows) {
-      obj.visible = false;
-    }
-
-    let i = 0;
-    for (const shadow of this.world.toRenderShadows()) {
-      const obj = this.shadows[i++];
-      obj.visible = true;
-      obj.position.set(
-        shadow.position.x,
-        shadow.position.y,
-        shadow.position.z - shadow.size.z/2 + 0.2);
-      obj.scale.set(shadow.size.x, shadow.size.y, 1);
-    }
   }
 
   onMouseMove(event: MouseEvent): void {
