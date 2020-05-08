@@ -2,6 +2,7 @@ import { Vector2, Euler, Vector3 } from "three";
 
 import { Place, Slot, Thing, Size, ThingType } from "./places";
 import { Client, Status } from "./client";
+import { shuffle } from "./utils";
 
 interface Render {
   thingIndex: number;
@@ -586,14 +587,5 @@ export class World {
       }
     }
     return scores;
-  }
-}
-
-function shuffle<T>(arr: Array<T>): void {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const temp = arr[j];
-    arr[j] = arr[i];
-    arr[i] = temp;
   }
 }

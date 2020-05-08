@@ -1,5 +1,6 @@
-import { World } from "./world";
 import { Group, Mesh, Vector3, PlaneGeometry, MeshBasicMaterial, MeshLambertMaterial } from "three";
+
+import { World } from "./world";
 import { Client } from "./client";
 import { AssetLoader } from "./asset-loader";
 import { Center } from "./center";
