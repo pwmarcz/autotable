@@ -336,19 +336,26 @@ export class World {
       mouse: this.mouse ? {x: this.mouse.x, y: this.mouse.y} : null,
     });
     this.mouse = mouse;
-    if (this.mouse !== null && this.heldMouse !== null) {
-      for (let i = 0; i < this.held.length; i++) {
-        this.targetSlots[i] = null;
-      }
 
-      for (let i = 0; i < this.held.length; i++) {
-        const thing = this.held[i];
-        const place = thing.place();
-        const x = place.position.x + this.mouse.x - this.heldMouse.x;
-        const y = place.position.y + this.mouse.y - this.heldMouse.y;
+    this.drag();
+  }
 
-        this.targetSlots[i] = this.findSlot(x, y, thing.type);
-      }
+  drag(): void {
+    if (this.mouse === null || this.heldMouse === null) {
+      return;
+    }
+
+    for (let i = 0; i < this.held.length; i++) {
+      this.targetSlots[i] = null;
+    }
+
+    for (let i = 0; i < this.held.length; i++) {
+      const thing = this.held[i];
+      const place = thing.place();
+      const x = place.position.x + this.mouse.x - this.heldMouse.x;
+      const y = place.position.y + this.mouse.y - this.heldMouse.y;
+
+      this.targetSlots[i] = this.findSlot(x, y, thing.type);
     }
   }
 
@@ -416,6 +423,8 @@ export class World {
       for (let i = 0; i < this.held.length; i++) {
         this.targetSlots[i] = null;
       }
+
+      this.drag();
 
       return true;
     }
