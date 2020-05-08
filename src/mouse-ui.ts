@@ -55,8 +55,8 @@ export class MouseUi {
     this.raycastTable.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
     this.mainGroup.add(this.raycastTable);
 
-    this.mouse2 = new Vector2(0, 0);
-    this.mouse3 = new Vector3(0, 0, 0);
+    this.mouse2 = null;
+    this.mouse3 = null;
     this.selectStart2 = null;
     this.dragStart3 = null;
 
