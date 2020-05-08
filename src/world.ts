@@ -118,15 +118,12 @@ export class World {
             this.targetSlots.splice(heldIndex, 1);
           }
         }
-        // Someone gave us the thing? Should not happen, but handle it anyway.
+        // Someone gave us the thing back - might be a conflict.
         if (thingInfo.heldBy === this.playerNum) {
           // eslint-disable-next-line no-console
           console.error(`received thing to hold: ${thing.index}, current heldBy: ${thing.heldBy}`);
-
-          if (this.held.indexOf(thing) === -1) {
-            this.held.push(thing);
-            this.targetSlots.push(null);
-          }
+          thing.heldBy = null;
+          this.sendUpdate([thing]);
         }
         thing.heldBy = thingInfo.heldBy;
       }
@@ -135,7 +132,6 @@ export class World {
   }
 
   onReplace(allThings: Array<ThingInfo>): void {
-    // TODO conflicts?
     if (allThings.length === 0) {
       this.client.replace(this.things.map(this.describeThing.bind(this)));
     } else {

@@ -1,7 +1,10 @@
 
 export type Player = {};
 
-export type Thing = {};
+export type Thing = any & {
+  // checked for conflicts
+  slotName: string | null;
+};
 
 interface NewMessage {
   type: 'NEW';

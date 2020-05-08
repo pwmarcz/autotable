@@ -9,11 +9,11 @@ const PLAYERS = 4;
 
 class Game {
   gameId: string;
-  secrets: Array<string | null>;
-  clients: Array<Client | null>;
+  private secrets: Array<string | null>;
+  private clients: Array<Client | null>;
 
-  players: Array<Player | null>;
-  things: Array<Thing | null>;
+  private players: Array<Player | null>;
+  private things: Array<Thing | null>;
 
   constructor(gameId: string) {
     this.gameId = gameId;
@@ -70,7 +70,7 @@ class Game {
     this.start(client, num);
   }
 
-  start(client: Client, num: number): void {
+  private start(client: Client, num: number): void {
     this.clients[num] = client;
     client.game = this;
     client.num = num;
@@ -101,7 +101,7 @@ class Game {
     this.sendAll({ type: 'PLAYER', num, player: null});
   }
 
-  send(num: number, message: Message): void {
+  private send(num: number, message: Message): void {
     const client = this.clients[num];
     if (client !== null) {
       const data = JSON.stringify(message);
@@ -110,13 +110,13 @@ class Game {
     }
   }
 
-  sendAll(message: Message): void {
+  private sendAll(message: Message): void {
     for (let i = 0; i < PLAYERS; i++) {
       this.send(i, message);
     }
   }
 
-  sendOthers(num: number, message: Message): void {
+  private sendOthers(num: number, message: Message): void {
     for (let i = 0; i < PLAYERS; i++) {
       if (i !== num) {
         this.send(i, message);
@@ -134,16 +134,42 @@ class Game {
         this.sendAll(message);
         break;
       case 'UPDATE':
-        for (const thingIndex in message.things) {
-          this.things[thingIndex] = message.things[thingIndex];
-        }
-        this.sendAll(message);
+        this.onUpdate(num, message.things);
+
         break;
       case 'REPLACE':
         this.things = message.allThings;
         this.sendAll(message);
         break;
     }
+  }
+
+  onUpdate(num: number, newThings: Record<number, Thing>): void {
+    const occupied = new Set<string>();
+    for (let i = 0; i < this.things.length; i++) {
+      const thing = this.things[i];
+      const newThing = newThings[i];
+      if (thing.slotName !== null && newThing === undefined) {
+        occupied.add(thing.slotName);
+      }
+    }
+
+    for (const newThing of Object.values(newThings)) {
+      if (newThing.slotName !== null && occupied.has(newThing.slotName)) {
+        console.error(`conflict on slot ${newThing.slotName}, aborting`);
+
+        this.send(num, {
+          type: 'REPLACE',
+          allThings: this.things,
+        });
+        return;
+      }
+    }
+
+    for (const thingIndex in newThings) {
+      this.things[thingIndex] = newThings[thingIndex];
+    }
+    this.sendAll({type: 'UPDATE', things: newThings});
   }
 }
 
