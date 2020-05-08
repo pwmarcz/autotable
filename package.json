@@ -5,6 +5,7 @@
   "author": "Paweł Marczewski <pwmarcz@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "@types/qs": "^6.9.2",
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
     "eslint": "^6.8.0",
@@ -13,6 +14,7 @@
   },
   "dependencies": {
     "normalize.css": "^8.0.1",
+    "qs": "^6.9.4",
     "three": "^0.115.0"
   }
 }

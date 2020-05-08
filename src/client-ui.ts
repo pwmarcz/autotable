@@ -1,4 +1,12 @@
+import qs from 'qs';
+
 import { Client, Status } from "./client";
+
+
+interface UrlState {
+  gameId: string | null;
+  num: number | null;
+}
 
 
 export class ClientUi {
@@ -25,8 +33,39 @@ export class ClientUi {
     const connectButton = document.getElementById('connect')!;
     connectButton.onclick = this.connect.bind(this);
 
-    if (window.location.hash.length > 1) {
-      this.connect();
+    this.start();
+  }
+
+  getUrlState(): UrlState {
+    const hash = window.location.search.substr(1);
+    const q = qs.parse(hash) as any;
+    return {
+      gameId: q.gameId ?? null,
+      num: q.num === undefined ? null : parseInt(q.num, 10),
+    };
+  }
+
+  setUrlState(state: UrlState): void {
+    const hash = window.location.search.substr(1);
+    const q = qs.parse(hash) as any;
+    q.gameId = state.gameId ?? undefined;
+    q.num = state.num ?? undefined;
+    history.replaceState(undefined, '', '?' + qs.stringify(q));
+  }
+
+  start(): void {
+    const {gameId, num} = this.getUrlState();
+    if (gameId !== null && num !== null) {
+      const secret = localStorage.getItem(`autotable.secret.${gameId}.${num}`);
+      if (secret) {
+        this.success = false;
+        this.client.rejoin(this.url, gameId, num, secret);
+        return;
+      }
+    }
+    if (gameId) {
+      this.success = false;
+      this.client.join(this.url, gameId, num ?? null);
     }
   }
 
@@ -60,8 +99,8 @@ export class ClientUi {
         break;
       case Status.DISCONNECTED:
         this.statusElement.innerText = 'not connected';
-        if (!this.success && window.location.hash.length > 1) {
-          window.location.hash = '#';
+        if (!this.success) {
+          this.setUrlState({ gameId: null, num: null });
         }
         break;
       case Status.CONNECTING:
@@ -70,8 +109,9 @@ export class ClientUi {
         break;
       case Status.JOINED: {
         this.success = true;
-        const {gameId, secret} = this.client.game!;
-        localStorage.setItem(`autotable.secret.${gameId}`, secret);
+        const {num, gameId, secret} = this.client.game!;
+        localStorage.setItem(`autotable.secret.${gameId}.${num}`, secret);
+        this.setUrlState({gameId, num});
         break;
       }
     }
@@ -83,12 +123,7 @@ export class ClientUi {
       return;
     }
 
-    const gameId = window.location.hash.substr(1) || null;
-    let secret = null;
-    if (gameId) {
-      secret = localStorage.getItem(`autotable.secret.${gameId}`);
-    }
     this.success = false;
-    this.client.connect(this.url, gameId, secret);
+    this.client.new(this.url, null);
   }
 }

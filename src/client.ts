@@ -23,9 +23,6 @@ const PLAYER_UPDATE_RATE = 100;
 export class Client {
   private ws: WebSocket | null = null;
   game: Game | null = null;
-  private joinGameId: string | null = null;
-  private joinSecret: string | null = null;
-
   player: Player = {};
 
   handlers: Record<string, Array<Function>> = {};
@@ -34,16 +31,34 @@ export class Client {
   playerDirty = false;
   updateIntervalId: number | null = null;
 
-  connect(url: string, gameId: string | null, secret: string | null): void {
+  new(url: string, num: number | null): void {
+    this.connect(url, () => {
+      this.send({ type: 'NEW', num, });
+    });
+  }
+
+  join(url: string, gameId: string, num: number | null): void {
+    this.connect(url, () => {
+      this.send({ type: 'JOIN', num, gameId });
+    });
+  }
+
+  rejoin(url: string, gameId: string, num: number, secret: string): void {
+    this.connect(url, () => {
+      this.send({ type: 'REJOIN', num, gameId, secret });
+    });
+  }
+
+  private connect(url: string, start: () => void): void {
     if (this.isConnected()) {
       return;
     }
     this.ws = new WebSocket(url);
-    this.ws.onopen = this.onOpen.bind(this);
+    this.ws.onopen = () => {
+      start();
+      this.onOpen();
+    };
     this.ws.onclose = this.onClose.bind(this);
-
-    this.joinGameId = gameId;
-    this.joinSecret = secret;
 
     this.ws.onmessage = event => {
       const message = JSON.parse(event.data as string) as Message;
@@ -151,11 +166,6 @@ export class Client {
   }
 
   private onOpen(): void {
-    this.send({
-      type: 'JOIN',
-      gameId: this.joinGameId,
-      secret: this.joinSecret,
-    });
     this.event('status', f => f(this.status()));
     if (this.updateIntervalId === null) {
       this.updateIntervalId = setInterval(this.checkSendPlayer.bind(this), PLAYER_UPDATE_RATE);
@@ -183,7 +193,6 @@ export class Client {
           players: new Array(4).fill(null),
           things: [],
         };
-        window.location.hash = this.game.gameId;
         this.sendPlayer();
         this.event('status', f => f(this.status()));
         break;

@@ -229,9 +229,10 @@ class Server {
           throw `game not found: ${message.gameId}`;
         }
         game.rejoin(client, message.num, message.secret);
+        break;
       }
       default:
-        throw 'unknown message';
+        throw `unknown message: ${message.type}`;
     }
   }
 
