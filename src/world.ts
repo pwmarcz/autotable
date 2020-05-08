@@ -26,7 +26,7 @@ const Rotation = {
 };
 
 interface PlayerInfo {
-  mouse: { x: number; y: number } | null;
+  mouse: { x: number; y: number; z: number } | null;
 }
 
 interface ThingInfo {
@@ -41,15 +41,15 @@ export class World {
 
   hovered: Thing | null = null;
   selected: Array<Thing> = [];
-  mouse: Vector2 | null = null;
+  mouse: Vector3 | null = null;
 
   targetSlots: Array<Slot | null> = [];
   held: Array<Thing> = [];
-  heldMouse: Vector2 | null = null;
+  heldMouse: Vector3 | null = null;
 
   scoreSlots: Array<Array<Slot>> = [[], [], [], []];
   playerNum = 0;
-  playerCursors: Array<Vector2 | null> = new Array(4).fill(null);
+  playerCursors: Array<Vector3 | null> = new Array(4).fill(null);
 
   static WIDTH = 174;
 
@@ -78,7 +78,7 @@ export class World {
     for (let i = 0; i < 4; i++) {
       const player = players[i];
       if (player && player.mouse) {
-        this.playerCursors[i] = new Vector2(player.mouse.x, player.mouse.y);
+        this.playerCursors[i] = new Vector3(player.mouse.x, player.mouse.y, player.mouse.z);
       } else {
         this.playerCursors[i] = null;
       }
@@ -326,14 +326,14 @@ export class World {
     this.selected = this.selected.filter(thing => thing.type === allTypes[0]);
   }
 
-  onMove(mouse: Vector2 | null): void {
+  onMove(mouse: Vector3 | null): void {
     if ((this.mouse === null && mouse === null) ||
         (this.mouse !== null && mouse !== null && this.mouse.equals(mouse))) {
       return;
     }
 
-    this.client.updatePlayer({
-      mouse: this.mouse ? {x: this.mouse.x, y: this.mouse.y} : null,
+    this.client.updatePlayer<PlayerInfo>({
+      mouse: this.mouse ? {x: this.mouse.x, y: this.mouse.y, z: this.mouse.z} : null,
     });
     this.mouse = mouse;
 

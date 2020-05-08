@@ -1,7 +1,6 @@
 import { Raycaster, Camera, Group, Mesh, BoxGeometry, PlaneGeometry, Vector3, Vector2 } from "three";
 import { World } from "./world";
 import { SelectionBox } from "./selection-box";
-import { Size } from "./places";
 
 export class MouseUi {
   private world: World;
@@ -18,8 +17,10 @@ export class MouseUi {
   private raycastObjects: Array<Mesh>;
   private raycastTable: Mesh;
 
-  private mouse: Vector2;
-  private selectStart: Vector2 | null;
+  private mouse2: Vector2;
+  private mouse3: Vector3;
+  private selectStart2: Vector2 | null;
+  private dragStart3: Vector3 | null;
 
   constructor(world: World, mainGroup: Group) {
     this.world = world;
@@ -54,23 +55,47 @@ export class MouseUi {
     this.raycastTable.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
     this.mainGroup.add(this.raycastTable);
 
-    this.mouse = new Vector2(0, 0);
-    this.selectStart = null;
+    this.mouse2 = new Vector2(0, 0);
+    this.mouse3 = new Vector3(0, 0, 0);
+    this.selectStart2 = null;
+    this.dragStart3 = null;
+
+    this.setupEvents();
   }
 
-  move(event: MouseEvent): void {
+  private setupEvents(): void {
+    this.main.addEventListener('mousemove', this.onMouseMove.bind(this));
+    this.main.addEventListener('mouseleave', this.onMouseLeave.bind(this));
+    this.main.addEventListener('mousedown', this.onMouseDown.bind(this));
+    window.addEventListener('mouseup', this.onMouseUp.bind(this));
+  }
+
+  private onMouseMove(event: MouseEvent): void {
     const w = this.main.clientWidth;
     const h = this.main.clientHeight;
-    this.mouse.x = event.offsetX / w * 2 - 1;
-    this.mouse.y = -event.offsetY / h * 2 + 1;
+    this.mouse2.x = event.offsetX / w * 2 - 1;
+    this.mouse2.y = -event.offsetY / h * 2 + 1;
+
+    this.update();
   }
 
-  startSelect(): void {
-    this.selectStart = this.mouse.clone();
+  private onMouseLeave(): void {
+    this.world.onHover(null);
+    this.world.onMove(null);
   }
 
-  endSelect(): void {
-    this.selectStart = null;
+  private onMouseDown(): void {
+    if (this.world.onDragStart()) {
+      this.dragStart3 = this.mouse3.clone();
+    } else {
+      this.selectStart2 = this.mouse2.clone();
+    }
+  }
+
+  private onMouseUp(): void {
+    this.dragStart3 = null;
+    this.selectStart2 = null;
+    this.world.onDragEnd();
   }
 
   setCamera(camera: Camera): void {
@@ -83,24 +108,27 @@ export class MouseUi {
       return;
     }
 
-    this.raycaster.setFromCamera(this.mouse, this.camera);
+    this.raycaster.setFromCamera(this.mouse2, this.camera);
     const objs = this.prepareObjects();
 
     const intersects = this.raycaster.intersectObjects(objs);
     let hovered = null;
+    let hoverPos = null;
     if (intersects.length > 0) {
       hovered = intersects[0].object.userData.id;
+      hoverPos = intersects[0].point.clone();
+      this.mainGroup.worldToLocal(hoverPos);
     }
     this.world.onHover(hovered);
 
+    this.raycastTable.position.z = this.dragStart3 ? this.dragStart3.z : 0;
+    this.raycastTable.updateMatrixWorld();
     const intersectsTable = this.raycaster.intersectObject(this.raycastTable);
-    let tablePos = null;
+    let levelPos = null;
     if (intersectsTable.length > 0) {
-      const point = intersectsTable[0].point.clone();
-      this.raycastTable.worldToLocal(point);
-      tablePos = new Vector2(point.x, point.y);
+      levelPos = intersectsTable[0].point.clone();
+      this.mainGroup.worldToLocal(levelPos);
     }
-    this.world.onMove(tablePos);
 
     if (this.prepareSelection()) {
       const selected = [];
@@ -109,7 +137,17 @@ export class MouseUi {
         selected.push(id);
       }
       this.world.onSelect(selected);
+      if (levelPos) {
+        this.mouse3.copy(levelPos);
+      }
+    } else {
+      if (this.dragStart3) {
+        this.mouse3 = levelPos ?? this.mouse3;
+      } else {
+        this.mouse3 = hoverPos ?? levelPos ?? this.mouse3;
+      }
     }
+    this.world.onMove(this.mouse3);
   }
 
   updateCursors(): void {
@@ -127,8 +165,8 @@ export class MouseUi {
       const cursorPos = this.world.playerCursors[i];
 
       if (cursorPos && i !== this.world.playerNum) {
-        const v = new Vector3(cursorPos.x, cursorPos.y, Size.TILE.y);
-        this.raycastTable.localToWorld(v);
+        const v = cursorPos.clone();
+        this.mainGroup.localToWorld(v);
         v.project(this.camera);
 
         const x = Math.floor((v.x + 1) / 2 * w);
@@ -147,7 +185,7 @@ export class MouseUi {
       return false;
     }
 
-    if (this.selectStart === null) {
+    if (this.selectStart2 === null) {
       this.selection.style.visibility = 'hidden';
       return false;
     }
@@ -155,10 +193,10 @@ export class MouseUi {
     const w = this.main.clientWidth;
     const h = this.main.clientHeight;
 
-    const x1 = Math.min(this.selectStart.x, this.mouse.x);
-    const y1 = Math.min(this.selectStart.y, this.mouse.y);
-    const x2 = Math.max(this.selectStart.x, this.mouse.x);
-    const y2 = Math.max(this.selectStart.y, this.mouse.y);
+    const x1 = Math.min(this.selectStart2.x, this.mouse2.x);
+    const y1 = Math.min(this.selectStart2.y, this.mouse2.y);
+    const x2 = Math.max(this.selectStart2.x, this.mouse2.x);
+    const y2 = Math.max(this.selectStart2.y, this.mouse2.y);
 
     const sx1 = (x1 + 1) * w / 2;
     const sx2 = (x2 + 1) * w / 2;

@@ -89,10 +89,6 @@ export class View {
   }
 
   setupEvents(): void {
-    this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this));
-    this.renderer.domElement.addEventListener('mouseleave', this.onMouseLeave.bind(this));
-    this.renderer.domElement.addEventListener('mousedown', this.onMouseDown.bind(this));
-    window.addEventListener('mouseup', this.onMouseUp.bind(this));
     window.addEventListener('keypress', this.onKeyPress.bind(this));
     window.addEventListener('keydown', this.onKeyDown.bind(this));
     window.addEventListener('keyup', this.onKeyUp.bind(this));
@@ -177,28 +173,6 @@ export class View {
     this.mouseUi.updateCursors();
     this.composer.render();
     this.stats.update();
-  }
-
-  onMouseMove(event: MouseEvent): void {
-    this.mouseUi.move(event);
-  }
-
-  onMouseLeave(event: MouseEvent): void {
-    this.world.onHover(null);
-    this.world.onMove(null);
-  }
-
-  onMouseDown(event: MouseEvent): void {
-    if (!this.world.onDragStart()) {
-      this.mouseUi.startSelect();
-    }
-    this.mouseUi.update();
-  }
-
-  onMouseUp(event: MouseEvent): void {
-    this.mouseUi.endSelect();
-    this.world.onDragEnd();
-    this.mouseUi.update();
   }
 
   onKeyPress(event: KeyboardEvent): void {
