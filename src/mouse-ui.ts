@@ -17,8 +17,8 @@ export class MouseUi {
   private raycastObjects: Array<Mesh>;
   private raycastTable: Mesh;
 
-  private mouse2: Vector2;
-  private mouse3: Vector3;
+  private mouse2: Vector2 | null;
+  private mouse3: Vector3 | null;
   private selectStart2: Vector2 | null;
   private dragStart3: Vector3 | null;
 
@@ -73,6 +73,9 @@ export class MouseUi {
   private onMouseMove(event: MouseEvent): void {
     const w = this.main.clientWidth;
     const h = this.main.clientHeight;
+    if (this.mouse2 === null) {
+      this.mouse2 = new Vector2(0, 0);
+    }
     this.mouse2.x = event.offsetX / w * 2 - 1;
     this.mouse2.y = -event.offsetY / h * 2 + 1;
 
@@ -80,16 +83,21 @@ export class MouseUi {
   }
 
   private onMouseLeave(): void {
-    this.world.onHover(null);
-    this.world.onMove(null);
+    this.mouse2 = null;
+    this.update();
   }
 
   private onMouseDown(): void {
+    if (this.mouse2 === null || this.mouse3 === null) {
+      return;
+    }
+
     if (this.world.onDragStart()) {
       this.dragStart3 = this.mouse3.clone();
     } else {
       this.selectStart2 = this.mouse2.clone();
     }
+    this.update();
   }
 
   private onMouseUp(): void {
@@ -104,7 +112,9 @@ export class MouseUi {
   }
 
   update(): void {
-    if (!this.camera || !this.selectionBox) {
+    if (!this.camera || !this.selectionBox || this.mouse2 === null) {
+      this.world.onHover(null);
+      this.world.onMove(null);
       return;
     }
 
@@ -138,7 +148,7 @@ export class MouseUi {
       }
       this.world.onSelect(selected);
       if (levelPos) {
-        this.mouse3.copy(levelPos);
+        this.mouse3 = levelPos;
       }
     } else {
       if (this.dragStart3) {
@@ -185,7 +195,7 @@ export class MouseUi {
       return false;
     }
 
-    if (this.selectStart2 === null) {
+    if (this.selectStart2 === null || this.mouse2 === null) {
       this.selection.style.visibility = 'hidden';
       return false;
     }
