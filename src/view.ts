@@ -19,8 +19,6 @@ export class View {
 
   stats: Stats;
 
-  assetLoader: AssetLoader;
-
   perspective = false;
 
   scene: Scene;
@@ -47,8 +45,6 @@ export class View {
     this.client = client;
     this.client.on('status', this.onStatus.bind(this));
 
-    this.assetLoader = assetLoader;
-
     this.scene = new Scene();
     this.mainGroup = new Group();
     this.scene.add(this.mainGroup);
@@ -57,7 +53,7 @@ export class View {
     this.main.appendChild(this.renderer.domElement);
 
     this.mouseUi = new MouseUi(this.world, this.mainGroup);
-    this.objectUi = new ObjectUi(this.world, this.mainGroup, this.assetLoader, this.client);
+    this.objectUi = new ObjectUi(this.world, this.mainGroup, assetLoader, this.client);
 
     this.setupLights();
     this.setupEvents();
