@@ -584,13 +584,16 @@ export class World {
 
   getScores(): Array<number> {
     const scores = new Array(4).fill(-20000);
+    scores.push((25000 + 20000) * 4); // remaining
     const stickScores = [100, 1000, 5000, 10000, 10000];
 
     for (let i = 0; i < 4; i++) {
       for (const slot of this.scoreSlots[i]) {
         if (slot.thing !== null) {
           if (slot.thing.type === ThingType.STICK) {
-            scores[i] += stickScores[slot.thing.typeIndex];
+            const score = stickScores[slot.thing.typeIndex];
+            scores[i] += score;
+            scores[4] -= score;
           }
         }
       }
