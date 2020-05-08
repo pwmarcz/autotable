@@ -6,14 +6,13 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import { World } from './world';
 import { AssetLoader } from './asset-loader';
-import { Client, Status } from './client';
+import { Client } from './client';
 import { MouseUi } from './mouse-ui';
 import { ObjectUi } from './object-ui';
 import { Animation } from './utils';
 
 export class View {
   world: World;
-  client: Client;
 
   main: HTMLElement;
 
@@ -42,9 +41,6 @@ export class View {
     this.main = document.getElementById('main')!;
     this.world = world;
 
-    this.client = client;
-    this.client.on('status', this.onStatus.bind(this));
-
     this.scene = new Scene();
     this.mainGroup = new Group();
     this.scene.add(this.mainGroup);
@@ -53,7 +49,7 @@ export class View {
     this.main.appendChild(this.renderer.domElement);
 
     this.mouseUi = new MouseUi(this.world, this.mainGroup);
-    this.objectUi = new ObjectUi(this.world, this.mainGroup, assetLoader, this.client);
+    this.objectUi = new ObjectUi(this.world, this.mainGroup, assetLoader, client);
 
     this.setupLights();
     this.setupEvents();
@@ -64,13 +60,6 @@ export class View {
     this.stats.dom.style.right = '0';
     const full = document.getElementById('full')!;
     full.appendChild(this.stats.dom);
-  }
-
-  onStatus(status: Status): void {
-    if (status === Status.JOINED) {
-      const playerNum = this.client.game!.num;
-      this.updateRotation(playerNum);
-    }
   }
 
   setupLights(): void {
@@ -165,6 +154,7 @@ export class View {
 
   draw(): void {
     requestAnimationFrame(this.draw.bind(this));
+    this.updateRotation(this.world.playerNum);
     this.updateViewport();
     this.adjustCamera();
     this.objectUi.update();
