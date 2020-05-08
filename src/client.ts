@@ -1,13 +1,15 @@
 /* eslint no-console: 0 */
 
-import { Message, Player, Thing } from '../server/protocol';
+import { Message } from '../server/protocol';
+
+type ClientMessage = Message<any, any>;
 
 interface Game {
   gameId: string;
   num: number;
   secret: string;
-  players: Array<Player | null>;
-  things: Array<Thing>;
+  players: Array<any | null>;
+  things: Array<any>;
 }
 
 export enum Status {
@@ -23,7 +25,7 @@ const PLAYER_UPDATE_RATE = 100;
 export class Client {
   private ws: WebSocket | null = null;
   game: Game | null = null;
-  player: Player = {};
+  player: any = {};
 
   handlers: Record<string, Array<Function>> = {};
 
@@ -61,7 +63,7 @@ export class Client {
     this.ws.onclose = this.onClose.bind(this);
 
     this.ws.onmessage = event => {
-      const message = JSON.parse(event.data as string) as Message;
+      const message = JSON.parse(event.data as string) as Message<any, any>;
       console.log('recv', message);
       this.onMessage(message);
     };
@@ -113,7 +115,7 @@ export class Client {
     return Status.DISCONNECTED;
   }
 
-  players(): Array<Player> {
+  players(): Array<any> {
     return this.game ? this.game.players : new Array(4).fill(null);
   }
 
@@ -134,7 +136,7 @@ export class Client {
     this.send({ type: 'REPLACE', allThings });
   }
 
-  private send(message: Message): void {
+  private send(message: ClientMessage): void {
     if (!this.isConnected()) {
       return;
     }
@@ -183,7 +185,7 @@ export class Client {
     this.event('players', f => f(this.players()));
   }
 
-  private onMessage(message: Message): void {
+  private onMessage(message: ClientMessage): void {
     switch (message.type) {
       case 'JOINED':
         this.game = {

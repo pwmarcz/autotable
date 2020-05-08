@@ -1,11 +1,4 @@
 
-export type Player = {};
-
-export type Thing = any & {
-  // checked for conflicts
-  slotName: string | null;
-};
-
 interface NewMessage {
   type: 'NEW';
   num: number | null;
@@ -31,20 +24,26 @@ interface JoinedMessage {
   num: number;
 }
 
-interface PlayerMessage {
+interface PlayerMessage<P> {
   type: 'PLAYER';
   num: number;
-  player: Player | null;
+  player: P | null;
 }
 
-interface UpdateMessage {
+interface UpdateMessage<T> {
   type: 'UPDATE';
-  things: Record<number, Thing>;
+  things: Record<number, T>;
 }
 
-interface ReplaceMessage {
+interface ReplaceMessage<T> {
   type: 'REPLACE';
-  allThings: Array<any>;
+  allThings: Array<T>;
 }
 
-export type Message = NewMessage | JoinMessage | RejoinMessage | JoinedMessage | PlayerMessage | UpdateMessage | ReplaceMessage;
+export type Message<P, T> = NewMessage
+  | JoinMessage
+  | RejoinMessage
+  | JoinedMessage
+  | PlayerMessage<P>
+  | UpdateMessage<T>
+  | ReplaceMessage<T>;

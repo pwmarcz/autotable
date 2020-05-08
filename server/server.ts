@@ -2,9 +2,13 @@
 
 import WebSocket from 'ws';
 
-import { Message, Player, Thing } from './protocol';
+import { Message } from './protocol';
 
 const PLAYERS = 4;
+
+type Player = unknown;
+type Thing = { slotName: string | null };
+type ServerMessage = Message<Player, Thing>;
 
 
 class Game {
@@ -13,7 +17,7 @@ class Game {
   private clients: Array<Client | null>;
 
   private players: Array<Player | null>;
-  private things: Array<Thing | null>;
+  private things: Array<Thing>;
 
   constructor(gameId: string) {
     this.gameId = gameId;
@@ -101,7 +105,7 @@ class Game {
     this.sendAll({ type: 'PLAYER', num, player: null});
   }
 
-  private send(num: number, message: Message): void {
+  private send(num: number, message: ServerMessage): void {
     const client = this.clients[num];
     if (client !== null) {
       const data = JSON.stringify(message);
@@ -110,13 +114,13 @@ class Game {
     }
   }
 
-  private sendAll(message: Message): void {
+  private sendAll(message: ServerMessage): void {
     for (let i = 0; i < PLAYERS; i++) {
       this.send(i, message);
     }
   }
 
-  private sendOthers(num: number, message: Message): void {
+  private sendOthers(num: number, message: ServerMessage): void {
     for (let i = 0; i < PLAYERS; i++) {
       if (i !== num) {
         this.send(i, message);
@@ -124,7 +128,7 @@ class Game {
     }
   }
 
-  onMessage(num: number, message: Message): void {
+  onMessage(num: number, message: Message<Player, Thing>): void {
     switch (message.type) {
       case 'PLAYER':
         if (num !== message.num) {
@@ -203,7 +207,7 @@ class Server {
           console.log(`recv * ${data}`);
         }
 
-        const message = JSON.parse(data as string) as Message;
+        const message = JSON.parse(data as string) as ServerMessage;
 
         try {
           this.onMessage(client, message);
@@ -221,7 +225,7 @@ class Server {
     });
   }
 
-  onMessage(client: Client, message: Message): void {
+  onMessage(client: Client, message: ServerMessage): void {
     if (client.game) {
       client.game.onMessage(client.num!, message);
       return;
@@ -284,13 +288,13 @@ function testPlayer(num: number, gameId: string | null): void {
     perMessageDeflate: false
   });
 
-  const send = (message: Message): void => {
+  const send = (message: Message<string, string>): void => {
     ws.send(JSON.stringify(message));
   };
 
   ws.on('open', () => {
     ws.on('message', data => {
-      const message = JSON.parse(data as string) as Message;
+      const message = JSON.parse(data as string) as Message<string, string>;
       if (message.type === 'JOINED' && num+1 < PLAYERS) {
         testPlayer(num+1, message.gameId);
       }
