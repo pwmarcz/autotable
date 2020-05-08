@@ -62,7 +62,8 @@ export class View {
     this.stats = Stats();
     this.stats.dom.style.left = 'auto';
     this.stats.dom.style.right = '0';
-    this.main.appendChild(this.stats.dom);
+    const full = document.getElementById('full')!;
+    full.appendChild(this.stats.dom);
   }
 
   onStatus(status: Status): void {
