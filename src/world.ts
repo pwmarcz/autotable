@@ -45,6 +45,8 @@ export class World {
   selected: Array<Thing> = [];
   mouse: Vector3 | null = null;
 
+  shifted: Array<Thing> = [];
+  targetShiftSlots: Array<Slot> = [];
   targetSlots: Array<Slot | null> = [];
   held: Array<Thing> = [];
   heldMouse: Vector3 | null = null;
@@ -93,7 +95,6 @@ export class World {
   }
 
   onUpdate(thingInfos: Record<number, ThingInfo>): void {
-    // TODO conflicts!
     const indexes = Object.keys(thingInfos).map(k => parseInt(k, 10));
     indexes.sort((a, b) => a - b);
 
@@ -375,9 +376,9 @@ export class World {
       return;
     }
 
-    for (let i = 0; i < this.held.length; i++) {
-      this.targetSlots[i] = null;
-    }
+    this.shifted.splice(0);
+    this.targetShiftSlots.splice(0);
+    this.targetSlots.fill(null);
 
     for (let i = 0; i < this.held.length; i++) {
       const thing = this.held[i];
@@ -386,6 +387,109 @@ export class World {
       const y = place.position.y + this.mouse.y - this.heldMouse.y;
 
       this.targetSlots[i] = this.findSlot(x, y, thing.type);
+    }
+
+    if (!this.targetSlots.every(slot => slot !== null)) {
+      this.targetSlots.fill(null);
+      return;
+    }
+
+    let shift: Map<string, number> | null = new Map();
+    for (const thing of this.things) {
+      if (thing.type === this.held[0].type && thing.heldBy !== this.playerNum) {
+        shift.set(thing.slot.name, thing.index);
+      }
+    }
+
+    for (let i = 0; i < this.held.length; i++) {
+      const slot = this.targetSlots[i]!;
+      if (!shift.has(slot.name)) {
+        // All OK
+        continue;
+      }
+      shift = this.findShift(slot, shift);
+      if (shift === null) {
+        // Can't move out of the way, abort.
+        this.targetSlots.fill(null);
+        return;
+      }
+    }
+
+    this.applyShift(shift!);
+  }
+
+  findShift(slot: Slot, shift: Map<string, number>): Map<string, number> | null {
+    const left = new Map(shift.entries());
+    const right = new Map(shift.entries());
+    const leftSize = this.tryShift(slot, left, slot => slot.shiftLeft);
+    const rightSize = this.tryShift(slot, right, slot => slot.shiftRight);
+    if (leftSize === null && rightSize === null) {
+      return null;
+    }
+    if (leftSize === null) {
+      return right;
+    }
+    if (rightSize === null) {
+      return left;
+    }
+    return leftSize <= rightSize ? left : right;
+  }
+
+  tryShift(
+    sourceSlot: Slot,
+    shift: Map<string, number>,
+    next: (slot: Slot) => string | null,
+  ): number | null {
+    const thingIndex = shift.get(sourceSlot.name)!;
+    let operations = 0;
+
+    const done = (endSlot: Slot): boolean => {
+      // Must clear the source slot
+      if (endSlot === sourceSlot) {
+        return false;
+      }
+      // Must not end up on one of proposed drop slots
+      if (this.targetSlots.indexOf(currentSlot) !== -1) {
+        return false;
+      }
+      // Must not be occupied (even by a thing that we are about to move)
+      // if (endSlot.thing) {
+      //   return false;
+      // }
+
+      return true;
+    };
+
+    let currentSlot = sourceSlot;
+    while (!done(currentSlot)) {
+      const nextName = next(currentSlot);
+      if (nextName === null) {
+        return null;
+      }
+      const nextSlot = this.slots[nextName];
+      if (shift.has(nextName)) {
+        const subOperations = this.tryShift(nextSlot, shift, next);
+        if (subOperations === null) {
+          return null;
+        }
+        operations += subOperations;
+      }
+      shift.delete(currentSlot.name);
+      shift.set(nextName, thingIndex);
+      currentSlot = nextSlot;
+      operations++;
+    }
+    return operations;
+  }
+
+  applyShift(shift: Map<string, number>): void {
+    for (const [slotName, thingIndex] of shift.entries()) {
+      const thing = this.things[thingIndex];
+      if (thing.slot.name !== slotName) {
+        const slot = this.slots[slotName];
+        this.shifted.push(thing);
+        this.targetShiftSlots.push(slot);
+      }
     }
   }
 
@@ -412,8 +516,11 @@ export class World {
         continue;
       }
 
-      if (slot.thing !== null && this.held.indexOf(slot.thing) === -1) {
-        continue;
+      if (slot.thing !== null && slot.thing.heldBy !== this.playerNum) {
+        // Occupied. But can it be potentially shifted?
+        if (slot.shiftLeft === null && slot.shiftRight === null) {
+          continue;
+        }
       }
       // Already proposed for another thing
       if (this.targetSlots.indexOf(slot) !== -1) {
@@ -446,6 +553,23 @@ export class World {
         this.held.push(this.hovered);
         this.selected.splice(0);
       }
+
+      // Sort by (z, y, x)
+      this.held.sort((a, b) => {
+        const ap = a.place().position;
+        const bp = b.place().position;
+
+        if (ap.z !== bp.z) {
+          return ap.z - bp.z;
+        }
+        if (ap.y !== bp.y) {
+          return ap.y - bp.z;
+        }
+        if (ap.x !== bp.x) {
+          return ap.x - bp.x;
+        }
+        return 0;
+      });
 
       for (const thing of this.held) {
         thing.heldBy = this.playerNum;
@@ -516,11 +640,19 @@ export class World {
     for (const thing of this.held) {
       thing.remove();
     }
+    for (const thing of this.shifted) {
+      thing.remove();
+    }
     for (let i = 0; i < this.held.length; i++) {
       const thing = this.held[i];
       const targetSlot = this.targetSlots[i]!;
       thing.moveTo(targetSlot);
       thing.heldBy = null;
+    }
+    for (let i = 0; i < this.shifted.length; i++) {
+      const thing = this.shifted[i];
+      const targetSlot = this.targetShiftSlots[i]!;
+      thing.moveTo(targetSlot);
     }
     this.checkPushes();
     this.finishDrop();
@@ -538,6 +670,8 @@ export class World {
     this.selected.splice(0);
     this.held.splice(0);
     this.targetSlots.splice(0);
+    this.shifted.splice(0);
+    this.targetShiftSlots.splice(0);
     this.heldMouse = null;
 
     this.sendUpdate(toDrop);
@@ -577,6 +711,12 @@ export class World {
           place.position.x += mouse.x - heldMouse.x;
           place.position.y += mouse.y - heldMouse.y;
         }
+      }
+
+      const shiftIndex = this.shifted.indexOf(thing);
+      if (shiftIndex !== -1) {
+        const shiftSlot = this.targetShiftSlots[shiftIndex]!;
+        place = shiftSlot.places[0];
       }
 
       const selected = this.selected.indexOf(thing) !== -1;

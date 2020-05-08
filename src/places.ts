@@ -125,6 +125,10 @@ export class Slot {
       size,
     };
   }
+
+  canBeUsed(playerNum: number): boolean {
+    return this.thing === null || this.thing.heldBy === playerNum;
+  }
 }
 
 export class Thing {
@@ -153,7 +157,7 @@ export class Thing {
   // TODO handle null slot better
   get slot(): Slot {
     if (this._slot === null) {
-      throw `no slot: ${this.index}`;
+      throw `thing has no slot: ${this.index}`;
     }
     return this._slot;
   }
