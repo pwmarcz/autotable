@@ -65,13 +65,13 @@ export class Center {
     this.ctx.textBaseline = 'middle';
 
     this.ctx.translate(256, 256);
-    this.drawRemainingScore(this.scores[4]);
 
     for (let i = 0; i < 4; i++) {
       this.drawScore(this.scores[i]);
       this.drawNick(this.nicks[i]);
       this.ctx.rotate(-Math.PI / 2);
     }
+    this.ctx.rotate(Math.PI/4);
     this.texture.needsUpdate = true;
   }
 
