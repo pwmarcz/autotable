@@ -10,6 +10,12 @@ export const Size = {
   STICK: new Vector3(20, 2, 1),
 };
 
+export interface Place {
+  position: Vector3;
+  rotation: Euler;
+  size: Vector3;
+}
+
 export class Slot {
   name: string;
   type: ThingType;
@@ -120,6 +126,8 @@ export class Thing {
   _slot: Slot | null;
   rotationIndex: number;
   offset: Vector2;
+
+  heldBy: number | null;
   // place: Place;
 
   constructor(index: number, type: ThingType, typeIndex: number, slot: Slot) {
@@ -129,6 +137,7 @@ export class Thing {
     this._slot = slot;
     this.rotationIndex = 0;
     this.offset = new Vector2(0, 0);
+    this.heldBy = null;
 
     this.slot.thing = this;
   }
@@ -207,10 +216,4 @@ export class Thing {
     this.rotationIndex = rotationIndex ?? 0;
     target.thing = this;
   }
-}
-
-export interface Place {
-  position: Vector3;
-  rotation: Euler;
-  size: Vector3;
 }

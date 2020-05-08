@@ -27,11 +27,13 @@ const Rotation = {
 
 interface PlayerInfo {
   mouse: { x: number; y: number; z: number } | null;
+  heldMouse: { x: number; y: number; z: number } | null;
 }
 
 interface ThingInfo {
   slotName: string;
   rotationIndex: number;
+  heldBy: number | null;
 }
 
 export class World {
@@ -49,7 +51,8 @@ export class World {
 
   scoreSlots: Array<Array<Slot>> = [[], [], [], []];
   playerNum = 0;
-  playerCursors: Array<Vector3 | null> = new Array(4).fill(null);
+  playerMouses: Array<Vector3 | null> = new Array(4).fill(null);
+  playerHeldMouses: Array<Vector3 | null> = new Array(4).fill(null);
 
   static WIDTH = 174;
 
@@ -77,10 +80,14 @@ export class World {
   onPlayers(players: Array<PlayerInfo | null>): void {
     for (let i = 0; i < 4; i++) {
       const player = players[i];
-      if (player && player.mouse) {
-        this.playerCursors[i] = new Vector3(player.mouse.x, player.mouse.y, player.mouse.z);
+      if (player) {
+        this.playerMouses[i] = player.mouse && new Vector3(
+          player.mouse.x, player.mouse.y, player.mouse.z);
+        this.playerHeldMouses[i] = player.heldMouse && new Vector3(
+          player.heldMouse.x, player.heldMouse.y, player.heldMouse.z);
       } else {
-        this.playerCursors[i] = null;
+        this.playerMouses[i] = null;
+        this.playerHeldMouses[i] = null;
       }
     }
   }
@@ -99,6 +106,30 @@ export class World {
       const thingInfo = thingInfos[thingIndex];
       const slot = this.slots[thingInfo.slotName];
       thing.moveTo(slot, thingInfo.rotationIndex);
+
+      // TODO: remove held?
+      // TODO: move targetSlots to thing.targetSlot?
+      if (thing.heldBy !== thingInfo.heldBy) {
+        // Someone else grabbed the thing
+        if (thing.heldBy === this.playerNum) {
+          const heldIndex = this.held.indexOf(thing);
+          if (heldIndex !== -1) {
+            this.held.splice(heldIndex, 1);
+            this.targetSlots.splice(heldIndex, 1);
+          }
+        }
+        // Someone gave us the thing? Should not happen, but handle it anyway.
+        if (thingInfo.heldBy === this.playerNum) {
+          // eslint-disable-next-line no-console
+          console.error(`received thing to hold: ${thing.index}, current heldBy: ${thing.heldBy}`);
+
+          if (this.held.indexOf(thing) === -1) {
+            this.held.push(thing);
+            this.targetSlots.push(null);
+          }
+        }
+        thing.heldBy = thingInfo.heldBy;
+      }
     }
     this.checkPushes();
   }
@@ -120,10 +151,18 @@ export class World {
     this.client.update(update);
   }
 
+  sendPlayer(): void {
+    this.client.updatePlayer<PlayerInfo>({
+      mouse: this.mouse && {x: this.mouse.x, y: this.mouse.y, z: this.mouse.z},
+      heldMouse: this.heldMouse && {x: this.heldMouse.x, y: this.heldMouse.y, z: this.heldMouse.z},
+    });
+  }
+
   describeThing(thing: Thing): ThingInfo {
     return {
       slotName: thing.slot.name,
       rotationIndex: thing.rotationIndex,
+      heldBy: thing.heldBy,
     };
   }
 
@@ -332,10 +371,8 @@ export class World {
       return;
     }
 
-    this.client.updatePlayer<PlayerInfo>({
-      mouse: this.mouse ? {x: this.mouse.x, y: this.mouse.y, z: this.mouse.z} : null,
-    });
     this.mouse = mouse;
+    this.sendPlayer();
 
     this.drag();
   }
@@ -416,8 +453,15 @@ export class World {
         this.held.push(this.hovered);
         this.selected.splice(0);
       }
+
+      for (const thing of this.held) {
+        thing.heldBy = this.playerNum;
+      }
       // this.hovered = null;
       this.heldMouse = this.mouse;
+
+      this.sendUpdate(this.held);
+      this.sendPlayer();
 
       this.targetSlots.length = this.held.length;
       for (let i = 0; i < this.held.length; i++) {
@@ -438,16 +482,18 @@ export class World {
 
         // No movement; unselect
         this.selected.splice(0);
+        this.dropInPlace();
         // if (this.hovered !== null) {
         //   this.selected.push(this.hovered);
         // }
       } else if (this.canDrop()) {
         // Successful movement
         this.drop();
+      } else {
+        this.dropInPlace();
       }
     }
-    this.held.splice(0);
-    this.targetSlots.splice(0);
+
   }
 
   onFlip(): void {
@@ -461,8 +507,8 @@ export class World {
           continue;
         }
         thing.flip();
-        this.sendUpdate(this.selected);
       }
+      this.sendUpdate(this.selected);
       this.checkPushes();
       this.selected.splice(0);
     } else if (this.hovered !== null) {
@@ -480,10 +526,28 @@ export class World {
       const thing = this.held[i];
       const targetSlot = this.targetSlots[i]!;
       thing.moveTo(targetSlot);
+      thing.heldBy = null;
     }
-    this.sendUpdate(this.held);
     this.checkPushes();
+    this.finishDrop();
+  }
+
+  dropInPlace(): void {
+    for (const thing of this.held) {
+      thing.heldBy = null;
+    }
+    this.finishDrop();
+  }
+
+  finishDrop(): void {
+    const toDrop = this.held.slice();
     this.selected.splice(0);
+    this.held.splice(0);
+    this.targetSlots.splice(0);
+    this.heldMouse = null;
+
+    this.sendUpdate(toDrop);
+    this.sendPlayer();
   }
 
   canDrop(): boolean {
@@ -502,12 +566,23 @@ export class World {
     const result = [];
     for (const thing of this.things) {
       let place = thing.place();
-      const held = this.held.indexOf(thing) !== -1;
+      const held = thing.heldBy !== null;
 
-      if (held && this.mouse !== null && this.heldMouse !== null) {
-        place = {...place, position: place.position.clone()};
-        place.position.x += this.mouse.x - this.heldMouse.x;
-        place.position.y += this.mouse.y - this.heldMouse.y;
+      if (thing.heldBy !== null) {
+        let mouse = null, heldMouse = null;
+        if (thing.heldBy === this.playerNum) {
+          mouse = this.mouse;
+          heldMouse = this.heldMouse;
+        } else {
+          mouse = this.playerMouses[thing.heldBy];
+          heldMouse = this.playerHeldMouses[thing.heldBy];
+        }
+
+        if (mouse && heldMouse) {
+          place = {...place, position: place.position.clone()};
+          place.position.x += mouse.x - heldMouse.x;
+          place.position.y += mouse.y - heldMouse.y;
+        }
       }
 
       const selected = this.selected.indexOf(thing) !== -1;

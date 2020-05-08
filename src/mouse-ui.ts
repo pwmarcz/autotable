@@ -162,7 +162,7 @@ export class MouseUi {
       const j = (4 + i - this.world.playerNum) % 4;
 
       const cursorElement = this.cursors[j];
-      const cursorPos = this.world.playerCursors[i];
+      const cursorPos = this.world.playerMouses[i];
 
       if (cursorPos && i !== this.world.playerNum) {
         const v = cursorPos.clone();
