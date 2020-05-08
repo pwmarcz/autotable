@@ -6,35 +6,32 @@ import { Client } from './client';
 import { ClientUi } from './client-ui';
 
 const client = new Client();
-new ClientUi(client);
-
-const world = new World(client);
-
-let view: View | null = null;
-
 const assetLoader = new AssetLoader();
+const world = new World(client);
+const clientUi = new ClientUi(client);
+
+// Debugging:
+Object.assign(window, {
+  assetLoader,
+  world,
+  client,
+  clientUi,
+});
 
 assetLoader.loadAll().then(() => {
-  view = new View(world, assetLoader, client);
+  const view = new View(world, assetLoader, client);
+  Object.assign(window, { view });
 
-  // Debugging
-  // @ts-ignore
-  window.world = world;
-  // @ts-ignore
-  window.view = view;
-  // @ts-ignore
-  window.client = client;
+  const perspectiveCheckbox = document.getElementById('perspective') as HTMLInputElement;
+  perspectiveCheckbox.addEventListener('change', updateSettings);
 
   updateSettings();
   view.draw();
-});
 
-const perspectiveCheckbox = document.getElementById('perspective') as HTMLInputElement;
-perspectiveCheckbox.addEventListener('change', updateSettings);
-
-function updateSettings(): void {
-  const perspective = perspectiveCheckbox.checked;
-  if (view) {
-    view.setPerspective(perspective);
+  function updateSettings(): void {
+    const perspective = perspectiveCheckbox.checked;
+    if (view) {
+      view.setPerspective(perspective);
+    }
   }
-}
+});
