@@ -30,6 +30,8 @@ export class Slot {
   down: string | null;
   up: string | null;
   requires: string | null;
+  shiftLeft: string | null;
+  shiftRight: string | null;
   canFlipMultiple: boolean;
   drawShadow: boolean;
 
@@ -42,6 +44,8 @@ export class Slot {
     down?: string | null;
     up?: string | null;
     requires?: string | null;
+    shiftLeft?: string | null;
+    shiftRight?: string | null;
     canFlipMultiple?: boolean;
     drawShadow?: boolean;
   }) {
@@ -53,6 +57,8 @@ export class Slot {
     this.down = params.down ?? null;
     this.up = params.up ?? null;
     this.requires = params.requires ?? null;
+    this.shiftLeft = params.shiftLeft ?? null;
+    this.shiftRight = params.shiftRight ?? null;
     this.canFlipMultiple = params.canFlipMultiple ?? false;
     this.drawShadow = params.drawShadow ?? true;
 
@@ -90,6 +96,8 @@ export class Slot {
     slot.down = this.down && this.down + suffix;
     slot.up = this.up && this.up + suffix;
     slot.requires = this.requires && this.requires + suffix;
+    slot.shiftLeft = this.shiftLeft && this.shiftLeft + suffix;
+    slot.shiftRight = this.shiftRight && this.shiftRight + suffix;
     slot.canFlipMultiple = this.canFlipMultiple;
     slot.drawShadow = this.drawShadow;
     return slot;

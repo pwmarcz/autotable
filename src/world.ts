@@ -226,6 +226,8 @@ export class World {
         ),
         rotations: [Rotation.STANDING, Rotation.FACE_UP],
         canFlipMultiple: true,
+        shiftLeft: i > 0 ? `hand.${i-1}` : null,
+        shiftRight: i < 13 ? `hand.${i+1}` : null,
       }));
     }
 
