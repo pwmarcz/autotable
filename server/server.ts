@@ -28,34 +28,53 @@ class Game {
     }
   }
 
-  join(client: Client, secret: string | null): number {
-    let num = null;
-
-    for (let i = 0; i < PLAYERS; i++) {
-      if (secret !== null && this.secrets[i] === secret) {
-        const client = this.clients[i];
-        if (client) {
-          client.game = null;
-          client.close();
-        }
-        num = i;
-        break;
-      }
-      if (secret === null && this.secrets[i] === null) {
-        let secret: string;
-        do {
-          secret = randomString();
-        } while (this.secrets.indexOf(secret) !== -1);
-        this.secrets[i] = secret;
-        num = i;
-        break;
-      }
-    }
+  join(client: Client, num: number | null): void {
     if (num === null) {
-      throw "no player slot";
+      for (let i = 0; i < PLAYERS; i++) {
+        if (this.secrets[i] === null) {
+          num = i;
+          break;
+        }
+      }
+
+      if (num === null) {
+        throw 'no free seats';
+      }
     }
 
+    if (this.secrets[num] !== null) {
+      throw 'already taken';
+    }
+
+    let secret: string;
+    do {
+      secret = randomString();
+    } while (this.secrets.indexOf(secret) !== -1);
+    this.secrets[num] = secret;
+
+    this.start(client, num);
+  }
+
+  rejoin(client: Client, num: number, secret: string): void {
+    if (this.secrets[num] !== secret) {
+      throw 'wrong secret';
+    }
+
+    // Kick old client
+    const oldClient = this.clients[num];
+    if (oldClient) {
+      oldClient.game = null;
+      oldClient.close();
+    }
+
+    this.start(client, num);
+  }
+
+  start(client: Client, num: number): void {
     this.clients[num] = client;
+    client.game = this;
+    client.num = num;
+
     this.send(num, {
       type: 'JOINED',
       gameId: this.gameId,
@@ -74,8 +93,6 @@ class Game {
         player: this.players[i],
       });
     }
-    // Send data
-    return num;
   }
 
   leave(num: number): void {
@@ -185,26 +202,33 @@ class Server {
     }
 
     switch(message.type) {
-      case 'JOIN': {
-        let game: Game;
-        if (message.gameId === null) {
-          let gameId: string;
-          do {
-            gameId = randomString();
-          } while (this.games[gameId] !== undefined);
+      case 'NEW': {
+        let gameId: string;
+        do {
+          gameId = randomString();
+        } while (this.games[gameId] !== undefined);
 
-          game = new Game(gameId);
-          this.games[gameId] = game;
-        } else {
-          game = this.games[message.gameId];
-          if (game === undefined) {
-            throw `game not found: ${message.gameId}`;
-          }
-        }
-        const num = game.join(client, message.secret);
-        client.game = game;
-        client.num = num;
+        const game = new Game(gameId);
+        this.games[gameId] = game;
+        game.join(client, message.num);
         break;
+      }
+
+      case 'JOIN': {
+        const game = this.games[message.gameId];
+        if (!game) {
+          throw `game not found: ${message.gameId}`;
+        }
+        game.join(client, message.num);
+        break;
+      }
+
+      case 'REJOIN': {
+        const game = this.games[message.gameId];
+        if (!game) {
+          throw `game not found: ${message.gameId}`;
+        }
+        game.rejoin(client, message.num, message.secret);
       }
       default:
         throw 'unknown message';
@@ -246,7 +270,11 @@ function testPlayer(num: number, gameId: string | null): void {
     });
     ws.on('close', data => console.log('test close'));
 
-    send({type: 'JOIN', gameId, secret: null});
+    if (gameId === null) {
+      send({type: 'NEW', num});
+    } else {
+      send({type: 'JOIN', gameId, num});
+    }
     send({
       type: 'PLAYER',
       num,

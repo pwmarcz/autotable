@@ -3,10 +3,22 @@ export type Player = {};
 
 export type Thing = {};
 
+interface NewMessage {
+  type: 'NEW';
+  num: number | null;
+}
+
 interface JoinMessage {
   type: 'JOIN';
-  gameId: string | null;
-  secret: string | null;
+  gameId: string;
+  num: number | null;
+}
+
+interface RejoinMessage {
+  type: 'REJOIN';
+  gameId: string;
+  num: number;
+  secret: string;
 }
 
 interface JoinedMessage {
@@ -32,4 +44,4 @@ interface ReplaceMessage {
   allThings: Array<any>;
 }
 
-export type Message = JoinMessage | JoinedMessage | PlayerMessage | UpdateMessage | ReplaceMessage;
+export type Message = NewMessage | JoinMessage | RejoinMessage | JoinedMessage | PlayerMessage | UpdateMessage | ReplaceMessage;
