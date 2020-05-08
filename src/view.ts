@@ -1,27 +1,21 @@
-
-
-import * as THREE from 'three';
-import { Scene, Camera, WebGLRenderer, Vector2, Raycaster, Mesh, MeshLambertMaterial, Vector3, Group } from 'three';
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { Scene, Camera, WebGLRenderer, Vector2, Mesh, MeshLambertMaterial, Vector3, Group, PlaneGeometry, MeshBasicMaterial, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera } from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import { World } from './world';
-import { ThingType, Size } from './places';
-import { SelectionBox } from './selection-box';
+import { ThingType, } from './places';
 import { AssetLoader } from './asset-loader';
 import { Center } from './center';
 import { Client, Status } from './client';
+import { MouseUi } from './mouse-ui';
 
 export class View {
   world: World;
   client: Client;
 
   main: HTMLElement;
-  selection: HTMLElement;
-  cursors: Array<HTMLElement>;
 
   stats: Stats;
 
@@ -34,38 +28,26 @@ export class View {
   scene: Scene;
   mainGroup: Group;
   renderer: WebGLRenderer;
-  raycaster: Raycaster;
 
   // Setup in setupRendering()
   camera: Camera = null!;
   composer: EffectComposer = null!;
   outlinePass: OutlinePass = null!;
-  selectionBox: SelectionBox = null!;
 
   objects: Array<Mesh>;
   ghostObjects: Array<Mesh>;
   shadows: Array<Mesh>;
-  raycastObjects: Array<Mesh>;
-  raycastTable: Mesh;
 
   width = 0;
   height = 0;
   static RATIO = 1.5;
 
-  mouse: Vector2 = new Vector2();
-  selectStart: Vector2 | null = null;
+  mouseUi: MouseUi;
 
   cameraPos = new Animation(150);
 
   constructor(world: World, assetLoader: AssetLoader, client: Client) {
     this.main = document.getElementById('main')!;
-    this.selection = document.getElementById('selection')!;
-    this.cursors = [
-      document.querySelector('.cursor.rotate-0')! as HTMLElement,
-      document.querySelector('.cursor.rotate-1')! as HTMLElement,
-      document.querySelector('.cursor.rotate-2')! as HTMLElement,
-      document.querySelector('.cursor.rotate-3')! as HTMLElement,
-    ];
     this.world = world;
 
     this.client = client;
@@ -75,13 +57,11 @@ export class View {
 
     this.assetLoader = assetLoader;
 
-    this.scene = new THREE.Scene();
-    this.mainGroup = new THREE.Group();
+    this.scene = new Scene();
+    this.mainGroup = new Group();
     this.scene.add(this.mainGroup);
 
-    this.raycaster = new THREE.Raycaster();
-
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer = new WebGLRenderer({ antialias: true });
     this.main.appendChild(this.renderer.domElement);
 
     const tableMesh = this.assetLoader.makeTable();
@@ -127,8 +107,8 @@ export class View {
       this.ghostObjects.push(gobj);
       this.mainGroup.add(gobj);
 
-      const geometry = new THREE.PlaneGeometry(1, 1);
-      const material = new THREE.MeshBasicMaterial({
+      const geometry = new PlaneGeometry(1, 1);
+      const material = new MeshBasicMaterial({
         transparent: true,
         opacity: 0.2,
         color: 0,
@@ -143,8 +123,8 @@ export class View {
       // const w = Math.max(shadow.size.x, World.TILE_WIDTH);
       // const h = Math.max(shadow.size.y, World.TILE_WIDTH);
 
-      const geometry = new THREE.PlaneGeometry(shadow.size.x, shadow.size.y);
-      const material = new THREE.MeshBasicMaterial({
+      const geometry = new PlaneGeometry(shadow.size.x, shadow.size.y);
+      const material = new MeshBasicMaterial({
         transparent: true,
         opacity: 0.1,
         color: 0,
@@ -154,22 +134,7 @@ export class View {
       this.mainGroup.add(mesh);
     }
 
-    this.raycastObjects = [];
-    for (let i = 0; i < Object.keys(this.world.slots).length; i++) {
-      const robj = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1));
-      robj.visible = false;
-      robj.geometry.computeBoundingBox();
-      this.raycastObjects.push(robj);
-      this.mainGroup.add(robj);
-    }
-
-    this.raycastTable = new THREE.Mesh(new THREE.PlaneGeometry(
-      World.WIDTH * 3,
-      World.WIDTH * 3,
-    ));
-    this.raycastTable.visible = false;
-    this.raycastTable.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
-    this.mainGroup.add(this.raycastTable);
+    this.mouseUi = new MouseUi(this.world, this.mainGroup);
 
     this.setupLights();
     this.setupEvents();
@@ -189,16 +154,16 @@ export class View {
   }
 
   setupLights(): void {
-    this.scene.add(new THREE.AmbientLight(0x888888));
-    const topLight = new THREE.DirectionalLight(0x777777);
+    this.scene.add(new AmbientLight(0x888888));
+    const topLight = new DirectionalLight(0x777777);
     topLight.position.set(0, 0, 1);
     this.scene.add(topLight);
 
-    const frontLight = new THREE.DirectionalLight(0x222222);
+    const frontLight = new DirectionalLight(0x222222);
     frontLight.position.set(0, -1, 0);
     this.scene.add(frontLight);
 
-    const sideLight = new THREE.DirectionalLight(0x222222);
+    const sideLight = new DirectionalLight(0x222222);
     sideLight.position.set(-1, -1, 0);
     this.scene.add(sideLight);
   }
@@ -219,7 +184,7 @@ export class View {
 
     this.camera = this.makeCamera(this.perspective);
     this.adjustCamera();
-    this.selectionBox = new SelectionBox(this.camera);
+    this.mouseUi.setCamera(this.camera);
     this.composer = new EffectComposer(this.renderer);
     const renderPass = new RenderPass(this.scene, this.camera);
     this.outlinePass = new OutlinePass(new Vector2(w, h), this.scene, this.camera);
@@ -235,9 +200,9 @@ export class View {
     this.outlinePass.selectedObjects.splice(0);
   }
 
-  makeCamera(perspective: boolean): THREE.Camera {
+  makeCamera(perspective: boolean): Camera {
     if (perspective) {
-      const camera = new THREE.PerspectiveCamera(30, 800 / 600, 0.1, 1000);
+      const camera = new PerspectiveCamera(30, 800 / 600, 0.1, 1000);
       camera.position.set(World.WIDTH/2, -World.WIDTH*0.8, World.WIDTH * 0.9);
       camera.rotateX(Math.PI * 0.3);
       return camera;
@@ -245,7 +210,7 @@ export class View {
 
     const w = World.WIDTH * 1.2;
     const h = w / View.RATIO;
-    const camera = new THREE.OrthographicCamera(
+    const camera = new OrthographicCamera(
       (World.WIDTH - w) / 2, (World.WIDTH + w) / 2,
       h, 0,
       0.1, 1000);
@@ -263,7 +228,7 @@ export class View {
     this.camera.rotation.set(Math.PI * 0.25, 0, 0);
 
     if (updated) {
-      this.updateSelect();
+      this.mouseUi.update();
     }
   }
 
@@ -303,84 +268,18 @@ export class View {
     requestAnimationFrame(this.draw.bind(this));
     this.updateViewport();
     this.adjustCamera();
-    this.updateSelect();
+    this.mouseUi.update();
 
     this.updateRender();
     this.updateRenderGhosts();
     this.updateRenderShadows();
-    this.updateCursors();
+    this.mouseUi.updateCursors();
 
     this.center.setScores(this.world.getScores());
     this.center.draw();
     this.composer.render();
 
     this.stats.update();
-  }
-
-  updateSelect(): void {
-    const toSelect = this.world.toSelect();
-    this.raycaster.setFromCamera(this.mouse, this.camera);
-
-    if (this.selectStart !== null) {
-      const w = this.renderer.domElement.clientWidth;
-      const h = this.renderer.domElement.clientHeight;
-
-      const x1 = Math.min(this.selectStart.x, this.mouse.x);
-      const y1 = Math.min(this.selectStart.y, this.mouse.y);
-      const x2 = Math.max(this.selectStart.x, this.mouse.x);
-      const y2 = Math.max(this.selectStart.y, this.mouse.y);
-
-      const sx1 = (x1 + 1) * w / 2;
-      const sx2 = (x2 + 1) * w / 2;
-      const sy1 = (-y2 + 1) * h / 2;
-      const sy2 = (-y1 + 1) * h / 2;
-
-      this.selection.style.left = `${sx1}px`;
-      this.selection.style.top = `${sy1}px`;
-      this.selection.style.width = `${sx2-sx1}px`;
-      this.selection.style.height = `${sy2-sy1}px`;
-      this.selection.style.visibility = 'visible';
-
-      this.selectionBox.update(new Vector2(x1, y1), new Vector2(x2, y2));
-    } else {
-      this.selection.style.visibility = 'hidden';
-    }
-
-    const robjs = [];
-    for (let i = 0; i < toSelect.length; i++) {
-      const select = toSelect[i];
-      const robj = this.raycastObjects[i];
-      robj.position.copy(select.position);
-      robj.scale.copy(select.size);
-      robj.updateMatrixWorld();
-      robj.userData.id = select.id;
-      robjs.push(robj);
-    }
-
-    const intersects = this.raycaster.intersectObjects(robjs);
-    let hovered = null;
-    if (intersects.length > 0) {
-      hovered = intersects[0].object.userData.id;
-    }
-    this.world.onHover(hovered);
-
-    const intersectsTable = this.raycaster.intersectObject(this.raycastTable);
-    let tablePos = null;
-    if (intersectsTable.length > 0) {
-      const point = intersectsTable[0].point.clone();
-      this.raycastTable.worldToLocal(point);
-      tablePos = new Vector2(point.x, point.y);
-    }
-    this.world.onMove(tablePos);
-
-    if (this.selectStart !== null) {
-      const selected = [];
-      for (const obj of this.selectionBox.select(robjs)) {
-        const id = obj.userData.id;
-        selected.push(id);
-      }
-      this.world.onSelect(selected);
-    }
   }
 
   updateRender(): void {
@@ -454,39 +353,8 @@ export class View {
     }
   }
 
-  updateCursors(): void {
-    const w = this.renderer.domElement.clientWidth;
-    const h = this.renderer.domElement.clientHeight;
-
-    for (let i = 0; i < 4; i++) {
-      const j = (4 + i - this.world.playerNum) % 4;
-
-      const cursorElement = this.cursors[j];
-      const cursorPos = this.world.playerCursors[i];
-
-      if (cursorPos && i !== this.world.playerNum) {
-        const v = new Vector3(cursorPos.x, cursorPos.y, Size.TILE.y);
-        this.raycastTable.localToWorld(v);
-        v.project(this.camera);
-
-        const x = Math.floor((v.x + 1) / 2 * w);
-        const y = Math.floor((-v.y + 1) / 2 * h);
-        cursorElement.style.visibility = 'visible';
-        cursorElement.style.left = `${x}px`;
-        cursorElement.style.top = `${y}px`;
-      } else {
-        cursorElement.style.visibility = 'hidden';
-      }
-    }
-  }
-
   onMouseMove(event: MouseEvent): void {
-    const w = this.renderer.domElement.clientWidth;
-    const h = this.renderer.domElement.clientHeight;
-    this.mouse.x = event.offsetX / w * 2 - 1;
-    this.mouse.y = -event.offsetY / h * 2 + 1;
-
-    this.updateSelect();
+    this.mouseUi.move(event);
   }
 
   onMouseLeave(event: MouseEvent): void {
@@ -496,19 +364,18 @@ export class View {
 
   onMouseDown(event: MouseEvent): void {
     if (!this.world.onDragStart()) {
-      this.selectStart = this.mouse.clone();
+      this.mouseUi.startSelect();
     }
-    this.updateSelect();
+    this.mouseUi.update();
   }
 
   onMouseUp(event: MouseEvent): void {
-    this.selectStart = null;
+    this.mouseUi.endSelect();
     this.world.onDragEnd();
-    this.updateSelect();
+    this.mouseUi.update();
   }
 
   onKeyPress(event: KeyboardEvent): void {
-
   }
 
   onKeyDown(event: KeyboardEvent): void {
