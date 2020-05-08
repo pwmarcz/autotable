@@ -194,8 +194,11 @@ export class Thing {
     }
   }
 
-  flip(): void {
-    this.rotationIndex = (this.rotationIndex + 1) % this.slot.rotations.length;
+  flip(rotationIndex?: number): void {
+    if (rotationIndex === undefined) {
+      rotationIndex = this.rotationIndex + 1;
+    }
+    this.rotationIndex = rotationIndex % this.slot.rotations.length;
   }
 
   remove(): void {

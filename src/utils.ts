@@ -8,6 +8,27 @@ export function shuffle<T>(arr: Array<T>): void {
   }
 }
 
+export function mostCommon<T, R>(arr: Array<T>, func: (elem: T) => R): R | null {
+  if (arr.length === 0) {
+    return null;
+  }
+
+  const counts: Map<R, number> = new Map();
+  for (const elem of arr) {
+    const result = func(elem);
+    const current = counts.get(result);
+    if (current !== undefined) {
+      counts.set(result, current + 1);
+    } else {
+      counts.set(result, 1);
+    }
+  }
+
+  const allResults = Array.from(counts.keys());
+  allResults.sort((a, b) => counts.get(b)! - counts.get(a)!);
+  return allResults[0];
+}
+
 export class Animation {
   private startTime = 0;
   private endTime = 1;

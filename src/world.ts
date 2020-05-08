@@ -2,7 +2,7 @@ import { Vector2, Euler, Vector3 } from "three";
 
 import { Place, Slot, Thing, Size, ThingType } from "./places";
 import { Client, Status } from "./client";
-import { shuffle } from "./utils";
+import { shuffle, mostCommon } from "./utils";
 
 interface Render {
   thingIndex: number;
@@ -352,13 +352,8 @@ export class World {
     }
 
     // Only allow selecting one thing type at a time
-    const counts: Map<ThingType, number> = new Map();
-    for (const thing of this.selected) {
-      counts.set(thing.type, (counts.get(thing.type) ?? 0) + 1);
-    }
-    const allTypes = Array.from(counts.keys());
-    allTypes.sort((a, b) => counts.get(b)! - counts.get(a)!);
-    this.selected = this.selected.filter(thing => thing.type === allTypes[0]);
+    const type = mostCommon(this.selected, thing => thing.type);
+    this.selected = this.selected.filter(thing => thing.type === type);
   }
 
   onMove(mouse: Vector3 | null): void {
@@ -498,11 +493,12 @@ export class World {
     }
 
     if (this.selected.length > 0) {
+      const rotationIndex = mostCommon(this.selected, thing => thing.rotationIndex)!;
       for (const thing of this.selected) {
         if (this.selected.length > 1 && !thing.slot.canFlipMultiple) {
           continue;
         }
-        thing.flip();
+        thing.flip(rotationIndex + 1);
       }
       this.sendUpdate(this.selected);
       this.checkPushes();
