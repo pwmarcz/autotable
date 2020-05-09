@@ -98,7 +98,7 @@ export class World {
 
     for (const thingIndex of indexes) {
       const thing = this.things[thingIndex];
-      thing.remove();
+      thing.prepareMove();
     }
     for (const thingIndex of indexes) {
       const thing = this.things[thingIndex];
@@ -167,7 +167,7 @@ export class World {
     for (let i = 0; i < 17; i++) {
       for (let j = 0; j < 2; j++) {
         for (let k = 0; k < 4; k++) {
-          slots.push(`wall.${i+1}.${j}.${k}`);
+          slots.push(`wall.${j}.${i+1}@${k}`);
         }
       }
     }
@@ -184,7 +184,7 @@ export class World {
     const add = (index: number, n: number, slot: number): void => {
       for (let i = 0; i < 4; i++) {
         for (let j = 0; j < n; j++) {
-          this.addThing(ThingType.STICK, index, `stick.${slot}.${j}.${i}`);
+          this.addThing(ThingType.STICK, index, `stick.${slot}.${j}@${i}`);
         }
       }
     };
@@ -218,6 +218,7 @@ export class World {
     for (let i = 0; i < 14; i++) {
       this.addSlot(new Slot({
         name: `hand.${i}`,
+        group: `hand`,
         origin: new Vector3(
           46 + i*Size.TILE.x,
           0,
@@ -234,6 +235,7 @@ export class World {
       for (let j = 0; j < 4; j++) {
         this.addSlot(new Slot({
           name: `meld.${i}.${j}`,
+          group: `meld`,
           origin: new Vector3(
             174 - (j)*Size.TILE.x,
             i * Size.TILE.y,
@@ -255,7 +257,8 @@ export class World {
     for (let i = 0; i < 19; i++) {
       for (let j = 0; j < 2; j++) {
         this.addSlot(new Slot({
-          name: `wall.${i}.${j}`,
+          name: `wall.${j}.${i}`,
+          group: `wall.${j}`,
           origin: new Vector3(
             30 + i * Size.TILE.x,
             20,
@@ -263,8 +266,8 @@ export class World {
           ),
           rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
           drawShadow: j === 0 && i >= 1 && i < 18,
-          down: j === 1 ? `wall.${i}.0` : null,
-          up: j === 0 ? `wall.${i}.1` : null,
+          down: j === 1 ? `wall.0.${i}` : null,
+          up: j === 0 ? `wall.1.${i}` : null,
         }));
       }
     }
@@ -273,6 +276,7 @@ export class World {
       for (let j = 0; j < 6; j++) {
         this.addSlot(new Slot({
           name: `discard.${i}.${j}`,
+          group: `discard`,
           origin: new Vector3(
             69 + j * Size.TILE.x,
             60 - i * Size.TILE.y,
@@ -291,6 +295,7 @@ export class World {
       for (let j = 0; j < 10; j++) {
         this.addSlot(new Slot({
           name: `stick.${i}.${j}`,
+          group: `stick`,
           type: ThingType.STICK,
           origin: new Vector3(
             15 + 24 * i,
@@ -306,13 +311,14 @@ export class World {
           if (this.scoreSlots[k] === null) {
             this.scoreSlots[k] = [];
           }
-          this.scoreSlots[k].push(this.slots[`stick.${i}.${j}.${k}`]);
+          this.scoreSlots[k].push(this.slots[`stick.${i}.${j}@${k}`]);
         }
       }
     }
 
     this.addSlot(new Slot({
       name: 'riichi',
+      group: 'riichi',
       type: ThingType.STICK,
       origin: new Vector3(
         (World.WIDTH - Size.STICK.x) / 2,
@@ -326,14 +332,14 @@ export class World {
 
   addSlot(slot: Slot): void {
     for (let i = 0; i < 4; i++) {
-      const rotated = slot.rotated('.' + i, i * Math.PI / 2, World.WIDTH);
+      const rotated = slot.rotated('@' + i, i * Math.PI / 2, World.WIDTH);
       this.slots[rotated.name] = rotated;
     }
   }
 
   addPush(source: string, target: string): void {
     for (let i = 0; i < 4; i++) {
-      this.pushes.push([this.slots[`${source}.${i}`], this.slots[`${target}.${i}`]]);
+      this.pushes.push([this.slots[`${source}@${i}`], this.slots[`${target}@${i}`]]);
     }
   }
 
@@ -605,7 +611,7 @@ export class World {
         }
       } else if (this.movement && this.movement.has(thing)) {
         const targetSlot = this.movement.get(thing)!;
-        place = targetSlot.places[0];
+        place = targetSlot.places[this.movement.rotationIndex(thing)!];
       }
 
       const selected = this.selected.indexOf(thing) !== -1;

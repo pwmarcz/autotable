@@ -18,6 +18,7 @@ export interface Place {
 
 export class Slot {
   name: string;
+  group: string;
   type: ThingType;
   origin: Vector3;
   direction: Vector2;
@@ -37,6 +38,7 @@ export class Slot {
 
   constructor(params: {
     name: string;
+    group: string;
     type?: ThingType;
     origin: Vector3;
     direction?: Vector2;
@@ -50,6 +52,7 @@ export class Slot {
     drawShadow?: boolean;
   }) {
     this.name = params.name;
+    this.group = params.group;
     this.type = params.type ?? ThingType.TILE;
     this.origin = params.origin;
     this.direction = params.direction ?? new Vector2(1, 1);
@@ -69,6 +72,7 @@ export class Slot {
     const quat = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), rotation);
 
     const name = this.name + suffix;
+    const group = this.group + suffix;
 
     const pos = new Vector3(
       this.origin.x - worldWidth / 2,
@@ -92,7 +96,7 @@ export class Slot {
       return new Euler().setFromQuaternion(q);
     });
 
-    const slot = new Slot({name, type: this.type, origin, direction, rotations});
+    const slot = new Slot({name, group, type: this.type, origin, direction, rotations});
     slot.down = this.down && this.down + suffix;
     slot.up = this.up && this.up + suffix;
     slot.requires = this.requires && this.requires + suffix;
@@ -135,7 +139,7 @@ export class Thing {
   index: number;
   type: ThingType;
   typeIndex: number;
-  _slot: Slot | null;
+  slot: Slot;
   rotationIndex: number;
   offset: Vector2;
 
@@ -146,20 +150,12 @@ export class Thing {
     this.index = index;
     this.type = type;
     this.typeIndex = typeIndex;
-    this._slot = slot;
+    this.slot = slot;
     this.rotationIndex = 0;
     this.offset = new Vector2(0, 0);
     this.heldBy = null;
 
     this.slot.thing = this;
-  }
-
-  // TODO handle null slot better
-  get slot(): Slot {
-    if (this._slot === null) {
-      throw `thing has no slot: ${this.index}`;
-    }
-    return this._slot;
   }
 
   place(): Place {
@@ -213,10 +209,9 @@ export class Thing {
     this.rotationIndex = rotationIndex % this.slot.rotations.length;
   }
 
-  remove(): void {
+  prepareMove(): void {
     // console.log('remove', this.index, this.slot.name);
     this.slot.thing = null;
-    this._slot = null;
   }
 
   moveTo(target: Slot, rotationIndex?: number): void {
@@ -224,10 +219,7 @@ export class Thing {
     if (target.thing !== null) {
       throw `slot not empty: ${this.index} ${target.name}`;
     }
-    if (this._slot !== null) {
-      throw `not removed: ${this.index} -> ${this.slot.name}`;
-    }
-    this._slot = target;
+    this.slot = target;
     this.rotationIndex = rotationIndex ?? 0;
     target.thing = this;
   }
@@ -259,6 +251,14 @@ export class Movement {
     return this.thingMap.get(thing) ?? null;
   }
 
+  rotationIndex(thing: Thing): number {
+    const slot = this.thingMap.get(thing);
+    if (slot === undefined) {
+      return 0;
+    }
+    return thing.slot.group === slot.group ? thing.rotationIndex : 0;
+  }
+
   slots(): Iterable<Slot> {
     return this.thingMap.values();
   }
@@ -282,10 +282,11 @@ export class Movement {
 
   apply(): void {
     for (const thing of this.thingMap.keys()) {
-      thing.remove();
+      thing.prepareMove();
     }
     for (const [thing, slot] of this.thingMap.entries()) {
-      thing.moveTo(slot);
+      const rotationIndex = thing.slot.group === slot.group ? thing.rotationIndex : 0;
+      thing.moveTo(slot, rotationIndex);
     }
   }
 
