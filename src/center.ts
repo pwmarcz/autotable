@@ -10,6 +10,8 @@ export class Center {
 
   scores: Array<number> = new Array(5).fill(0);
   nicks: Array<string | null> = new Array(4).fill(null);
+  dealer = 0;
+  honba = 2;
   dirty = true;
 
   constructor(loader: AssetLoader, client: Client) {
@@ -69,6 +71,9 @@ export class Center {
     for (let i = 0; i < 4; i++) {
       this.drawScore(this.scores[i]);
       this.drawNick(this.nicks[i]);
+      if (this.dealer === i) {
+        this.drawDealer();
+      }
       this.ctx.rotate(-Math.PI / 2);
     }
     this.ctx.rotate(Math.PI/4);
@@ -116,5 +121,15 @@ export class Center {
     this.ctx.font = '20px Verdana, Arial';
     this.ctx.fillStyle = '#afa';
     this.ctx.fillText(text, 0, 55);
+  }
+
+  drawDealer(): void {
+    this.ctx.fillStyle = '#a60';
+    this.ctx.fillRect(-132, 132, 264, -13);
+    if (this.honba > 0) {
+      this.ctx.textAlign = 'right';
+      this.ctx.font = '40px Segment7Standard, monospace';
+      this.ctx.fillText('' + this.honba, -90, 100);
+    }
   }
 }
