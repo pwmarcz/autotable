@@ -4,7 +4,7 @@ import jpg from '../img/*.jpg';
 import glbModels from '../img/models.auto.glb';
 
 import { Texture, Mesh, TextureLoader, Material, LinearEncoding,
-   MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, BufferGeometry, RepeatWrapping } from 'three';
+   MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, BufferGeometry, RepeatWrapping, InstancedMesh } from 'three';
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { World } from './world';
 import { Size } from './places';
@@ -75,6 +75,11 @@ export class AssetLoader {
 
   makeMarker(): Mesh {
     return this.cloneMesh(this.meshes.marker);
+  }
+
+  makeInstancedTile(count: number): InstancedMesh {
+    const mesh = this.cloneMesh(this.meshes.tile);
+    return new InstancedMesh(mesh.geometry, mesh.material, count);
   }
 
   cloneMesh(mesh: Mesh): Mesh {

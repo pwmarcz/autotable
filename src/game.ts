@@ -223,10 +223,6 @@ export class Game {
       return;
     }
 
-    if (this.keys.has(event.key)) {
-      return;
-    }
-
     this.keys.add(event.key);
 
     switch(event.key) {
