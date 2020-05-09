@@ -1,6 +1,6 @@
 import { Vector2, Euler, Vector3 } from "three";
 
-import { Place, Slot, Thing, Size, ThingType } from "./places";
+import { Place, Slot, Thing, Size, ThingType, Movement } from "./places";
 import { Client, Status } from "./client";
 import { shuffle, mostCommon } from "./utils";
 
@@ -45,10 +45,8 @@ export class World {
   selected: Array<Thing> = [];
   mouse: Vector3 | null = null;
 
-  shifted: Array<Thing> = [];
-  targetShiftSlots: Array<Slot> = [];
-  targetSlots: Array<Slot | null> = [];
   held: Array<Thing> = [];
+  movement: Movement | null = null;
   heldMouse: Vector3 | null = null;
 
   scoreSlots: Array<Array<Slot>> = [[], [], [], []];
@@ -116,7 +114,7 @@ export class World {
           const heldIndex = this.held.indexOf(thing);
           if (heldIndex !== -1) {
             this.held.splice(heldIndex, 1);
-            this.targetSlots.splice(heldIndex, 1);
+            this.movement = null;
           }
         }
         // Someone gave us the thing back - might be a conflict.
@@ -376,9 +374,7 @@ export class World {
       return;
     }
 
-    this.shifted.splice(0);
-    this.targetShiftSlots.splice(0);
-    this.targetSlots.fill(null);
+    this.movement = new Movement();
 
     for (let i = 0; i < this.held.length; i++) {
       const thing = this.held[i];
@@ -386,110 +382,22 @@ export class World {
       const x = place.position.x + this.mouse.x - this.heldMouse.x;
       const y = place.position.y + this.mouse.y - this.heldMouse.y;
 
-      this.targetSlots[i] = this.findSlot(x, y, thing.type);
-    }
-
-    if (!this.targetSlots.every(slot => slot !== null)) {
-      this.targetSlots.fill(null);
-      return;
-    }
-
-    let shift: Map<string, number> | null = new Map();
-    for (const thing of this.things) {
-      if (thing.type === this.held[0].type && thing.heldBy !== this.playerNum) {
-        shift.set(thing.slot.name, thing.index);
-      }
-    }
-
-    for (let i = 0; i < this.held.length; i++) {
-      const slot = this.targetSlots[i]!;
-      if (!shift.has(slot.name)) {
-        // All OK
-        continue;
-      }
-      shift = this.findShift(slot, shift);
-      if (shift === null) {
-        // Can't move out of the way, abort.
-        this.targetSlots.fill(null);
+      const targetSlot = this.findSlot(x, y, thing.type);
+      if (targetSlot === null) {
+        this.movement = null;
         return;
       }
+      this.movement.move(thing, targetSlot);
     }
 
-    this.applyShift(shift!);
-  }
-
-  findShift(slot: Slot, shift: Map<string, number>): Map<string, number> | null {
-    const left = new Map(shift.entries());
-    const right = new Map(shift.entries());
-    const leftSize = this.tryShift(slot, left, slot => slot.shiftLeft);
-    const rightSize = this.tryShift(slot, right, slot => slot.shiftRight);
-    if (leftSize === null && rightSize === null) {
-      return null;
-    }
-    if (leftSize === null) {
-      return right;
-    }
-    if (rightSize === null) {
-      return left;
-    }
-    return leftSize <= rightSize ? left : right;
-  }
-
-  tryShift(
-    sourceSlot: Slot,
-    shift: Map<string, number>,
-    next: (slot: Slot) => string | null,
-  ): number | null {
-    const thingIndex = shift.get(sourceSlot.name)!;
-    let operations = 0;
-
-    const done = (endSlot: Slot): boolean => {
-      // Must clear the source slot
-      if (endSlot === sourceSlot) {
-        return false;
-      }
-      // Must not end up on one of proposed drop slots
-      if (this.targetSlots.indexOf(currentSlot) !== -1) {
-        return false;
-      }
-      // Must not be occupied (even by a thing that we are about to move)
-      // if (endSlot.thing) {
-      //   return false;
-      // }
-
-      return true;
-    };
-
-    let currentSlot = sourceSlot;
-    while (!done(currentSlot)) {
-      const nextName = next(currentSlot);
-      if (nextName === null) {
-        return null;
-      }
-      const nextSlot = this.slots[nextName];
-      if (shift.has(nextName)) {
-        const subOperations = this.tryShift(nextSlot, shift, next);
-        if (subOperations === null) {
-          return null;
-        }
-        operations += subOperations;
-      }
-      shift.delete(currentSlot.name);
-      shift.set(nextName, thingIndex);
-      currentSlot = nextSlot;
-      operations++;
-    }
-    return operations;
-  }
-
-  applyShift(shift: Map<string, number>): void {
-    for (const [slotName, thingIndex] of shift.entries()) {
-      const thing = this.things[thingIndex];
-      if (thing.slot.name !== slotName) {
-        const slot = this.slots[slotName];
-        this.shifted.push(thing);
-        this.targetShiftSlots.push(slot);
-      }
+    const relevantThings = this.things.filter(thing =>
+      thing.type === this.held[0].type
+    );
+    if (!this.movement.findShift(relevantThings, [
+      slot => slot.shiftLeft !== null ? this.slots[slot.shiftLeft] : null,
+      slot => slot.shiftRight !== null ? this.slots[slot.shiftRight] : null,
+    ])) {
+      this.movement = null;
     }
   }
 
@@ -523,7 +431,7 @@ export class World {
         }
       }
       // Already proposed for another thing
-      if (this.targetSlots.indexOf(slot) !== -1) {
+      if (this.movement?.hasSlot(slot)) {
         continue;
       }
       // The slot requires other slots to be occupied first
@@ -579,12 +487,6 @@ export class World {
 
       this.sendUpdate(this.held);
       this.sendPlayer();
-
-      this.targetSlots.length = this.held.length;
-      for (let i = 0; i < this.held.length; i++) {
-        this.targetSlots[i] = null;
-      }
-
       this.drag();
 
       return true;
@@ -638,22 +540,10 @@ export class World {
 
   drop(): void {
     for (const thing of this.held) {
-      thing.remove();
-    }
-    for (const thing of this.shifted) {
-      thing.remove();
-    }
-    for (let i = 0; i < this.held.length; i++) {
-      const thing = this.held[i];
-      const targetSlot = this.targetSlots[i]!;
-      thing.moveTo(targetSlot);
       thing.heldBy = null;
     }
-    for (let i = 0; i < this.shifted.length; i++) {
-      const thing = this.shifted[i];
-      const targetSlot = this.targetShiftSlots[i]!;
-      thing.moveTo(targetSlot);
-    }
+    this.movement!.apply();
+    this.sendUpdate([...this.movement!.things()]);
     this.checkPushes();
     this.finishDrop();
   }
@@ -669,17 +559,15 @@ export class World {
     const toDrop = this.held.slice();
     this.selected.splice(0);
     this.held.splice(0);
-    this.targetSlots.splice(0);
-    this.shifted.splice(0);
-    this.targetShiftSlots.splice(0);
     this.heldMouse = null;
+    this.movement = null;
 
     this.sendUpdate(toDrop);
     this.sendPlayer();
   }
 
   canDrop(): boolean {
-    return this.targetSlots.every(s => s !== null);
+    return this.movement ? this.movement.valid() : false;
   }
 
   checkPushes(): void {
@@ -711,12 +599,9 @@ export class World {
           place.position.x += mouse.x - heldMouse.x;
           place.position.y += mouse.y - heldMouse.y;
         }
-      }
-
-      const shiftIndex = this.shifted.indexOf(thing);
-      if (shiftIndex !== -1) {
-        const shiftSlot = this.targetShiftSlots[shiftIndex]!;
-        place = shiftSlot.places[0];
+      } else if (this.movement && this.movement.has(thing)) {
+        const targetSlot = this.movement.get(thing)!;
+        place = targetSlot.places[0];
       }
 
       const selected = this.selected.indexOf(thing) !== -1;
@@ -784,7 +669,7 @@ export class World {
   toRenderShadows(): Array<Place> {
     const result = [];
     if (this.canDrop()) {
-      for (const slot of this.targetSlots) {
+      for (const slot of this.movement!.slots()) {
         result.push(slot!.places[0]);
       }
     }

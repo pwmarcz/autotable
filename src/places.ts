@@ -232,3 +232,130 @@ export class Thing {
     target.thing = this;
   }
 }
+
+type SlotOp = (slot: Slot) => Slot | null;
+
+export class Movement {
+  private thingMap: Map<Thing, Slot> = new Map();
+  private reverseMap: Map<Slot, Thing> = new Map();
+
+  move(thing: Thing, slot: Slot): void {
+    if (this.reverseMap.has(slot)) {
+      throw `move(): conflict`;
+    }
+    const oldSlot = this.thingMap.get(thing);
+    if (oldSlot !== undefined) {
+      this.reverseMap.delete(oldSlot);
+    }
+    this.thingMap.set(thing, slot);
+    this.reverseMap.set(slot, thing);
+  }
+
+  has(thing: Thing): boolean {
+    return this.thingMap.has(thing);
+  }
+
+  get(thing: Thing): Slot | null {
+    return this.thingMap.get(thing) ?? null;
+  }
+
+  slots(): Iterable<Slot> {
+    return this.thingMap.values();
+  }
+
+  things(): Iterable<Thing> {
+    return this.thingMap.keys();
+  }
+
+  hasSlot(slot: Slot): boolean {
+    return this.reverseMap.has(slot);
+  }
+
+  valid(): boolean {
+    for (const slot of this.reverseMap.keys()) {
+      if (slot.thing !== null && !this.thingMap.has(slot.thing)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  apply(): void {
+    for (const thing of this.thingMap.keys()) {
+      thing.remove();
+    }
+    for (const [thing, slot] of this.thingMap.entries()) {
+      thing.moveTo(slot);
+    }
+  }
+
+  findShift(allThings: Array<Thing>, ops: Array<SlotOp>): boolean {
+    let shift: Map<Slot, Thing> | null = new Map();
+    for (const thing of allThings) {
+      if (!this.thingMap.has(thing)) {
+        shift.set(thing.slot, thing);
+      }
+    }
+
+    for (const slot of this.thingMap.values()) {
+      if (shift.has(slot)) {
+        shift = this.findShiftFor(slot, ops, shift);
+        if (shift === null) {
+          return false;
+        }
+      }
+    }
+    for (const [slot, thing] of shift.entries()) {
+      if (slot.thing !== thing) {
+        this.move(thing, slot);
+      }
+    }
+    return true;
+  }
+
+  private findShiftFor(
+    slot: Slot, ops: Array<SlotOp>, shift: Map<Slot, Thing>
+  ): Map<Slot, Thing> | null {
+    // console.log('findShiftFor', slot.name);
+    if (!shift.has(slot)) {
+      return null;
+    }
+
+    let best = null;
+    for (const op of ops) {
+      const cloned = new Map(shift.entries());
+      const nOps = this.tryShift(slot, op, cloned);
+      if (nOps !== null && (best === null || best.nOps > nOps)) {
+        best = { nOps, cloned };
+      }
+    }
+    return best ? best.cloned : null;
+  }
+
+  private tryShift(initialSlot: Slot, op: SlotOp, shift: Map<Slot, Thing>): number | null {
+    let nOps = 0;
+    let slot = initialSlot;
+    const thing = shift.get(initialSlot)!;
+    // console.log('tryShift start', thing.index, slot.name);
+    while (slot === initialSlot || this.reverseMap.has(slot)) {
+      const nextSlot = op(slot);
+      if (nextSlot === null) {
+        return null;
+      }
+
+      if (shift.has(nextSlot)) {
+        const nSubOps = this.tryShift(nextSlot, op, shift);
+        if (nSubOps === null) {
+          return null;
+        }
+        nOps += nSubOps + 5;
+      }
+      shift.delete(slot);
+      shift.set(nextSlot, thing);
+      slot = nextSlot;
+      nOps++;
+    }
+    // console.log('tryShift end', thing.index, slot.name);
+    return nOps;
+  }
+}
