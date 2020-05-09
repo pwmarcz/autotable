@@ -71,6 +71,20 @@ export class World {
     this.client.on('players', this.onPlayers.bind(this));
     this.client.on('update', this.onUpdate.bind(this));
     this.client.on('replace', this.onReplace.bind(this));
+
+    // TODO confirmation prompt
+    document.getElementById('deal')!.onclick = this.deal.bind(this);
+    document.getElementById('toggleDealer')!.onclick = () => {
+      let dealer = this.client.attributes().dealer;
+      dealer = ((dealer ?? 0) + 1) %4;
+      this.client.updateAttributes({ dealer });
+    };
+    document.getElementById('toggleHonba')!.onclick = () => {
+      let { dealer, honba } = this.client.attributes();
+      dealer = dealer ?? 0;
+      honba = ((honba ?? 0) + 1) % 8;
+      this.client.updateAttributes({ dealer, honba });
+    };
   }
 
   onStatus(status: Status): void {
@@ -163,23 +177,68 @@ export class World {
     };
   }
 
-  addTiles(): void {
+  wallSlots(): Array<Slot> {
     const slots = [];
 
-    for (let i = 0; i < 17; i++) {
-      for (let j = 0; j < 2; j++) {
-        for (let k = 0; k < 4; k++) {
-          slots.push(`wall.${j}.${i+1}@${k}`);
+    for (let num = 0; num < 4; num++) {
+      for (let i = 0; i < 17; i++) {
+        for (let j = 0; j < 2; j++) {
+          slots.push(this.slots[`wall.${j}.${i+1}@${num}`]);
         }
       }
     }
+    return slots;
+  }
+
+  addTiles(): void {
+    const slots = this.wallSlots();
+    shuffle(slots);
 
     // Shuffle slots, not tiles - this way tiles are the same for everyone.
     shuffle(slots);
     for (let i = 0; i < 136; i++) {
       const tileIndex = Math.floor(i / 4);
-      this.addThing(ThingType.TILE, tileIndex, slots[i]);
+      this.addThing(ThingType.TILE, tileIndex, slots[i].name);
     }
+  }
+
+  deal(): void {
+    const tiles = this.things.filter(thing => thing.type === ThingType.TILE);
+    const slots = this.wallSlots();
+    shuffle(slots);
+    for (const thing of tiles) {
+      thing.prepareMove();
+      thing.heldBy = null;
+    }
+    for (let i = 0; i < 136; i++) {
+      tiles[i].moveTo(slots[i]);
+    }
+
+    const slotsToDeal = this.wallSlots();
+    const dice = Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6);
+    const wallNum = (this.playerNum + dice) % 4;
+    let index = wallNum * 17 * 2 - dice * 2 - 1;
+    for (let num = 0; num < 4; num++) {
+      for (let i = 0; i < 13; i++) {
+        const slot = slotsToDeal[(index + 136) % 136];
+        const thing = slot.thing!;
+        thing.prepareMove();
+        thing.moveTo(this.slots[`hand.${i}@${num}`]);
+        index--;
+      }
+    }
+
+    this.held.splice(0);
+    this.sendUpdate(tiles);
+
+    let { dealer, honba } = this.client.attributes();
+    if (dealer === this.playerNum) {
+      honba = ((honba ?? 0) + 1) % 8;
+    } else {
+      dealer = this.playerNum;
+      honba = 0;
+    }
+    this.client.updateAttributes({ dealer, honba });
   }
 
   addSticks(): void {

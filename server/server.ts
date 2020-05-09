@@ -18,6 +18,7 @@ class Game {
 
   private players: Array<Player | null>;
   private things: Array<Thing>;
+  private attributes: Record<string, any>;
 
   constructor(gameId: string) {
     this.gameId = gameId;
@@ -25,6 +26,7 @@ class Game {
     this.clients = [];
     this.players = [];
     this.things = [];
+    this.attributes = {};
     for (let i = 0; i < PLAYERS; i++) {
       this.secrets[i] = null;
       this.clients[i] = null;
@@ -89,6 +91,10 @@ class Game {
       type: 'REPLACE',
       allThings: this.things,
     });
+    this.send(num, {
+      type: 'ATTRIBUTES',
+      attributes: this.attributes,
+    });
 
     for (let i = 0; i < 4; i++) {
       this.send(num, {
@@ -144,6 +150,10 @@ class Game {
       case 'REPLACE':
         this.things = message.allThings;
         this.sendAll(message);
+        break;
+      case 'ATTRIBUTES':
+        Object.assign(this.attributes, message.attributes);
+        this.sendAll({type: 'ATTRIBUTES', attributes: this.attributes});
         break;
     }
   }

@@ -10,6 +10,7 @@ interface Game {
   secret: string;
   players: Array<any | null>;
   things: Array<any>;
+  attributes: Record<string, any>;
 }
 
 export enum Status {
@@ -25,7 +26,8 @@ const PLAYER_UPDATE_RATE = 100;
 export class Client {
   private ws: WebSocket | null = null;
   game: Game | null = null;
-  player: any = {};
+  localPlayer: any = {};
+  localAttributes: Record<string, any> = {};
 
   handlers: Record<string, Array<Function>> = {};
 
@@ -75,6 +77,7 @@ export class Client {
   on<P>(what: 'players', handler: (players: Array<P | null>) => void): void;
   on<T>(what: 'update', handler: (things: Record<number, T>) => void): void;
   on<T>(what: 'replace', handler: (things: Array<T>) => void): void;
+  on<T>(what: 'attributes', handler: (things: Record<string, any>) => void): void;
 
   on(what: string, handler: Function): void {
     if (this.handlers[what] === undefined) {
@@ -87,6 +90,9 @@ export class Client {
     }
     if (what === 'players') {
       handler(this.players());
+    }
+    if (what === 'attributes') {
+      handler(this.attributes());
     }
   }
 
@@ -119,12 +125,25 @@ export class Client {
     return this.game ? this.game.players : new Array(4).fill(null);
   }
 
+  attributes(): Record<string, any> {
+    return this.game ? this.game.attributes : this.localAttributes;
+  }
+
   updatePlayer<P>(player: P): void {
-    Object.assign(this.player, player);
+    Object.assign(this.localPlayer, player);
     this.playerDirty = true;
     const now = new Date().getTime();
     if (now - this.lastPlayerUpdate > PLAYER_UPDATE_RATE) {
       this.sendPlayer();
+    }
+  }
+
+  updateAttributes(attributes: Record<string, any>): void {
+    if (this.isConnected() && this.game) {
+      this.send({ type: 'ATTRIBUTES', attributes });
+    } else {
+      Object.assign(this.localAttributes, attributes);
+      this.event('attributes', f => f(this.localAttributes));
     }
   }
 
@@ -154,7 +173,7 @@ export class Client {
       this.send({
         type: 'PLAYER',
         num: this.game.num,
-        player: this.player,
+        player: this.localPlayer,
       });
       this.playerDirty = false;
       this.lastPlayerUpdate = new Date().getTime();
@@ -194,7 +213,9 @@ export class Client {
           secret: message.secret,
           players: new Array(4).fill(null),
           things: [],
+          attributes: {},
         };
+        this.localAttributes = {};
         this.sendPlayer();
         this.event('status', f => f(this.status()));
         break;
@@ -214,6 +235,11 @@ export class Client {
       case 'REPLACE':
         this.game!.things = message.allThings;
         this.event('replace', f => f(message.allThings));
+        break;
+
+      case 'ATTRIBUTES':
+        Object.assign(this.game!.attributes, message.attributes);
+        this.event('attributes', f => f(this.game!.attributes));
         break;
     }
   }

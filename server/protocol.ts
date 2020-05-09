@@ -40,10 +40,16 @@ interface ReplaceMessage<T> {
   allThings: Array<T>;
 }
 
+interface AttributesMessage {
+  type: 'ATTRIBUTES';
+  attributes: Record<string, any>;
+}
+
 export type Message<P, T> = NewMessage
   | JoinMessage
   | RejoinMessage
   | JoinedMessage
   | PlayerMessage<P>
   | UpdateMessage<T>
-  | ReplaceMessage<T>;
+  | ReplaceMessage<T>
+  | AttributesMessage;

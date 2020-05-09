@@ -10,8 +10,9 @@ export class Center {
 
   scores: Array<number> = new Array(5).fill(0);
   nicks: Array<string | null> = new Array(4).fill(null);
-  dealer = 0;
-  honba = 2;
+  dealer: number | null = null;
+  honba = 0;
+
   dirty = true;
 
   constructor(loader: AssetLoader, client: Client) {
@@ -37,6 +38,12 @@ export class Center {
       for (let i = 0; i < 4; i++) {
         this.nicks[i] = players[i] === null ? null : players[i]!.nick;
       }
+      this.dirty = true;
+    });
+
+    client.on('attributes', attributes => {
+      this.dealer = attributes.dealer ?? null;
+      this.honba = attributes.honba ?? 0;
       this.dirty = true;
     });
   }
