@@ -321,41 +321,36 @@ export class Movement {
       return null;
     }
 
-    let best = null;
+    // Prefer moving to the left
     for (const op of ops) {
       const cloned = new Map(shift.entries());
-      const nOps = this.tryShift(slot, op, cloned);
-      if (nOps !== null && (best === null || best.nOps > nOps)) {
-        best = { nOps, cloned };
+      if (this.tryShift(slot, op, cloned)) {
+        return cloned;
       }
     }
-    return best ? best.cloned : null;
+    return null;
   }
 
-  private tryShift(initialSlot: Slot, op: SlotOp, shift: Map<Slot, Thing>): number | null {
-    let nOps = 0;
+  private tryShift(initialSlot: Slot, op: SlotOp, shift: Map<Slot, Thing>): boolean {
     let slot = initialSlot;
     const thing = shift.get(initialSlot)!;
     // console.log('tryShift start', thing.index, slot.name);
     while (slot === initialSlot || this.reverseMap.has(slot)) {
       const nextSlot = op(slot);
       if (nextSlot === null) {
-        return null;
+        return false;
       }
 
       if (shift.has(nextSlot)) {
-        const nSubOps = this.tryShift(nextSlot, op, shift);
-        if (nSubOps === null) {
-          return null;
+        if (!this.tryShift(nextSlot, op, shift)) {
+          return false;
         }
-        nOps += nSubOps + 5;
       }
       shift.delete(slot);
       shift.set(nextSlot, thing);
       slot = nextSlot;
-      nOps++;
     }
     // console.log('tryShift end', thing.index, slot.name);
-    return nOps;
+    return true;
   }
 }
