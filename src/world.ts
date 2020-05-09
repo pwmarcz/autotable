@@ -338,7 +338,8 @@ export class World {
     }
 
     for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 6; j++) {
+      const n = i < 2 ? 6 : 10;
+      for (let j = 0; j < n; j++) {
         this.addSlot(new Slot({
           name: `discard.${i}.${j}`,
           group: `discard`,
@@ -349,6 +350,7 @@ export class World {
           ),
           direction: new Vector2(1, 1),
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
+          drawShadow: j < 6,
         }));
         if (j > 0) {
           this.addPush(`discard.${i}.${j-1}`, `discard.${i}.${j}`);
