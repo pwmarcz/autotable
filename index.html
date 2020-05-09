@@ -95,16 +95,6 @@
             font-style: italic;
         }
     </style>
-    <script>
-        function showMore(e) {
-            e.preventDefault();
-            document.getElementById('sidebar').classList.remove('collapsed');
-        }
-        function hideMore(e) {
-            e.preventDefault();
-            document.getElementById('sidebar').classList.add('collapsed');
-        }
-    </script>
 </head>
 <body>
     <canvas id="center"></canvas>
@@ -121,10 +111,10 @@
             <button class="btn btn-secondary btn-sm btn-block" id="toggleDealer">Toggle dealer</button></p>
             <button class="btn btn-secondary btn-sm btn-block" id="toggleHonba">Toggle honba</button></p>
 
-            <a class="text-muted show-more" href="#" onclick="showMore(event)">show more</a>
+            <a class="text-muted show-more" href="#" id="showMore">show more</a>
 
             <div class="more">
-                <a class="text-muted" href="#" onclick="hideMore(event)">hide more</a>
+                <a class="text-muted" href="#" id="hideMore">hide more</a>
                 <h4>Game</h4>
                 <p>Status: <b id="status">offline</b></p>
                 <button class="btn btn-primary btn-sm btn-block" id="connect">New game</button></p>

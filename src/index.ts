@@ -6,6 +6,17 @@ import { AssetLoader } from './asset-loader';
 import { Client } from './client';
 import { ClientUi } from './client-ui';
 
+// UI
+document.getElementById('showMore')!.onclick = event => {
+  event.preventDefault();
+  document.getElementById('sidebar')!.classList.remove('collapsed');
+};
+document.getElementById('hideMore')!.onclick = event => {
+  event.preventDefault();
+  document.getElementById('sidebar')!.classList.add('collapsed');
+};
+
+
 const client = new Client();
 const assetLoader = new AssetLoader();
 const world = new World(client);
