@@ -3,11 +3,13 @@ import { Vector2, Euler, Vector3, Quaternion } from "three";
 export enum ThingType {
   TILE = 'TILE',
   STICK = 'STICK',
+  MARKER = 'MARKER',
 }
 
 export const Size = {
   TILE: new Vector3(6, 9, 4),
   STICK: new Vector3(20, 2, 1),
+  MARKER: new Vector3(12, 6, 1),
 };
 
 export interface Place {
@@ -72,7 +74,7 @@ export class Slot {
     const quat = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), rotation);
 
     const name = this.name + suffix;
-    const group = this.group + suffix;
+    const group = /@/.exec(this.group) ? this.group : this.group + suffix;
 
     const pos = new Vector3(
       this.origin.x - worldWidth / 2,

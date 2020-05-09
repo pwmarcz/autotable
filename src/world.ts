@@ -23,6 +23,7 @@ const Rotation = {
   FACE_UP_SIDEWAYS: new Euler(0, 0, Math.PI / 2),
   STANDING: new Euler(Math.PI / 2, 0, 0),
   FACE_DOWN: new Euler(Math.PI, 0, 0),
+  FACE_DOWN_REVERSE: new Euler(Math.PI, 0, Math.PI),
 };
 
 interface PlayerInfo {
@@ -62,6 +63,7 @@ export class World {
     this.addSlots();
     this.addTiles();
     this.addSticks();
+    this.addMarker();
 
     this.client = client;
 
@@ -202,6 +204,10 @@ export class World {
     add(0, 5, 5);
   }
 
+  addMarker(): void {
+    this.addThing(ThingType.MARKER, 0, 'marker@0');
+  }
+
   addThing(type: ThingType, typeIndex: number, slotName: string): void {
     if (this.slots[slotName] === undefined) {
       throw `Unknown slot: ${slotName}`;
@@ -326,6 +332,17 @@ export class World {
         1.5,
       ),
       rotations: [Rotation.FACE_UP],
+      drawShadow: false,
+    }));
+
+    this.addSlot(new Slot({
+      name: 'marker',
+      group: 'marker@',
+      type: ThingType.MARKER,
+      origin: new Vector3(
+        1, 0, 0,
+      ),
+      rotations: [Rotation.FACE_DOWN_REVERSE, Rotation.FACE_UP],
       drawShadow: false,
     }));
   }

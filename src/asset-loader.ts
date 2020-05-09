@@ -70,6 +70,10 @@ export class AssetLoader {
     return mesh;
   }
 
+  makeMarker(): Mesh {
+    return this.cloneMesh(this.meshes.marker);
+  }
+
   cloneMesh(mesh: Mesh): Mesh {
     const newMesh = mesh.clone();
     if (Array.isArray(mesh.material)) {

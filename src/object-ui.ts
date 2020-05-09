@@ -100,6 +100,8 @@ export class ObjectUi {
         return this.assetLoader.makeTile(index);
       case ThingType.STICK:
         return this.assetLoader.makeStick(index);
+      case ThingType.MARKER:
+        return this.assetLoader.makeMarker();
     }
   }
 
