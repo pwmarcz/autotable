@@ -1,6 +1,8 @@
 
 all: files
 
+TEXTURES = img/sticks.auto.png img/tiles.auto.png img/center.auto.png img/winds.auto.png
+
 .PHONY: parcel
 parcel: files
 	./node_modules/.bin/parcel index.html
@@ -17,7 +19,10 @@ img/sticks.auto.png: img/sticks.svg
 img/center.auto.png: img/center.svg
 	inkscape $< --export-png=$@ --export-width=512 --export-height=512
 
-img/models.auto.glb: img/models.blend img/sticks.auto.png img/tiles.auto.png img/center.auto.png
+img/winds.auto.png: img/winds.svg
+	inkscape $< --export-png=$@ --export-width=128 --export-height=64
+
+img/models.auto.glb: img/models.blend $(TEXTURES)
 	blender $< --background --python export.py -- $@
 
 .PHONY: build
