@@ -1,10 +1,6 @@
 <html>
 <head>
     <style>
-        body {
-            color: #ddd;
-        }
-
         #full {
             position: fixed;
             top: 0;
@@ -72,25 +68,22 @@
             background: white;
         }
 
-        #settings {
+        #sidebar {
             position: absolute;
             top: 0;
             left: 0;
-            padding: 0 1em;
-            background: rgba(0,0,0, 0.4);
-            color: #ccc;
+            width: 250px;
+            padding: 1em;
+            background: rgba(30,30,30, 0.4);
+
             user-select: none;
         }
 
-        input[type=text] {
-            background: black;
-            color: #ddd;
-            border: 1px solid #aaa;
+        #sidebar.collapsed {
+            width: 200px;
         }
-
-        #nick {
-            width: 7em;
-        }
+        #sidebar.collapsed .more { display: none; }
+        #sidebar:not(.collapsed) .show-more { display: none; }
 
         #center { display: none; }
 
@@ -102,6 +95,16 @@
             font-style: italic;
         }
     </style>
+    <script>
+        function showMore(e) {
+            e.preventDefault();
+            document.getElementById('sidebar').classList.remove('collapsed');
+        }
+        function hideMore(e) {
+            e.preventDefault();
+            document.getElementById('sidebar').classList.add('collapsed');
+        }
+    </script>
 </head>
 <body>
     <canvas id="center"></canvas>
@@ -113,18 +116,35 @@
             <div class="cursor rotate-2"></div>
             <div class="cursor rotate-3"></div>
         </div>
-        <div id="settings">
-            <p>
+        <div id="sidebar" class="collapsed container text-light">
+            <button class="btn btn-warning btn-block">Deal</button></p>
+            <button class="btn btn-secondary btn-block">Toggle dealer</button></p>
+            <button class="btn btn-secondary btn-block">Toggle honba</button></p>
+
+            <a class="text-muted show-more" href="#" onclick="showMore(event)">show more</a>
+
+            <div class="more">
+                <a class="text-muted float-right" href="#" onclick="hideMore(event)">hide more</a>
+                <h4>Game</h4>
+                <p>Status: <b id="status">offline</b></p>
+                <button class="btn btn-primary btn-block" id="connect">New game</button></p>
+                <p>Game link:
+                    <input class="form-control" type="text" onfocus="this.select()" readonly value="https://www.example.com/"></input></p>
+                <p>Nick: <input class="form-control" id="nick" type="text"></input></p>
+
+
+                <h4>Instructions</h4>
+                <p>Drag to move
+                <p>Drag to select
+                <p>Press <b>F</b> to flip or rotate
+                <p>Press <b>SPACE</b> to look down
+
+                <h4>Settings</h4>
                 <label>
                     <input type="checkbox" id="perspective">
-                    Perspective mode
+                    Perspective mode (experimental)
                 </label>
-            </p>
-            <p>Press <b>F</b> to flip a tile</p>
-            <p>Press <b>SPACE</b> to look down</p>
-            <p>Status: <b id="status">not connected</b></p>
-            <p><button id="connect">Connect</button></p>
-            <p>Nick: <input id="nick" type="text"></input></p>
+            </div>
         </div>
     </div>
     <script src="./src/index.ts"></script>

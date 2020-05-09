@@ -1,4 +1,5 @@
-import 'normalize.css';
+//import 'normalize.css';
+import 'bootstrap/dist/css/bootstrap.css';
 import { World } from './world';
 import { View } from './view';
 import { AssetLoader } from './asset-loader';
