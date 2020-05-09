@@ -80,7 +80,7 @@
         }
 
         #sidebar.collapsed {
-            width: 200px;
+            width: 180px;
         }
         #sidebar.collapsed .more { display: none; }
         #sidebar:not(.collapsed) .show-more { display: none; }
@@ -117,27 +117,28 @@
             <div class="cursor rotate-3"></div>
         </div>
         <div id="sidebar" class="collapsed container text-light">
-            <button class="btn btn-warning btn-block">Deal</button></p>
-            <button class="btn btn-secondary btn-block">Toggle dealer</button></p>
-            <button class="btn btn-secondary btn-block">Toggle honba</button></p>
+            <button class="btn btn-warning btn-sm btn-block">Deal</button></p>
+            <button class="btn btn-secondary btn-sm btn-block">Toggle dealer</button></p>
+            <button class="btn btn-secondary btn-sm btn-block">Toggle honba</button></p>
 
             <a class="text-muted show-more" href="#" onclick="showMore(event)">show more</a>
 
             <div class="more">
-                <a class="text-muted float-right" href="#" onclick="hideMore(event)">hide more</a>
+                <a class="text-muted" href="#" onclick="hideMore(event)">hide more</a>
                 <h4>Game</h4>
                 <p>Status: <b id="status">offline</b></p>
-                <button class="btn btn-primary btn-block" id="connect">New game</button></p>
+                <button class="btn btn-primary btn-sm btn-block" id="connect">New game</button></p>
                 <p>Game link:
-                    <input class="form-control" type="text" onfocus="this.select()" readonly value="https://www.example.com/"></input></p>
-                <p>Nick: <input class="form-control" id="nick" type="text"></input></p>
+                    <input class="form-control form-control-sm" type="text" onfocus="this.select()" readonly value="https://www.example.com/"></input></p>
+                <p>Nick: <input class="form-control form-control-sm" id="nick" type="text"></input></p>
 
 
                 <h4>Instructions</h4>
-                <p>Drag to move
-                <p>Drag to select
-                <p>Press <b>F</b> to flip or rotate
-                <p>Press <b>SPACE</b> to look down
+                <p>
+                    <b>Drag mouse</b> to move or select<br>
+                    <b>F</b> to flip or rotate<br>
+                    <b>SPACE</b> to look down
+                </p>
 
                 <h4>Settings</h4>
                 <label>
