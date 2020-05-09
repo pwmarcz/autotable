@@ -243,6 +243,8 @@ export class World {
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
           drawShadow: false,
           requires: i > 0 ? `meld.${i-1}.0` : null,
+          shiftLeft: j > 0 ? `meld.${i}.${j-1}` : null,
+          shiftRight: j < 3 ? `meld.${i}.${j+1}` : null,
         }));
         if (j > 0) {
           this.addPush(`meld.${i}.${j-1}`, `meld.${i}.${j}`);
@@ -297,6 +299,8 @@ export class World {
           ),
           rotations: [Rotation.FACE_UP],
           drawShadow: false,
+          shiftLeft: j > 0 ? `stick.${i}.${j-1}` : null,
+          shiftRight: j < 9 ? `stick.${i}.${j+1}` : null,
         }));
         for (let k = 0; k < 4; k++) {
           if (this.scoreSlots[k] === null) {
