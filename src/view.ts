@@ -174,7 +174,10 @@ export class View {
     }
 
     if (event.key === 'f') {
-      this.world.onFlip();
+      this.world.onFlip(1);
+    }
+    if (event.key === 'r') {
+      this.world.onFlip(-1);
     }
     if (event.key === ' ') {
       this.cameraPos.start(1);

@@ -208,7 +208,8 @@ export class Thing {
     if (rotationIndex === undefined) {
       rotationIndex = this.rotationIndex + 1;
     }
-    this.rotationIndex = rotationIndex % this.slot.rotations.length;
+    const r = this.slot.rotations.length;
+    this.rotationIndex = (rotationIndex + r) % r;
   }
 
   prepareMove(): void {

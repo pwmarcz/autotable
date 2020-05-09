@@ -223,7 +223,7 @@ export class World {
         const slot = slotsToDeal[(index + 136) % 136];
         const thing = slot.thing!;
         thing.prepareMove();
-        thing.moveTo(this.slots[`hand.${i}@${num}`]);
+        thing.moveTo(this.slots[`hand.${i}@${num}`], 2);
         index--;
       }
     }
@@ -289,7 +289,7 @@ export class World {
           0,
           0,
         ),
-        rotations: [Rotation.STANDING, Rotation.FACE_UP],
+        rotations: [Rotation.STANDING, Rotation.FACE_UP, Rotation.FACE_DOWN],
         canFlipMultiple: true,
         shiftLeft: i > 0 ? `hand.${i-1}` : null,
         shiftRight: i < 13 ? `hand.${i+1}` : null,
@@ -603,7 +603,7 @@ export class World {
 
   }
 
-  onFlip(): void {
+  onFlip(direction: number): void {
     if (this.held.length > 0) {
       return;
     }
@@ -614,13 +614,13 @@ export class World {
         if (this.selected.length > 1 && !thing.slot.canFlipMultiple) {
           continue;
         }
-        thing.flip(rotationIndex + 1);
+        thing.flip(rotationIndex + direction);
       }
       this.sendUpdate(this.selected);
       this.checkPushes();
       this.selected.splice(0);
     } else if (this.hovered !== null) {
-      this.hovered.flip();
+      this.hovered.flip(this.hovered.rotationIndex + direction);
       this.sendUpdate([this.hovered]);
       this.checkPushes();
     }
