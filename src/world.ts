@@ -340,7 +340,7 @@ export class World {
       group: 'marker@',
       type: ThingType.MARKER,
       origin: new Vector3(
-        1, 0, 0,
+        -4, -8, 0,
       ),
       rotations: [Rotation.FACE_DOWN_REVERSE, Rotation.FACE_UP],
       drawShadow: false,
