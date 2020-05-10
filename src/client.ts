@@ -1,43 +1,39 @@
 /* eslint no-console: 0 */
 
-import { Message } from '../server/protocol';
+import { EventEmitter, Listener } from 'events';
 
-type ClientMessage = Message<any, any>;
+import { Message, Entry } from '../server/protocol';
 
-interface Game {
+export interface Game {
   gameId: string;
   num: number;
   secret: string;
-  players: Array<any | null>;
-  things: Array<any>;
-  attributes: Record<string, any>;
 }
-
-export enum Status {
-  NEW = 'NEW',
-  CONNECTING = 'CONNECTING',
-  JOINING = 'JOINING',
-  JOINED = 'JOINED',
-  DISCONNECTED = 'DISCONNECTED',
-}
-
-const PLAYER_UPDATE_RATE = 100;
 
 export class Client {
   private ws: WebSocket | null = null;
-  game: Game | null = null;
-  localPlayer: any = {};
-  localAttributes: Record<string, any> = {};
+  private game: Game | null = null;
+  private events: EventEmitter = new EventEmitter();
+  private collections: Record<string, Collection<any, any>>;
 
-  handlers: Record<string, Array<Function>> = {};
+  constructor() {
+    this.collections = {
+      things: new Collection('things', this, { unique: 'slotName' }),
+      nicks: new Collection('nicks', this),
+      players: new Collection('players', this, { rateLimit: 100 }),
+      online: new Collection('online', this),
+      match: new Collection('match', this),
+    };
+    this.events.setMaxListeners(50);
+  }
 
-  lastPlayerUpdate = 0;
-  playerDirty = false;
-  updateIntervalId: number | null = null;
+  collection<K extends string | number, V>(name: string): Collection<K, V> {
+    return this.collections[name];
+  }
 
-  new(url: string, num: number | null): void {
+  new(url: string, num: number | null, numPlayers: number): void {
     this.connect(url, () => {
-      this.send({ type: 'NEW', num, });
+      this.send({ type: 'NEW', num, numPlayers});
     });
   }
 
@@ -54,193 +50,180 @@ export class Client {
   }
 
   private connect(url: string, start: () => void): void {
-    if (this.isConnected()) {
+    if (this.ws) {
       return;
     }
     this.ws = new WebSocket(url);
-    this.ws.onopen = () => {
-      start();
-      this.onOpen();
-    };
+    this.ws.onopen = start;
     this.ws.onclose = this.onClose.bind(this);
 
     this.ws.onmessage = event => {
-      const message = JSON.parse(event.data as string) as Message<any, any>;
-      console.log('recv', message);
+      const message = JSON.parse(event.data as string) as Message;
+      // console.log('recv', message);
       this.onMessage(message);
     };
-
-    this.event('status', f => f(this.status()));
   }
 
-  on(what: 'status', handler: (status: Status) => void): void;
-  on<P>(what: 'players', handler: (players: Array<P | null>) => void): void;
-  on<T>(what: 'update', handler: (things: Record<number, T>) => void): void;
-  on<T>(what: 'replace', handler: (things: Array<T>) => void): void;
-  on<T>(what: 'attributes', handler: (things: Record<string, any>) => void): void;
+  on(what: 'connect', handler: (game: Game) => void): void;
+  on(what: 'disconnect', handler: () => void): void;
+  on(what: 'update', handler: (things: Array<Entry>, full: boolean) => void): void;
 
   on(what: string, handler: Function): void {
-    if (this.handlers[what] === undefined) {
-      this.handlers[what] = [];
-    }
-    this.handlers[what].push(handler);
-
-    if (what === 'status') {
-      handler(this.status());
-    }
-    if (what === 'players') {
-      handler(this.players());
-    }
-    if (what === 'attributes') {
-      handler(this.attributes());
-    }
+    this.events.on(what, handler as Listener);
   }
 
-  private event(what: string, func: (handler: Function) => void): void {
-    if (this.handlers[what] !== undefined) {
-      for (const handler of this.handlers[what]) {
-        func(handler);
-      }
-    }
+  update(entries: Array<Entry>): void {
+    this.send({ type: 'UPDATE', entries, full: false });
   }
 
-  status(): Status {
-    if (!this.ws) {
-      return Status.NEW;
-    }
-
-    if (this.isConnected() && this.game) {
-      return Status.JOINED;
-    }
-    if (this.isConnected()) {
-      return Status.JOINING;
-    }
-    if (this.ws.readyState === WebSocket.OPEN) {
-      return Status.CONNECTING;
-    }
-    return Status.DISCONNECTED;
-  }
-
-  players(): Array<any> {
-    return this.game ? this.game.players : new Array(4).fill(null);
-  }
-
-  attributes(): Record<string, any> {
-    return this.game ? this.game.attributes : this.localAttributes;
-  }
-
-  updatePlayer<P>(player: P): void {
-    Object.assign(this.localPlayer, player);
-    this.playerDirty = true;
-    const now = new Date().getTime();
-    if (now - this.lastPlayerUpdate > PLAYER_UPDATE_RATE) {
-      this.sendPlayer();
-    }
-  }
-
-  updateAttributes(attributes: Record<string, any>): void {
-    if (this.isConnected() && this.game) {
-      this.send({ type: 'ATTRIBUTES', attributes });
-    } else {
-      Object.assign(this.localAttributes, attributes);
-      this.event('attributes', f => f(this.localAttributes));
-    }
-  }
-
-  update<T>(things: Record<number, T>): void {
-    this.send({ type: 'UPDATE', things });
-  }
-
-  replace<T>(allThings: Array<T>): void {
-    this.send({ type: 'REPLACE', allThings });
-  }
-
-  private send(message: ClientMessage): void {
-    if (!this.isConnected()) {
+  private send(message: Message): void {
+    if (!this.open) {
       return;
     }
-    console.log('send', message);
+    // console.log('send', message);
     const data = JSON.stringify(message);
     this.ws!.send(data);
   }
 
-  isConnected(): boolean {
+  private open(): boolean {
     return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
   }
 
-  private sendPlayer(): void {
-    if (this.isConnected() && this.game) {
-      this.send({
-        type: 'PLAYER',
-        num: this.game.num,
-        player: this.localPlayer,
-      });
-      this.playerDirty = false;
-      this.lastPlayerUpdate = new Date().getTime();
-    }
+  connected(): boolean {
+    return this.open() && this.game !== null;
   }
 
-  private checkSendPlayer(): void{
-    if (this.playerDirty) {
-      this.sendPlayer();
-    }
-  }
-
-  private onOpen(): void {
-    this.event('status', f => f(this.status()));
-    if (this.updateIntervalId === null) {
-      this.updateIntervalId = setInterval(this.checkSendPlayer.bind(this), PLAYER_UPDATE_RATE);
-    }
+  num(): number | undefined {
+    return this.game?.num;
   }
 
   private onClose(): void {
-    if (this.updateIntervalId !== null) {
-      clearInterval(this.updateIntervalId);
+    this.ws = null;
+    if (this.game) {
+      this.game = null;
+      this.events.emit('disconnect');
     }
-    this.updateIntervalId = null;
-    this.game = null;
-
-    this.event('status', f => f(this.status()));
-    this.event('players', f => f(this.players()));
   }
 
-  private onMessage(message: ClientMessage): void {
+  private onMessage(message: Message): void {
     switch (message.type) {
       case 'JOINED':
         this.game = {
           gameId: message.gameId,
           num: message.num,
           secret: message.secret,
-          players: new Array(4).fill(null),
-          things: [],
-          attributes: {},
         };
-        this.localAttributes = {};
-        this.sendPlayer();
-        this.event('status', f => f(this.status()));
-        break;
-
-      case 'PLAYER':
-        this.game!.players[message.num] = message.player;
-        this.event('players', f => f(this.players()));
+        this.events.emit('connect', this.game);
         break;
 
       case 'UPDATE':
-        for (const index in message.things) {
-          this.game!.things[index] = message.things[index];
-        }
-        this.event('update', f => f(message.things));
+        this.events.emit('update', message.entries, message.full);
         break;
+    }
+  }
+}
 
-      case 'REPLACE':
-        this.game!.things = message.allThings;
-        this.event('replace', f => f(message.allThings));
-        break;
+interface CollectionOptions {
+  rateLimit?: number;
+  unique?: string;
+}
 
-      case 'ATTRIBUTES':
-        Object.assign(this.game!.attributes, message.attributes);
-        this.event('attributes', f => f(this.game!.attributes));
-        break;
+export class Collection<K extends string | number, V> {
+  private kind: string;
+  private client: Client;
+  private map: Map<K, V> = new Map();
+  private pending: Map<K, V> = new Map();
+  private events: EventEmitter = new EventEmitter;
+  private options: CollectionOptions;
+  private intervalId: number | null = null;
+  private lastUpdate: number = 0;
+
+  constructor(
+    kind: string,
+    client: Client,
+    options?: CollectionOptions) {
+
+    this.kind = kind;
+    this.client = client;
+    this.options = options ?? {};
+
+    this.client.on('update', this.onUpdate.bind(this));
+    this.client.on('connect', this.onConnect.bind(this));
+    this.client.on('disconnect', this.onDisconnect.bind(this));
+  }
+
+  get(key: K): V | undefined {
+    return this.map.get(key);
+  }
+
+  update(localEntries: Array<[K, V]>): void {
+    const now = new Date().getTime();
+    if (!this.client.connected()) {
+      for (const [key, value] of localEntries) {
+        this.map.set(key, value);
+      }
+      this.events.emit('update', localEntries, false);
+    } else if (this.options.rateLimit && now < this.lastUpdate + this.options.rateLimit) {
+      for (const [key, value] of localEntries) {
+        this.pending.set(key, value);
+      }
+    } else {
+      this.client.update(localEntries.map(([key, value]) => [this.kind, key, value]));
+      this.lastUpdate = now;
+    }
+  }
+
+  set(key: K, value: V): void {
+    this.update([[key, value]]);
+  }
+
+  on(what: 'update', handler: (localEntries: Array<[K, V]>, full: boolean) => void): void;
+  on(what: string, handler: Function): void {
+    this.events.on(what, handler as Listener);
+  }
+
+  private onUpdate(entries: Array<Entry>, full: boolean): void {
+    if (full) {
+      this.map.clear();
+    }
+    const localEntries = [];
+    for (const [kind, key, value] of entries) {
+      if (kind === this.kind) {
+        localEntries.push([key, value]);
+        this.map.set(key as K, value);
+      }
+    }
+    if (full || localEntries.length > 0) {
+      console.log(full ? 'full update' : 'update', this.kind, localEntries.length);
+      this.events.emit('update', localEntries, full);
+    }
+  }
+
+  private onConnect(): void {
+    if (this.options.unique) {
+      this.client.update([['unique', this.kind, this.options.unique]]);
+    }
+    if (this.options.rateLimit) {
+      this.intervalId = setInterval(this.sendPending.bind(this), this.options.rateLimit);
+    }
+  }
+
+  private onDisconnect(): void {
+    if (this.intervalId !== null) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+  }
+
+  private sendPending(): void {
+    if (this.pending.size > 0) {
+      const entries: Array<Entry> = [];
+      for (const [k, v] of this.pending.entries()) {
+        entries.push([this.kind, k, v]);
+      }
+      this.client.update(entries);
+      this.lastUpdate = new Date().getTime();
+      this.pending.clear();
     }
   }
 }

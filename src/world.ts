@@ -1,7 +1,7 @@
 import { Vector2, Euler, Vector3 } from "three";
 
 import { Place, Slot, Thing, Size, ThingType, Movement } from "./places";
-import { Client, Status } from "./client";
+import { Client, Collection, Game } from "./client";
 import { shuffle, mostCommon } from "./utils";
 
 interface Render {
@@ -37,6 +37,11 @@ interface ThingInfo {
   heldBy: number | null;
 }
 
+export interface MatchInfo {
+  dealer: number;
+  honba: number;
+}
+
 export class World {
   slots: Record<string, Slot> = {};
   pushes: Array<[Slot, Slot]> = [];
@@ -58,6 +63,9 @@ export class World {
   static WIDTH = 174;
 
   client: Client;
+  clientThings: Collection<number, ThingInfo>;
+  clientPlayers: Collection<number, PlayerInfo>;
+  clientMatch: Collection<number, MatchInfo>;
 
   constructor(client: Client) {
     this.addSlots();
@@ -66,36 +74,35 @@ export class World {
     this.addMarker();
 
     this.client = client;
+    this.clientThings = client.collection('things');
+    this.clientPlayers = client.collection('players');
+    this.clientMatch = client.collection<number, MatchInfo>('match');
 
-    this.client.on('status', this.onStatus.bind(this));
-    this.client.on('players', this.onPlayers.bind(this));
-    this.client.on('update', this.onUpdate.bind(this));
-    this.client.on('replace', this.onReplace.bind(this));
+    this.client.on('connect', this.onConnect.bind(this));
+    this.clientPlayers.on('update', this.onPlayers.bind(this));
+    this.clientThings.on('update', this.onThings.bind(this));
 
     // TODO confirmation prompt
     document.getElementById('deal')!.onclick = this.deal.bind(this);
     document.getElementById('toggleDealer')!.onclick = () => {
-      let dealer = this.client.attributes().dealer;
-      dealer = ((dealer ?? 0) + 1) %4;
-      this.client.updateAttributes({ dealer });
+      const match = this.clientMatch.get(0) ?? { dealer: 3, honba: 0};
+      match.dealer = (match.dealer + 1) % 4;
+      this.clientMatch.set(0, match);
     };
     document.getElementById('toggleHonba')!.onclick = () => {
-      let { dealer, honba } = this.client.attributes();
-      dealer = dealer ?? 0;
-      honba = ((honba ?? 0) + 1) % 8;
-      this.client.updateAttributes({ dealer, honba });
+      const match = this.clientMatch.get(0) ?? { dealer: 0, honba: 0};
+      match.honba = (match.honba + 1) % 8;
+      this.clientMatch.set(0, match);
     };
   }
 
-  onStatus(status: Status): void {
-    if (status === Status.JOINED) {
-      this.playerNum = this.client.game!.num;
-    }
+  onConnect(game: Game): void {
+    this.playerNum = game.num;
   }
 
-  onPlayers(players: Array<PlayerInfo | null>): void {
+  onPlayers(): void {
     for (let i = 0; i < 4; i++) {
-      const player = players[i];
+      const player = this.clientPlayers.get(i);
       if (player) {
         this.playerMouses[i] = player.mouse && new Vector3(
           player.mouse.x, player.mouse.y, player.mouse.z);
@@ -108,17 +115,18 @@ export class World {
     }
   }
 
-  onUpdate(thingInfos: Record<number, ThingInfo>): void {
-    const indexes = Object.keys(thingInfos).map(k => parseInt(k, 10));
-    indexes.sort((a, b) => a - b);
+  onThings(entries: Array<[number, ThingInfo]>, full: boolean): void {
+    if (entries.length === 0 && full) {
+      this.sendUpdate(this.things);
+      return;
+    }
 
-    for (const thingIndex of indexes) {
+    for (const [thingIndex,] of entries) {
       const thing = this.things[thingIndex];
       thing.prepareMove();
     }
-    for (const thingIndex of indexes) {
+    for (const [thingIndex, thingInfo] of entries) {
       const thing = this.things[thingIndex];
-      const thingInfo = thingInfos[thingIndex];
       const slot = this.slots[thingInfo.slotName];
       thing.moveTo(slot, thingInfo.rotationIndex);
 
@@ -146,24 +154,16 @@ export class World {
     this.checkPushes();
   }
 
-  onReplace(allThings: Array<ThingInfo>): void {
-    if (allThings.length === 0) {
-      this.client.replace(this.things.map(this.describeThing.bind(this)));
-    } else {
-      this.onUpdate(allThings);
-    }
-  }
-
   sendUpdate(things: Array<Thing>): void {
-    const update: Record<number, ThingInfo> = {};
+    const entries: Array<[number, ThingInfo]> = [];
     for (const thing of things) {
-      update[thing.index] = this.describeThing(thing);
+      entries.push([thing.index, this.describeThing(thing)]);
     }
-    this.client.update(update);
+    this.clientThings.update(entries);
   }
 
   sendPlayer(): void {
-    this.client.updatePlayer<PlayerInfo>({
+    this.clientPlayers.set(this.playerNum, {
       mouse: this.mouse && {x: this.mouse.x, y: this.mouse.y, z: this.mouse.z},
       heldMouse: this.heldMouse && {x: this.heldMouse.x, y: this.heldMouse.y, z: this.heldMouse.z},
     });
@@ -231,14 +231,14 @@ export class World {
     this.held.splice(0);
     this.sendUpdate(tiles);
 
-    let { dealer, honba } = this.client.attributes();
-    if (dealer === this.playerNum) {
-      honba = ((honba ?? 0) + 1) % 8;
-    } else {
-      dealer = this.playerNum;
+    const match = this.clientMatch.get(0);
+    let honba;
+    if (!match || match.dealer === this.playerNum) {
       honba = 0;
+    } else {
+      honba = (match.honba + 1) % 8;
     }
-    this.client.updateAttributes({ dealer, honba });
+    this.clientMatch.set(0, {dealer: this.playerNum, honba});
   }
 
   addSticks(): void {

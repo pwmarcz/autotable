@@ -1,6 +1,7 @@
 import { AssetLoader } from "./asset-loader";
 import { Mesh, CanvasTexture, Vector2, MeshLambertMaterial } from "three";
 import { Client } from "./client";
+import { MatchInfo } from './world';
 
 export class Center {
   mesh: Mesh;
@@ -34,16 +35,19 @@ export class Center {
     this.texture.anisotropy = 16;
     material.map = this.texture;
 
-    client.on<{nick: string}>('players', players => {
+    const clientNicks = client.collection<number, string>('nicks');
+    clientNicks.on('update', () => {
       for (let i = 0; i < 4; i++) {
-        this.nicks[i] = players[i] === null ? null : players[i]!.nick;
+        const nick = clientNicks.get(i);
+        this.nicks[i] = nick ?? null;
       }
       this.dirty = true;
     });
 
-    client.on('attributes', attributes => {
-      this.dealer = attributes.dealer ?? null;
-      this.honba = attributes.honba ?? 0;
+    const clientMatch = client.collection<number, MatchInfo>('match');
+    clientMatch.on('update', () => {
+      this.dealer = clientMatch.get(0)?.dealer ?? null;
+      this.honba = clientMatch.get(0)?.honba ?? 0;
       this.dirty = true;
     });
   }

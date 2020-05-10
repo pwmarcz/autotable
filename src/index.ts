@@ -40,6 +40,8 @@ assetLoader.loadAll().then(() => {
   updateSettings();
   view.draw();
 
+  clientUi.start();
+
   function updateSettings(): void {
     const perspective = perspectiveCheckbox.checked;
     if (view) {

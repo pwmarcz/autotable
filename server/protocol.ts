@@ -1,7 +1,7 @@
-
 interface NewMessage {
   type: 'NEW';
   num: number | null;
+  numPlayers: number;
 }
 
 interface JoinMessage {
@@ -24,32 +24,17 @@ interface JoinedMessage {
   num: number;
 }
 
-interface PlayerMessage<P> {
-  type: 'PLAYER';
-  num: number;
-  player: P | null;
-}
-
-interface UpdateMessage<T> {
+interface UpdateMessage {
   type: 'UPDATE';
-  things: Record<number, T>;
+  // kind, key, value
+  entries: Array<Entry>;
+  full: boolean;
 }
 
-interface ReplaceMessage<T> {
-  type: 'REPLACE';
-  allThings: Array<T>;
-}
+export type Entry = [string, string | number, any];
 
-interface AttributesMessage {
-  type: 'ATTRIBUTES';
-  attributes: Record<string, any>;
-}
-
-export type Message<P, T> = NewMessage
+export type Message = NewMessage
   | JoinMessage
   | RejoinMessage
   | JoinedMessage
-  | PlayerMessage<P>
-  | UpdateMessage<T>
-  | ReplaceMessage<T>
-  | AttributesMessage;
+  | UpdateMessage;

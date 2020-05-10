@@ -1,7 +1,6 @@
 import qs from 'qs';
 
-import { Client, Status } from "./client";
-
+import { Client, Collection, Game } from "./client";
 
 interface UrlState {
   gameId: string | null;
@@ -15,11 +14,15 @@ export class ClientUi {
   nickElement: HTMLInputElement;
   statusElement: HTMLElement;
 
+  clientNicks: Collection<number, string>;
+
   success = false;
 
   constructor(client: Client) {
     this.url = this.getUrl();
     this.client = client;
+    this.clientNicks = this.client.collection('nicks');
+
     this.nickElement = document.getElementById('nick')! as HTMLInputElement;
     this.nickElement.value = localStorage.getItem('autotable.nick') ?? '';
 
@@ -27,13 +30,12 @@ export class ClientUi {
     this.nickElement.oninput = this.onNickChange.bind(this);
 
     this.statusElement = document.getElementById('status')! as HTMLElement;
-    this.client.on('status', this.onStatus.bind(this));
+    this.client.on('connect', this.onConnect.bind(this));
+    this.client.on('disconnect', this.onDisconnect.bind(this));
     this.onNickChange();
 
     const connectButton = document.getElementById('connect')!;
     connectButton.onclick = this.connect.bind(this);
-
-    this.start();
   }
 
   getUrlState(): UrlState {
@@ -86,44 +88,32 @@ export class ClientUi {
   }
 
   onNickChange(): void {
-    this.client.updatePlayer({ nick: this.nickElement.value });
+    if (this.client.connected()) {
+      this.clientNicks.set(this.client.num()!, this.nickElement.value);
+    }
     localStorage.setItem('autotable.nick', this.nickElement.value);
   }
 
-  onStatus(status: Status): void {
-    this.statusElement.innerText = status.toLowerCase();
+  onConnect(game: Game): void {
+    this.statusElement.innerText = 'connected';
+    this.onNickChange();
+    localStorage.setItem(`autotable.secret.${game.gameId}.${game.num}`, game.secret);
+    this.setUrlState({gameId: game.gameId, num: game.num});
+  }
 
-    switch (status) {
-      case Status.NEW:
-        this.statusElement.innerHTML = 'not connected';
-        break;
-      case Status.DISCONNECTED:
-        this.statusElement.innerText = 'not connected';
-        if (!this.success) {
-          this.setUrlState({ gameId: null, num: null });
-        }
-        break;
-      case Status.CONNECTING:
-      case Status.JOINING:
-        this.statusElement.innerText = 'connecting';
-        break;
-      case Status.JOINED: {
-        this.success = true;
-        const {num, gameId, secret} = this.client.game!;
-        localStorage.setItem(`autotable.secret.${gameId}.${num}`, secret);
-        this.setUrlState({gameId, num});
-        break;
-      }
+  onDisconnect(): void {
+    this.statusElement.innerText = 'disconnected';
+    if (!this.success) {
+      this.setUrlState({ gameId: null, num: null });
     }
   }
 
   connect(): void {
-    if (!(this.client.status() === Status.NEW ||
-          this.client.status() === Status.DISCONNECTED)) {
+    if (this.client.connected()) {
       return;
     }
 
     this.success = false;
-    this.client.new(this.url, null);
+    this.client.new(this.url, null, 4);
   }
 }
