@@ -17,7 +17,7 @@ export class MouseUi {
   private raycastObjects: Array<Mesh>;
   private raycastTable: Mesh;
 
-  private mouse2: Vector2 | null;
+  mouse2: Vector2 | null;
   private mouse3: Vector3 | null;
   private selectStart2: Vector2 | null;
   private dragStart3: Vector3 | null;

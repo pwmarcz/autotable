@@ -47,7 +47,7 @@ export class Center {
     this.clientNicks = client.collection('nicks');
     this.clientNicks.on('update', this.update.bind(this));
 
-    this.clientMatch = client.collection('nicks');
+    this.clientMatch = client.collection('match');
     this.clientMatch.on('update', this.update.bind(this));
 
     client.on('disconnect', this.update.bind(this));

@@ -35,7 +35,8 @@ export class View {
   mouseUi: MouseUi;
   objectUi: ObjectUi;
 
-  cameraPos = new Animation(150);
+  lookDown = new Animation(150);
+  zoom = new Animation(150);
 
   constructor(world: World, assetLoader: AssetLoader, client: Client) {
     this.main = document.getElementById('main')!;
@@ -116,8 +117,8 @@ export class View {
     const w = World.WIDTH * 1.2;
     const h = w / View.RATIO;
     const camera = new OrthographicCamera(
-      (World.WIDTH - w) / 2, (World.WIDTH + w) / 2,
-      h, 0,
+      -w / 2, w / 2,
+      h / 2, -h / 2,
       0.1, 1000);
     return camera;
   }
@@ -127,10 +128,23 @@ export class View {
       return;
     }
 
-    const updated = this.cameraPos.update();
+    const updated = [
+      this.lookDown.update(),
+      this.zoom.update(),
+    ].some(x => x);
 
-    this.camera.position.set(0, -40 - 53 * this.cameraPos.pos, 30);
+    this.camera.position.set(
+      World.WIDTH / 2,
+      -53 * this.lookDown.pos - World.WIDTH / 2,
+      174);
     this.camera.rotation.set(Math.PI * 0.25, 0, 0);
+
+    const zoom = this.zoom.pos;
+    this.camera.scale.setScalar(1 - 0.45 * zoom);
+    if (zoom > 0 && this.mouseUi.mouse2) {
+      this.camera.position.x += this.mouseUi.mouse2.x * zoom * World.WIDTH * 0.6;
+      this.camera.position.y += this.mouseUi.mouse2.y * zoom * World.WIDTH * 0.6;
+    }
 
     if (updated) {
       this.mouseUi.update();
@@ -173,20 +187,36 @@ export class View {
       return;
     }
 
-    if (event.key === 'f') {
-      this.world.onFlip(1);
-    }
-    if (event.key === 'r') {
-      this.world.onFlip(-1);
-    }
-    if (event.key === ' ') {
-      this.cameraPos.start(1);
+    switch(event.key) {
+      case 'f':
+        this.world.onFlip(1);
+        break;
+      case 'r':
+        this.world.onFlip(-1);
+        break;
+      case ' ':
+        this.lookDown.start(1);
+        break;
+      case 'z':
+        this.zoom.start(1);
+        break;
+      case 'x':
+        this.zoom.start(-1);
+        break;
     }
   }
 
   onKeyUp(event: KeyboardEvent): void {
-    if (event.key === ' ') {
-      this.cameraPos.start(0);
+    switch(event.key) {
+      case ' ':
+        this.lookDown.start(0);
+        break;
+      case 'z':
+        this.zoom.start(0);
+        break;
+      case 'x':
+        this.zoom.start(0);
+        break;
     }
   }
 
