@@ -228,6 +228,7 @@ export class Thing {
     }
     this.slot = target;
     this.rotationIndex = rotationIndex ?? 0;
+    this.offset.set(0, 0);
     target.thing = this;
   }
 }

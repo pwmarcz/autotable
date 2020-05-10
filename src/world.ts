@@ -227,6 +227,7 @@ export class World {
         index--;
       }
     }
+    this.checkPushes();
 
     this.held.splice(0);
     this.sendUpdate(tiles);
