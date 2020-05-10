@@ -19,7 +19,7 @@ export class MouseUi {
 
   mouse2: Vector2 | null;
   private mouse3: Vector3 | null;
-  private selectStart2: Vector2 | null;
+  private selectStart3: Vector3 | null;
   private dragStart3: Vector3 | null;
 
   constructor(world: World, mainGroup: Group) {
@@ -57,7 +57,7 @@ export class MouseUi {
 
     this.mouse2 = null;
     this.mouse3 = null;
-    this.selectStart2 = null;
+    this.selectStart3 = null;
     this.dragStart3 = null;
 
     this.setupEvents();
@@ -95,14 +95,14 @@ export class MouseUi {
     if (this.world.onDragStart()) {
       this.dragStart3 = this.mouse3.clone();
     } else {
-      this.selectStart2 = this.mouse2.clone();
+      this.selectStart3 = this.mouse3.clone();
     }
     this.update();
   }
 
   private onMouseUp(): void {
     this.dragStart3 = null;
-    this.selectStart2 = null;
+    this.selectStart3 = null;
     this.world.onDragEnd();
   }
 
@@ -197,7 +197,7 @@ export class MouseUi {
       return false;
     }
 
-    if (this.selectStart2 === null || this.mouse2 === null) {
+    if (this.selectStart3 === null || this.mouse2 === null) {
       this.selection.style.visibility = 'hidden';
       return false;
     }
@@ -205,10 +205,14 @@ export class MouseUi {
     const w = this.main.clientWidth;
     const h = this.main.clientHeight;
 
-    const x1 = Math.min(this.selectStart2.x, this.mouse2.x);
-    const y1 = Math.min(this.selectStart2.y, this.mouse2.y);
-    const x2 = Math.max(this.selectStart2.x, this.mouse2.x);
-    const y2 = Math.max(this.selectStart2.y, this.mouse2.y);
+    const p = this.selectStart3.clone();
+    this.mainGroup.localToWorld(p);
+    const selectStart2 = p.project(this.camera!);
+
+    const x1 = Math.min(selectStart2.x, this.mouse2.x);
+    const y1 = Math.min(selectStart2.y, this.mouse2.y);
+    const x2 = Math.max(selectStart2.x, this.mouse2.x);
+    const y2 = Math.max(selectStart2.y, this.mouse2.y);
 
     const sx1 = (x1 + 1) * w / 2;
     const sx2 = (x2 + 1) * w / 2;
