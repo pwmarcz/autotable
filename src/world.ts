@@ -293,6 +293,7 @@ export class World {
         canFlipMultiple: true,
         shiftLeft: i > 0 ? `hand.${i-1}` : null,
         shiftRight: i < 13 ? `hand.${i+1}` : null,
+        shadowRotation: 1,
       }));
     }
 
@@ -747,8 +748,9 @@ export class World {
   toRenderPlaces(): Array<Place> {
     const result = [];
     for (const slotName in this.slots) {
-      if (this.slots[slotName].drawShadow) {
-        result.push(this.slots[slotName].places[0]);
+      const slot = this.slots[slotName];
+      if (slot.drawShadow) {
+        result.push(slot.places[slot.shadowRotation]);
       }
     }
     return result;
