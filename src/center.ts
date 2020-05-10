@@ -1,6 +1,6 @@
 import { AssetLoader } from "./asset-loader";
 import { Mesh, CanvasTexture, Vector2, MeshLambertMaterial } from "three";
-import { Client } from "./client";
+import { Client, Collection } from "./client";
 import { MatchInfo } from './world';
 
 export class Center {
@@ -13,6 +13,11 @@ export class Center {
   nicks: Array<string | null> = new Array(4).fill(null);
   dealer: number | null = null;
   honba = 0;
+
+  client: Client;
+  clientNicks: Collection<number, string>;
+  clientOnline: Collection<number, string>;
+  clientMatch: Collection<number, MatchInfo>;
 
   dirty = true;
 
@@ -35,28 +40,33 @@ export class Center {
     this.texture.anisotropy = 16;
     material.map = this.texture;
 
-    const clientNicks = client.collection<number, string>('nicks');
-    clientNicks.on('update', () => {
-      for (let i = 0; i < 4; i++) {
-        const nick = clientNicks.get(i);
+    this.client = client;
+    this.clientOnline = client.collection('online');
+    this.clientOnline.on('update', this.update.bind(this));
+
+    this.clientNicks = client.collection('nicks');
+    this.clientNicks.on('update', this.update.bind(this));
+
+    this.clientMatch = client.collection('nicks');
+    this.clientMatch.on('update', this.update.bind(this));
+
+    client.on('disconnect', this.update.bind(this));
+  }
+
+  update(): void {
+    for (let i = 0; i < 4; i++) {
+      if (this.client.connected() && this.clientOnline.get(i)) {
+        const nick = this.clientNicks.get(i);
         this.nicks[i] = nick ?? null;
+      } else {
+        this.nicks[i] = null;
       }
-      this.dirty = true;
-    });
+    }
 
-    const clientMatch = client.collection<number, MatchInfo>('match');
-    clientMatch.on('update', () => {
-      this.dealer = clientMatch.get(0)?.dealer ?? null;
-      this.honba = clientMatch.get(0)?.honba ?? 0;
-      this.dirty = true;
-    });
+    this.dealer = this.clientMatch.get(0)?.dealer ?? null;
+    this.honba = this.clientMatch.get(0)?.honba ?? 0;
 
-    client.on('disconnect', () => {
-      this.nicks = new Array(4).fill(null);
-      this.dealer = null;
-      this.honba = 0;
-      this.dirty = true;
-    });
+    this.dirty = true;
   }
 
   setScores(scores: Array<number>): void {
