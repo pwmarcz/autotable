@@ -2,7 +2,7 @@ import { Vector2, Euler, Vector3 } from "three";
 
 import { Place, Slot, Thing, Size, ThingType, Movement } from "./places";
 import { Client, Collection, Game } from "./client";
-import { shuffle, mostCommon } from "./utils";
+import { shuffle, mostCommon, rectangleOverlap } from "./utils";
 
 interface Render {
   thingIndex: number;
@@ -245,7 +245,7 @@ export class World {
     const add = (index: number, n: number, slot: number): void => {
       for (let i = 0; i < 4; i++) {
         for (let j = 0; j < n; j++) {
-          this.addThing(ThingType.STICK, index, `stick.${slot}.${j}@${i}`);
+          this.addThing(ThingType.STICK, index, `tray.${slot}.${j}@${i}`);
         }
       }
     };
@@ -362,25 +362,44 @@ export class World {
     for (let i = 0; i < 6; i++) {
       for (let j = 0; j < 10; j++) {
         this.addSlot(new Slot({
-          name: `stick.${i}.${j}`,
-          group: `stick`,
+          name: `tray.${i}.${j}`,
+          group: `tray`,
           type: ThingType.STICK,
           origin: new Vector3(
             15 + 24 * i,
-            -25 - j * (Size.STICK.y + 1),
+            -25 - j * 3,
             0,
           ),
           rotations: [Rotation.FACE_UP],
           drawShadow: false,
-          shiftLeft: j > 0 ? `stick.${i}.${j-1}` : null,
-          shiftRight: j < 9 ? `stick.${i}.${j+1}` : null,
+          shiftLeft: j > 0 ? `tray.${i}.${j-1}` : null,
+          shiftRight: j < 9 ? `tray.${i}.${j+1}` : null,
         }));
         for (let k = 0; k < 4; k++) {
           if (this.scoreSlots[k] === null) {
             this.scoreSlots[k] = [];
           }
-          this.scoreSlots[k].push(this.slots[`stick.${i}.${j}@${k}`]);
+          this.scoreSlots[k].push(this.slots[`tray.${i}.${j}@${k}`]);
         }
+      }
+    }
+
+    for (let i = 0; i < 1; i++) {
+      for (let j = 0; j < 8; j++) {
+        this.addSlot(new Slot({
+          name: `payment.${i}.${j }`,
+          group: `payment.${i}`,
+          type: ThingType.STICK,
+          origin: new Vector3(
+            42 + (1-i) * j * 3,
+            42 + i * j * 3,
+            0
+          ),
+          rotations: [i === 0 ? Rotation.FACE_UP_SIDEWAYS : Rotation.FACE_UP],
+          shiftLeft: i > 0 ? `payment.${i}.${j-1}` : null,
+          shiftRight: i < 0 ? `payment.${i}.${j+1}` : null,
+          drawShadow: false,
+        }));
       }
     }
 
@@ -471,7 +490,7 @@ export class World {
       const x = place.position.x + this.mouse.x - this.heldMouse.x;
       const y = place.position.y + this.mouse.y - this.heldMouse.y;
 
-      const targetSlot = this.findSlot(x, y, thing.type);
+      const targetSlot = this.findSlot(x, y, place.size.x, place.size.y, thing.type);
       if (targetSlot === null) {
         this.movement = null;
         return;
@@ -502,8 +521,8 @@ export class World {
     return true;
   }
 
-  findSlot(x: number, y: number, thingType: ThingType): Slot | null {
-    let bestDistance = Size.TILE.z * 1.5;
+  findSlot(x: number, y: number, w: number, h: number, thingType: ThingType): Slot | null {
+    let bestOverlap = 0;
     let bestSlot = null;
 
     // Empty slots
@@ -529,11 +548,14 @@ export class World {
       }
 
       const place = slot.places[0];
-      const dx = Math.max(0, Math.abs(x - place.position.x) - place.size.x / 2);
-      const dy = Math.max(0, Math.abs(y - place.position.y) - place.size.y / 2);
-      const distance = Math.sqrt(dx*dx + dy*dy);
-      if (distance < bestDistance) {
-        bestDistance = distance;
+
+      const margin = 1.2;
+      const overlap = rectangleOverlap(
+        x, y, w * margin, h * margin,
+        place.position.x, place.position.y, place.size.x * margin, place.size.y * margin,
+      );
+      if (overlap > bestOverlap) {
+        bestOverlap = overlap;
         bestSlot = slot;
       }
     }

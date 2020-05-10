@@ -29,6 +29,19 @@ export function mostCommon<T, R>(arr: Array<T>, func: (elem: T) => R): R | null 
   return allResults[0];
 }
 
+// Overlap of two rectangles, given by midpoint and size
+export function rectangleOverlap(
+  x1: number, y1: number, w1: number, h1: number,
+  x2: number, y2: number, w2: number, h2: number
+): number {
+  const xa = Math.max(x1 - w1/2, x2 - w2/2);
+  const xb = Math.min(x1 + w1/2, x2 + w2/2);
+  const ya = Math.max(y1 - h1/2, y2 - h2/2);
+  const yb = Math.min(y1 + h1/2, y2 + h2/2);
+
+  return Math.max(0, xb - xa) * Math.max(0, yb - ya);
+}
+
 export class Animation {
   private startTime = 0;
   private endTime = 1;
