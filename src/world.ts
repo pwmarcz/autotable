@@ -725,7 +725,7 @@ export class World {
       const selected = this.selected.indexOf(thing) !== -1;
       const hovered = thing === this.hovered ||
         (selected && this.selected.indexOf(this.hovered!) !== -1);
-      const temporary = held && !canDrop;
+      const temporary = thing.heldBy === this.playerNum && !canDrop;
 
       const slot = thing.slot;
 
