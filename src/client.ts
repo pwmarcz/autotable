@@ -161,19 +161,20 @@ export class Collection<K extends string | number, V> {
   }
 
   update(localEntries: Array<[K, V]>): void {
-    const now = new Date().getTime();
+
     if (!this.client.connected()) {
       for (const [key, value] of localEntries) {
         this.map.set(key, value);
       }
       this.events.emit('update', localEntries, false);
-    } else if (this.options.rateLimit && now < this.lastUpdate + this.options.rateLimit) {
+    } else {
+      const now = new Date().getTime();
       for (const [key, value] of localEntries) {
         this.pending.set(key, value);
       }
-    } else {
-      this.client.update(localEntries.map(([key, value]) => [this.kind, key, value]));
-      this.lastUpdate = now;
+      if (!this.options.rateLimit || now > this.lastUpdate + this.options.rateLimit) {
+        this.sendPending();
+      }
     }
   }
 
