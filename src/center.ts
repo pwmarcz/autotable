@@ -50,6 +50,13 @@ export class Center {
       this.honba = clientMatch.get(0)?.honba ?? 0;
       this.dirty = true;
     });
+
+    client.on('disconnect', () => {
+      this.nicks = new Array(4).fill(null);
+      this.dealer = null;
+      this.honba = 0;
+      this.dirty = true;
+    });
   }
 
   setScores(scores: Array<number>): void {

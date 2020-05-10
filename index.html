@@ -85,6 +85,9 @@
         #sidebar.collapsed .more { display: none; }
         #sidebar:not(.collapsed) .show-more { display: none; }
 
+        #server:not(.connected) .server-connected { display: none; }
+        #server.connected .server-disconnected { display: none; }
+
         #center { display: none; }
 
         /* https://fontlibrary.org/en/font/segment7 */
@@ -108,20 +111,26 @@
         </div>
         <div id="sidebar" class="collapsed container text-light">
             <button class="btn btn-warning btn-sm btn-block" id="deal">Deal</button></p>
-            <button class="btn btn-secondary btn-sm btn-block" id="toggleDealer">Toggle dealer</button></p>
-            <button class="btn btn-secondary btn-sm btn-block" id="toggleHonba">Toggle honba</button></p>
+            <button class="btn btn-secondary btn-sm btn-block" id="toggle-dealer">Toggle dealer</button></p>
+            <button class="btn btn-secondary btn-sm btn-block" id="toggle-honba">Toggle honba</button></p>
 
             <a class="text-muted show-more" href="#" id="showMore">show more</a>
 
             <div class="more">
                 <a class="text-muted" href="#" id="hideMore">hide more</a>
-                <h4>Game</h4>
-                <p>Status: <b id="status">offline</b></p>
-                <button class="btn btn-primary btn-sm btn-block" id="connect">New game</button></p>
-                <p>Game link:
-                    <input class="form-control form-control-sm" type="text" onfocus="this.select()" readonly value="https://www.example.com/"></input></p>
-                <p>Nick: <input class="form-control form-control-sm" id="nick" type="text"></input></p>
 
+                <div id="server">
+                    <h4>Server</h4>
+                    <div class="server-disconnected">
+                        <button class="btn btn-primary btn-sm btn-block" id="connect">Connect</button></p>
+                    </div>
+                    <div class="server-connected">
+                        <button class="btn btn-warning btn-sm btn-block" id="disconnect">Disconnect</button></p>
+                        <p>Game link:
+                            <input class="form-control form-control-sm" id="game-link" type="text" onfocus="this.select()" readonly value=""></input></p>
+                        <p>Nick: <input class="form-control form-control-sm" id="nick" type="text"></input></p>
+                    </div>
+                </div>
 
                 <h4>Instructions</h4>
                 <p>

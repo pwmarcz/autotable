@@ -49,6 +49,10 @@ export class Client {
     });
   }
 
+  disconnect(): void {
+    this.ws?.close();
+  }
+
   private connect(url: string, start: () => void): void {
     if (this.ws) {
       return;

@@ -12,7 +12,6 @@ export class ClientUi {
   url: string;
   client: Client;
   nickElement: HTMLInputElement;
-  statusElement: HTMLElement;
 
   clientNicks: Collection<number, string>;
 
@@ -29,13 +28,14 @@ export class ClientUi {
     this.nickElement.onchange = this.onNickChange.bind(this);
     this.nickElement.oninput = this.onNickChange.bind(this);
 
-    this.statusElement = document.getElementById('status')! as HTMLElement;
     this.client.on('connect', this.onConnect.bind(this));
     this.client.on('disconnect', this.onDisconnect.bind(this));
     this.onNickChange();
 
     const connectButton = document.getElementById('connect')!;
     connectButton.onclick = this.connect.bind(this);
+    const disconnectButton = document.getElementById('disconnect')!;
+    disconnectButton.onclick = this.disconnect.bind(this);
   }
 
   getUrlState(): UrlState {
@@ -95,14 +95,22 @@ export class ClientUi {
   }
 
   onConnect(game: Game): void {
-    this.statusElement.innerText = 'connected';
+    document.getElementById('server')!.classList.add('connected');
     this.onNickChange();
     localStorage.setItem(`autotable.secret.${game.gameId}.${game.num}`, game.secret);
     this.setUrlState({gameId: game.gameId, num: game.num});
+
+    const query = qs.stringify({gameId: game.gameId});
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    const path = window.location.pathname;
+    const link = `${protocol}//${host}${path}?${query}`;
+    (document.getElementById('game-link')! as HTMLInputElement).value = link;
   }
 
   onDisconnect(): void {
-    this.statusElement.innerText = 'disconnected';
+    document.getElementById('server')!.classList.remove('connected');
+    (document.getElementById('connect')! as HTMLButtonElement).disabled = false;
     if (!this.success) {
       this.setUrlState({ gameId: null, num: null });
     }
@@ -112,8 +120,13 @@ export class ClientUi {
     if (this.client.connected()) {
       return;
     }
+    (document.getElementById('connect')! as HTMLButtonElement).disabled = true;
 
     this.success = false;
     this.client.new(this.url, null, 4);
+  }
+
+  disconnect(): void {
+    this.client.disconnect();
   }
 }

@@ -84,12 +84,12 @@ export class World {
 
     // TODO confirmation prompt
     document.getElementById('deal')!.onclick = this.deal.bind(this);
-    document.getElementById('toggleDealer')!.onclick = () => {
+    document.getElementById('toggle-dealer')!.onclick = () => {
       const match = this.clientMatch.get(0) ?? { dealer: 3, honba: 0};
       match.dealer = (match.dealer + 1) % 4;
       this.clientMatch.set(0, match);
     };
-    document.getElementById('toggleHonba')!.onclick = () => {
+    document.getElementById('toggle-honba')!.onclick = () => {
       const match = this.clientMatch.get(0) ?? { dealer: 0, honba: 0};
       match.honba = (match.honba + 1) % 8;
       this.clientMatch.set(0, match);
