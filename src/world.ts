@@ -523,7 +523,8 @@ export class World {
   }
 
   findSlot(x: number, y: number, w: number, h: number, thingType: ThingType): Slot | null {
-    let bestOverlap = 0;
+    const minOverlap = 1;
+    let bestOverlap = minOverlap ;
     let bestSlot = null;
 
     // Empty slots
@@ -550,11 +551,16 @@ export class World {
 
       const place = slot.places[0];
 
-      const margin = 1.2;
-      const overlap = rectangleOverlap(
-        x, y, w * margin, h * margin,
-        place.position.x, place.position.y, place.size.x * margin, place.size.y * margin,
+      const margin = Size.TILE.x / 2;
+      const overlap1 = rectangleOverlap(
+        x, y, w, h,
+        place.position.x, place.position.y, place.size.x, place.size.y,
       );
+      const overlap2 = rectangleOverlap(
+        x, y, w + margin, h + margin,
+        place.position.x, place.position.y, place.size.x + margin, place.size.y + margin,
+      );
+      const overlap = overlap1 + overlap2 * 0.5;
       if (overlap > bestOverlap) {
         bestOverlap = overlap;
         bestSlot = slot;
