@@ -352,6 +352,7 @@ export class World {
           direction: new Vector2(1, 1),
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
           drawShadow: j < 6,
+          requires: j < 6 ? null : `discard.${i}.${j-1}`,
         }));
         if (j > 0) {
           this.addPush(`discard.${i}.${j-1}`, `discard.${i}.${j}`);
