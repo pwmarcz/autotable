@@ -252,15 +252,16 @@ export class World {
     };
 
     // Debt
-    add(4, 2, 0);
+    add(5, 2, 0);
     // 10k
-    add(3, 1, 1);
+    add(4, 1, 1);
     // 5k
-    add(2, 2, 2);
+    add(3, 2, 2);
     // 1k
-    add(1, 4, 3);
+    add(2, 4, 3);
+    // 500
+    add(1, 1, 4);
     // 100
-    add(0, 5, 4);
     add(0, 5, 5);
   }
 
@@ -797,7 +798,7 @@ export class World {
   getScores(): Array<number> {
     const scores = new Array(4).fill(-20000);
     scores.push((25000 + 20000) * 4); // remaining
-    const stickScores = [100, 1000, 5000, 10000, 10000];
+    const stickScores = [100, 500, 1000, 5000, 10000, 10000];
 
     for (let i = 0; i < 4; i++) {
       for (const slot of this.scoreSlots[i]) {

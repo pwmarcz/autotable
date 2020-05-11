@@ -35,7 +35,7 @@ export class AssetLoader {
   makeStick(index: number): Mesh {
     const mesh = this.cloneMesh(this.meshes.stick);
 
-    const dv = 0.2 * index;
+    const dv = index / 6;
 
     const geometry = mesh.geometry.clone() as BufferGeometry;
     mesh.geometry = geometry;
