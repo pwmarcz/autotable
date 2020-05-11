@@ -293,6 +293,7 @@ export class Movement {
       thing.prepareMove();
     }
     for (const [thing, slot] of this.thingMap.entries()) {
+      // TODO instead of group, check if rotations are the same?
       const rotationIndex = thing.slot.group === slot.group ? thing.rotationIndex : 0;
       thing.moveTo(slot, rotationIndex);
     }

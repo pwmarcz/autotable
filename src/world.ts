@@ -325,7 +325,7 @@ export class World {
       for (let j = 0; j < 2; j++) {
         this.addSlot(new Slot({
           name: `wall.${j}.${i}`,
-          group: `wall.${j}`,
+          group: `wall`,
           origin: new Vector3(
             30 + i * Size.TILE.x,
             20,
