@@ -139,6 +139,7 @@ class Game {
           occupied.add(value);
         }
       }
+
       for (const [, key, ] of filtered) {
         const item = collection.get(key);
         if (!item) {
@@ -149,9 +150,15 @@ class Game {
           occupied.delete(value);
         }
       }
-      for (const [, , value] of filtered) {
-        if (occupied.has(value)) {
-          return false;
+
+      for (const [, , item] of filtered) {
+        const value = item[field];
+        if (value !== null && value !== undefined) {
+          if (occupied.has(value)) {
+            console.log(`conflict on ${kind}, ${field} = ${value}`);
+            return false;
+          }
+          occupied.add(value);
         }
       }
     }
