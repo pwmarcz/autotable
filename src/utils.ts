@@ -8,6 +8,15 @@ export function shuffle<T>(arr: Array<T>): void {
   }
 }
 
+export function filterMostCommon<T, R>(arr: Array<T>, func: (elem: T) => R): Array<T> {
+  const result = mostCommon(arr, func);
+  if (result === null) {
+    return [];
+  }
+  return arr.filter(elem => func(elem) === result);
+}
+
+
 export function mostCommon<T, R>(arr: Array<T>, func: (elem: T) => R): R | null {
   if (arr.length === 0) {
     return null;

@@ -2,7 +2,7 @@ import { Vector2, Euler, Vector3 } from "three";
 
 import { Place, Slot, Thing, Size, ThingType, Movement } from "./places";
 import { Client, Collection, Game } from "./client";
-import { shuffle, mostCommon, rectangleOverlap } from "./utils";
+import { shuffle, mostCommon, rectangleOverlap, filterMostCommon } from "./utils";
 
 interface Render {
   thingIndex: number;
@@ -462,9 +462,7 @@ export class World {
       return;
     }
 
-    // Only allow selecting one thing type at a time
-    const type = mostCommon(this.selected, thing => thing.type);
-    this.selected = this.selected.filter(thing => thing.type === type);
+    this.selected = filterMostCommon(this.selected, thing => thing.slot.group);
   }
 
   onMove(mouse: Vector3 | null): void {
