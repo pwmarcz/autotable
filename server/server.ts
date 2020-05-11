@@ -58,7 +58,7 @@ class Game {
   }
 
   rejoin(client: Client, num: number, secret: string): void {
-    if (!(Number.isInteger(num)))
+    this.validateNum(num);
     if (!this.secrets.has(num) || this.secrets.get(num) !== secret) {
       throw 'wrong secret';
     }
