@@ -35,7 +35,9 @@ assetLoader.loadAll().then(() => {
   Object.assign(window, { view });
 
   const perspectiveCheckbox = document.getElementById('perspective') as HTMLInputElement;
+  const benchmarkCheckbox = document.getElementById('benchmark') as HTMLInputElement;
   perspectiveCheckbox.addEventListener('change', updateSettings);
+  benchmarkCheckbox.addEventListener('change', updateSettings);
 
   updateSettings();
   view.draw();
@@ -44,8 +46,9 @@ assetLoader.loadAll().then(() => {
 
   function updateSettings(): void {
     const perspective = perspectiveCheckbox.checked;
-    if (view) {
-      view.setPerspective(perspective);
-    }
+    const benchmark = benchmarkCheckbox.checked;
+
+    view.setPerspective(perspective);
+    view.benchmark = benchmark;
   }
 });

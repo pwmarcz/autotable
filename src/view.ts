@@ -19,6 +19,7 @@ export class View {
   stats: Stats;
 
   perspective = false;
+  benchmark = false;
 
   scene: Scene;
   mainGroup: Group;
@@ -167,7 +168,11 @@ export class View {
   }
 
   draw(): void {
-    requestAnimationFrame(this.draw.bind(this));
+    if (this.benchmark) {
+      setTimeout(this.draw.bind(this));
+    } else {
+      requestAnimationFrame(this.draw.bind(this));
+    }
     this.updateRotation(this.world.playerNum);
     this.updateViewport();
     this.adjustCamera();
