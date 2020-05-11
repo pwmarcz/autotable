@@ -5,7 +5,12 @@ import { Client, Collection, Game } from "./client";
 interface UrlState {
   gameId: string | null;
   num: number | null;
+  secret: string | null;
 }
+
+
+const TITLE_DISCONNECTED = 'Autotable';
+const TITLE_CONNECTED = 'Autotable (online)';
 
 
 export class ClientUi {
@@ -39,26 +44,31 @@ export class ClientUi {
   }
 
   getUrlState(): UrlState {
-    const hash = window.location.search.substr(1);
-    const q = qs.parse(hash) as any;
+    const query = window.location.search.substr(1);
+    const q = qs.parse(query) as any;
     return {
       gameId: q.gameId ?? null,
       num: q.num === undefined ? null : parseInt(q.num, 10),
+      secret: q.secret ?? null,
     };
   }
 
   setUrlState(state: UrlState): void {
-    const hash = window.location.search.substr(1);
-    const q = qs.parse(hash) as any;
+    const query = window.location.search.substr(1);
+    const q = qs.parse(query) as any;
     q.gameId = state.gameId ?? undefined;
     q.num = state.num ?? undefined;
-    history.replaceState(undefined, '', '?' + qs.stringify(q));
+    q.secret = state.secret ?? undefined;
+    const newQuery = qs.stringify(q);
+    if (newQuery !== query) {
+      history.pushState(undefined, '', '?' + qs.stringify(q));
+    }
   }
 
   start(): void {
-    const {gameId, num} = this.getUrlState();
+    const {gameId, num, secret: urlSecret} = this.getUrlState();
     if (gameId !== null && num !== null) {
-      const secret = localStorage.getItem(`autotable.secret.${gameId}.${num}`);
+      const secret = urlSecret ?? localStorage.getItem(`autotable.secret.${gameId}.${num}`);
       if (secret) {
         this.success = false;
         this.client.rejoin(this.url, gameId, num, secret);
@@ -98,7 +108,8 @@ export class ClientUi {
     document.getElementById('server')!.classList.add('connected');
     this.onNickChange();
     localStorage.setItem(`autotable.secret.${game.gameId}.${game.num}`, game.secret);
-    this.setUrlState({gameId: game.gameId, num: game.num});
+    this.setUrlState({gameId: game.gameId, num: game.num, secret: game.secret});
+    document.getElementsByTagName('title')[0].innerText = TITLE_CONNECTED;
 
     const query = qs.stringify({gameId: game.gameId});
     const protocol = window.location.protocol;
@@ -111,8 +122,9 @@ export class ClientUi {
   onDisconnect(): void {
     document.getElementById('server')!.classList.remove('connected');
     (document.getElementById('connect')! as HTMLButtonElement).disabled = false;
+    document.getElementsByTagName('title')[0].innerText = TITLE_DISCONNECTED;
     if (!this.success) {
-      this.setUrlState({ gameId: null, num: null });
+      this.setUrlState({ gameId: null, num: null, secret: null });
     }
   }
 
