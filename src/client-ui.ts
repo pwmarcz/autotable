@@ -105,6 +105,7 @@ export class ClientUi {
   }
 
   onConnect(game: Game): void {
+    this.success = true;
     document.getElementById('server')!.classList.add('connected');
     this.onNickChange();
     localStorage.setItem(`autotable.secret.${game.gameId}.${game.num}`, game.secret);
@@ -140,5 +141,6 @@ export class ClientUi {
 
   disconnect(): void {
     this.client.disconnect();
+    this.setUrlState({ gameId: null, num: null, secret: null });
   }
 }
