@@ -234,7 +234,7 @@ export class World {
 
     const match = this.clientMatch.get(0);
     let honba;
-    if (!match || match.dealer === this.playerNum) {
+    if (!match || match.dealer !== this.playerNum) {
       honba = 0;
     } else {
       honba = (match.honba + 1) % 8;
