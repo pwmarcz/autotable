@@ -103,10 +103,8 @@ export class Client {
 
   private onClose(): void {
     this.ws = null;
-    if (this.game) {
-      this.game = null;
-      this.events.emit('disconnect');
-    }
+    this.game = null;
+    this.events.emit('disconnect');
   }
 
   private onMessage(message: Message): void {
