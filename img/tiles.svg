@@ -21,6 +21,22 @@
   <defs
      id="defs4">
     <linearGradient
+       osb:paint="gradient"
+       id="linearGradient1192">
+      <stop
+         id="stop1186"
+         offset="0"
+         style="stop-color:#8fdfef;stop-opacity:1" />
+      <stop
+         style="stop-color:#97e2f1;stop-opacity:1"
+         offset="0.60000002"
+         id="stop1188" />
+      <stop
+         id="stop1190"
+         offset="1"
+         style="stop-color:#97e2f1;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient
        id="linearGradient2564">
       <stop
          style="stop-color:#ffd003;stop-opacity:1;"
@@ -138,6 +154,17 @@
        y2="1007.827"
        gradientUnits="userSpaceOnUse"
        spreadMethod="reflect" />
+    <linearGradient
+       spreadMethod="reflect"
+       gradientUnits="userSpaceOnUse"
+       y2="1007.827"
+       x2="240.00386"
+       y1="1007.8625"
+       x1="224"
+       id="linearGradient1465-1"
+       xlink:href="#linearGradient1192"
+       inkscape:collect="always"
+       gradientTransform="matrix(1,0,0,0.85106243,0,158.60823)" />
   </defs>
   <sodipodi:namedview
      inkscape:bbox-paths="true"
@@ -149,9 +176,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.6393171"
-     inkscape:cx="115.32248"
-     inkscape:cy="130.86085"
+     inkscape:zoom="5.2786342"
+     inkscape:cx="184.59532"
+     inkscape:cy="195.65679"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -194,8 +221,8 @@
      id="layer1"
      transform="translate(0,-796.36218)">
     <rect
-       y="996.36218"
-       x="224"
+       y="956.36218"
+       x="160"
        height="7"
        width="32"
        id="rect1241-0"
@@ -1731,5 +1758,25 @@
            inkscape:connector-curvature="0" />
       </g>
     </g>
+    <rect
+       style="opacity:1;fill:#8fdfef;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.385922;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.2;paint-order:normal"
+       id="rect1241-0-5"
+       width="32"
+       height="7"
+       x="160"
+       y="996.36218" />
+    <rect
+       y="996.36218"
+       x="224"
+       height="40.000004"
+       width="32"
+       id="rect1241-7"
+       style="opacity:1;fill:url(#linearGradient1465-1);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.92253;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.2;paint-order:normal" />
+    <path
+       sodipodi:nodetypes="ccccccccc"
+       inkscape:connector-curvature="0"
+       d="m 224,1036.3622 v -40.00002 h -7 v 16.00002 h 2.0125 v 8 H 217 v 16 z"
+       style="opacity:1;fill:#8fdfef;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.431479;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.2;paint-order:normal"
+       id="rect1241-6-1" />
   </g>
 </svg>
