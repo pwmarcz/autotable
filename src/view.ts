@@ -244,6 +244,7 @@ export class View {
       this.main.style.width = `${renderWidth}px`;
       this.main.style.height = `${renderHeight}px`;
       this.renderer.setSize(renderWidth, renderHeight);
+      this.renderer.setPixelRatio(window.devicePixelRatio);
 
       this.setupRendering();
     }
