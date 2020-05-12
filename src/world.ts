@@ -69,6 +69,10 @@ export class World {
 
   constructor(client: Client) {
     this.addSlots();
+    for (const slotName in this.slots) {
+      this.slots[slotName].setLinks(this.slots);
+    }
+
     this.addTiles();
     this.addSticks();
     this.addMarker();
@@ -324,8 +328,10 @@ export class World {
         ),
         rotations: [Rotation.STANDING, Rotation.FACE_UP, Rotation.FACE_DOWN],
         canFlipMultiple: true,
-        shiftLeft: i > 0 ? `hand.${i-1}` : null,
-        shiftRight: i < 13 ? `hand.${i+1}` : null,
+        links: {
+          shiftLeft: i > 0 ? `hand.${i-1}` : undefined,
+          shiftRight: i < 13 ? `hand.${i+1}` : undefined,
+        },
         shadowRotation: 1,
       }));
     }
@@ -343,9 +349,11 @@ export class World {
           direction: new Vector2(-1, 1),
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
           drawShadow: false,
-          requires: i > 0 ? `meld.${i-1}.0` : null,
-          shiftLeft: j > 0 ? `meld.${i}.${j-1}` : null,
-          shiftRight: j < 3 ? `meld.${i}.${j+1}` : null,
+          links: {
+            requires: i > 0 ? `meld.${i-1}.0` : undefined,
+            shiftLeft: j > 0 ? `meld.${i}.${j-1}` : undefined,
+            shiftRight: j < 3 ? `meld.${i}.${j+1}` : undefined,
+          }
         }));
         if (j > 0) {
           this.addPush(`meld.${i}.${j-1}`, `meld.${i}.${j}`);
@@ -365,8 +373,10 @@ export class World {
           ),
           rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
           drawShadow: j === 0 && i >= 1 && i < 18,
-          down: j === 1 ? `wall.0.${i}` : null,
-          up: j === 0 ? `wall.1.${i}` : null,
+          links: {
+            down: j === 1 ? `wall.0.${i}` : undefined,
+            up: j === 0 ? `wall.1.${i}` : undefined,
+          }
         }));
       }
     }
@@ -385,7 +395,9 @@ export class World {
           direction: new Vector2(1, 1),
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
           drawShadow: j < 6,
-          requires: j < 6 ? null : `discard.${i}.${j-1}`,
+          links: {
+            requires: j < 6 ? undefined : `discard.${i}.${j-1}`,
+          },
         }));
         if (j > 0) {
           this.addPush(`discard.${i}.${j-1}`, `discard.${i}.${j}`);
@@ -406,8 +418,10 @@ export class World {
           ),
           rotations: [Rotation.FACE_UP],
           drawShadow: false,
-          shiftLeft: j > 0 ? `tray.${i}.${j-1}` : null,
-          shiftRight: j < 9 ? `tray.${i}.${j+1}` : null,
+          links: {
+            shiftLeft: j > 0 ? `tray.${i}.${j-1}` : undefined,
+            shiftRight: j < 9 ? `tray.${i}.${j+1}` : undefined,
+          }
         }));
         for (let k = 0; k < 4; k++) {
           if (this.scoreSlots[k] === null) {
@@ -430,8 +444,10 @@ export class World {
             0
           ),
           rotations: [i === 0 ? Rotation.FACE_UP_SIDEWAYS : Rotation.FACE_UP],
-          shiftLeft: i > 0 ? `payment.${i}.${j-1}` : null,
-          shiftRight: i < 0 ? `payment.${i}.${j+1}` : null,
+          links: {
+            shiftLeft: i > 0 ? `payment.${i}.${j-1}` : undefined,
+            shiftRight: i < 0 ? `payment.${i}.${j+1}` : undefined,
+          },
           drawShadow: false,
         }));
       }
@@ -534,16 +550,16 @@ export class World {
       thing.type === this.held[0].type
     );
     if (!this.movement.findShift(relevantThings, [
-      slot => slot.shiftLeft !== null ? this.slots[slot.shiftLeft] : null,
-      slot => slot.shiftRight !== null ? this.slots[slot.shiftRight] : null,
+      slot => slot.links.shiftLeft ?? null,
+      slot => slot.links.shiftRight ?? null,
     ])) {
       this.movement = null;
     }
   }
 
   canSelect(thing: Thing, otherSelected: Array<Thing>): boolean {
-    if (thing.slot.up !== null) {
-      const upSlot = this.slots[thing.slot.up];
+    const upSlot = thing.slot.links.up;
+    if (upSlot) {
       if (upSlot.thing !== null &&
         otherSelected.indexOf(upSlot.thing) === -1) {
 
@@ -567,7 +583,7 @@ export class World {
 
       if (slot.thing !== null && slot.thing.heldBy !== this.playerNum) {
         // Occupied. But can it be potentially shifted?
-        if (slot.shiftLeft === null && slot.shiftRight === null) {
+        if (!slot.links.shiftLeft && !slot.links.shiftRight) {
           continue;
         }
       }
@@ -576,7 +592,7 @@ export class World {
         continue;
       }
       // The slot requires other slots to be occupied first
-      if (slot.requires !== null && this.slots[slot.requires].thing === null) {
+      if (slot.links.requires && slot.links.requires.thing === null) {
         continue;
       }
 
@@ -761,8 +777,8 @@ export class World {
       const slot = thing.slot;
 
       let bottom = false;
-      if (this.held !== null && slot.up !== null) {
-        bottom = this.slots[slot.up].thing === null;
+      if (this.held !== null && slot.links.up) {
+        bottom = slot.links.up.thing === null;
       }
 
       result.push({

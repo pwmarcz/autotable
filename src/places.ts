@@ -19,6 +19,16 @@ export interface Place {
   size: Vector3;
 }
 
+interface SlotLinks {
+  down?: Slot;
+  up?: Slot;
+  requires?: Slot;
+  shiftLeft?: Slot;
+  shiftRight?: Slot;
+}
+
+type SlotLinkDesc = Partial<Record<keyof SlotLinks, string>>;
+
 export class Slot {
   name: string;
   group: string;
@@ -32,11 +42,8 @@ export class Slot {
 
   thing: Thing | null = null;
 
-  down: string | null;
-  up: string | null;
-  requires: string | null;
-  shiftLeft: string | null;
-  shiftRight: string | null;
+  links: SlotLinks;
+  linkDesc: SlotLinkDesc;
   canFlipMultiple: boolean;
   drawShadow: boolean;
   shadowRotation: number;
@@ -48,11 +55,7 @@ export class Slot {
     origin: Vector3;
     direction?: Vector2;
     rotations: Array<Euler>;
-    down?: string | null;
-    up?: string | null;
-    requires?: string | null;
-    shiftLeft?: string | null;
-    shiftRight?: string | null;
+    links?: SlotLinkDesc;
     canFlipMultiple?: boolean;
     drawShadow?: boolean;
     shadowRotation?: number;
@@ -63,17 +66,24 @@ export class Slot {
     this.origin = params.origin;
     this.direction = params.direction ?? new Vector2(1, 1);
     this.rotations = params.rotations;
-    this.down = params.down ?? null;
-    this.up = params.up ?? null;
-    this.requires = params.requires ?? null;
-    this.shiftLeft = params.shiftLeft ?? null;
-    this.shiftRight = params.shiftRight ?? null;
+    this.linkDesc = params.links ?? {};
     this.canFlipMultiple = params.canFlipMultiple ?? false;
     this.drawShadow = params.drawShadow ?? true;
     this.shadowRotation = params.shadowRotation ?? 0;
 
     this.places = this.rotations.map(this.makePlace.bind(this));
     this.offset = new Vector2(0, 0);
+    this.links = {};
+  }
+
+  setLinks(slots: Record<string, Slot>): void {
+    for (const key in this.linkDesc) {
+      const linkName = key as keyof SlotLinks;
+      const linkTarget = this.linkDesc[linkName];
+      if (linkTarget !== undefined) {
+        this.links[linkName] = slots[linkTarget];
+      }
+    }
   }
 
   rotated(suffix: string, rotation: number, worldWidth: number): Slot {
@@ -107,12 +117,17 @@ export class Slot {
       return new Euler().setFromQuaternion(q);
     });
 
+    const linkDesc: SlotLinkDesc = {};
+    for (const key in this.linkDesc) {
+      const linkName = key as keyof SlotLinks;
+      const linkTarget = this.linkDesc[linkName];
+      if (linkTarget !== undefined) {
+        linkDesc[linkName] = linkTarget + suffix;
+      }
+    }
+
     const slot = new Slot({name, group, type: this.type, origin, direction, rotations});
-    slot.down = this.down && this.down + suffix;
-    slot.up = this.up && this.up + suffix;
-    slot.requires = this.requires && this.requires + suffix;
-    slot.shiftLeft = this.shiftLeft && this.shiftLeft + suffix;
-    slot.shiftRight = this.shiftRight && this.shiftRight + suffix;
+    slot.linkDesc = linkDesc;
     slot.canFlipMultiple = this.canFlipMultiple;
     slot.drawShadow = this.drawShadow;
     slot.shadowRotation = this.shadowRotation;
