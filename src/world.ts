@@ -778,7 +778,7 @@ export class World {
 
       let bottom = false;
       if (this.held !== null && slot.links.up) {
-        bottom = slot.links.up.thing === null;
+        bottom = slot.links.up.thing === null || slot.links.up.thing.heldBy !== null;
       }
 
       result.push({
