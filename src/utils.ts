@@ -1,3 +1,4 @@
+import { Vector3 } from "three";
 
 export function shuffle<T>(arr: Array<T>): void {
   for (let i = arr.length - 1; i > 0; i--) {
@@ -15,7 +16,6 @@ export function filterMostCommon<T, R>(arr: Array<T>, func: (elem: T) => R): Arr
   }
   return arr.filter(elem => func(elem) === result);
 }
-
 
 export function mostCommon<T, R>(arr: Array<T>, func: (elem: T) => R): R | null {
   if (arr.length === 0) {
@@ -80,4 +80,10 @@ export class Animation {
     this.pos = this.startPos + (this.endPos - this.startPos) * Math.min(1, delta);
     return true;
   }
+}
+
+export function round3(vec: Vector3, factor: number): void {
+  vec.x = Math.round(vec.x * factor) / factor;
+  vec.y = Math.round(vec.y * factor) / factor;
+  vec.z = Math.round(vec.z * factor) / factor;
 }

@@ -1,4 +1,5 @@
 import { Vector2, Euler, Vector3, Quaternion } from "three";
+import { round3 } from "./utils";
 
 export enum ThingType {
   TILE = 'TILE',
@@ -92,6 +93,9 @@ export class Slot {
       pos.y + worldWidth / 2,
       pos.z,
     );
+
+    round3(pos, 16);
+    round3(origin, 16);
 
     const dir = new Vector3(this.direction.x, this.direction.y, 0);
     dir.applyQuaternion(quat);
