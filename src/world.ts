@@ -201,7 +201,15 @@ export class World {
     // Shuffle slots, not tiles - this way tiles are the same for everyone.
     shuffle(slots);
     for (let i = 0; i < 136; i++) {
-      const tileIndex = Math.floor(i / 4);
+      let tileIndex = Math.floor(i / 4);
+      if (tileIndex === 4 && i % 4 === 0) {
+        tileIndex = 34;
+      } else if (tileIndex === 13 && i % 4 === 0) {
+        tileIndex = 35;
+      } else if (tileIndex === 22 && i % 4 === 0) {
+        tileIndex = 36;
+      }
+
       this.addThing(ThingType.TILE, tileIndex, slots[i].name);
     }
   }
