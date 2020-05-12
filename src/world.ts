@@ -216,11 +216,14 @@ export class World {
 
     const slotsToDeal = this.wallSlots();
     const dice = Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6);
-    const wallNum = (this.playerNum + dice) % 4;
-    let index = wallNum * 17 * 2 - dice * 2 - 1;
+    const wallNum = (this.playerNum + dice - 1) % 4;
+    console.log('dice', dice, 'wallNum', wallNum);
+    const deadWallBegin = 136 + (wallNum+1) * 17 * 2 - dice * 2;
+
+    let index = deadWallBegin - 1;
     for (let num = 0; num < 4; num++) {
       for (let i = 0; i < 13; i++) {
-        const slot = slotsToDeal[(index + 136) % 136];
+        const slot = slotsToDeal[index % 136];
         const thing = slot.thing!;
         thing.prepareMove();
         thing.moveTo(this.slots[`hand.${i}@${num}`], 2);
@@ -228,6 +231,24 @@ export class World {
       }
     }
     this.checkPushes();
+
+    const moveFrom = [
+      slotsToDeal[(deadWallBegin+12)%136], slotsToDeal[(deadWallBegin+13)%136]
+    ];
+    let moveTo;
+    if (Math.floor((deadWallBegin + 12) / 34) === Math.floor(deadWallBegin / 34)) {
+      moveTo = [slotsToDeal[(deadWallBegin-2)%136], slotsToDeal[(deadWallBegin-1)%136]];
+    } else {
+      const endWall = Math.floor((deadWallBegin + 12) / 34) % 4;
+      console.log(this.slots[`wall.0.0@${endWall}`], `wall.0.0@${endWall}`);
+      moveTo = [this.slots[`wall.0.0@${endWall}`], this.slots[`wall.1.0@${endWall}`]];
+    }
+    console.log(moveFrom, moveTo);
+    for (let i = 0; i < 2; i++) {
+      const thing = moveFrom[i].thing!;
+      thing.prepareMove();
+      thing.moveTo(moveTo[i]);
+    }
 
     this.held.splice(0);
     this.sendUpdate(tiles);
