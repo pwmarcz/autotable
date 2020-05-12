@@ -54,7 +54,7 @@ export class AssetLoader {
     const y = Math.floor(index / 8);
 
     const du = 32 / 256;
-    const dv = 47 / 256;
+    const dv = 40 / 256;
 
     // Clone geometry and modify front face
     const geometry = mesh.geometry.clone() as BufferGeometry;
