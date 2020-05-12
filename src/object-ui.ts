@@ -13,7 +13,6 @@ export class ObjectUi {
 
   private center: Center;
   private objects: Array<Mesh>;
-  private ghostObjects: Array<Mesh>;
   private shadows: Array<Mesh>;
 
   selectedObjects: Array<Mesh>;
@@ -26,7 +25,6 @@ export class ObjectUi {
     this.center = new Center(this.assetLoader, client);
     this.center.mesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0.75);
     this.objects = [];
-    this.ghostObjects = [];
     this.shadows = [];
     this.selectedObjects = [];
     this.addObjects();
@@ -42,10 +40,6 @@ export class ObjectUi {
       const obj = this.makeObject(this.world.things[i].type, this.world.things[i].typeIndex);
       this.objects.push(obj);
       this.mainGroup.add(obj);
-
-      const gobj = this.makeGhostObject(this.world.things[i].type, this.world.things[i].typeIndex);
-      this.ghostObjects.push(gobj);
-      this.mainGroup.add(gobj);
 
       const geometry = new PlaneGeometry(1, 1);
       const material = new MeshBasicMaterial({
@@ -105,17 +99,8 @@ export class ObjectUi {
     }
   }
 
-  private makeGhostObject(type: ThingType, index: number): Mesh {
-    const obj = this.makeObject(type, index);
-    const material = obj.material as MeshLambertMaterial;
-    material.transparent = true;
-    material.opacity = 0.5;
-    return obj;
-  }
-
   update(): void {
     this.updateRender();
-    this.updateRenderGhosts();
     this.updateRenderShadows();
     this.center.setScores(this.world.getScores());
     this.center.draw();
@@ -159,20 +144,6 @@ export class ObjectUi {
         obj.position.z += 1;
         obj.renderOrder = 1;
       }
-    }
-  }
-
-
-  private updateRenderGhosts(): void {
-    for (const obj of this.ghostObjects) {
-      obj.visible = false;
-    }
-
-    for (const render of this.world.toRenderGhosts()) {
-      const obj = this.ghostObjects[render.thingIndex];
-      obj.visible = true;
-      obj.position.copy(render.place.position);
-      obj.rotation.copy(render.place.rotation);
     }
   }
 

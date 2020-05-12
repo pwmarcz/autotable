@@ -778,21 +778,6 @@ export class World {
     return result;
   }
 
-  toRenderGhosts(): Array<Render> {
-    const result: Array<Render> = [];
-    // if (this.targetSlot !== null) {
-    //   const thingIndex = this.held;
-    //   const place = this.slotPlace(this.slots[this.targetSlot]);
-    //   result.push({
-    //     ...place,
-    //     thingIndex,
-    //     selected: false,
-    //     held: false,
-    //   });
-    // }
-    return result;
-  }
-
   toSelect(): Array<Select> {
     const result = [];
     if (this.held.length === 0) {
