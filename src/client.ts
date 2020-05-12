@@ -20,7 +20,7 @@ export class Client {
     this.collections = {
       things: new Collection('things', this, { unique: 'slotName' }),
       nicks: new Collection('nicks', this),
-      players: new Collection('players', this, { rateLimit: 100 }),
+      mouse: new Collection('mouse', this, { rateLimit: 100 }),
       online: new Collection('online', this),
       match: new Collection('match', this),
     };

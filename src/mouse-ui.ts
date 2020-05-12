@@ -169,11 +169,13 @@ export class MouseUi {
     const w = this.main.clientWidth;
     const h = this.main.clientHeight;
 
+    const now = new Date().getTime();
+
     for (let i = 0; i < 4; i++) {
       const j = (4 + i - this.world.playerNum) % 4;
 
       const cursorElement = this.cursors[j];
-      const cursorPos = this.world.playerMouses[i];
+      const cursorPos = this.world.mouseTracker.getMouse(i, now);
 
       if (cursorPos && i !== this.world.playerNum) {
         const v = cursorPos.clone();

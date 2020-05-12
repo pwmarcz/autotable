@@ -3,6 +3,7 @@ import { Vector2, Euler, Vector3 } from "three";
 import { Place, Slot, Thing, Size, ThingType, Movement } from "./places";
 import { Client, Collection, Game } from "./client";
 import { shuffle, mostCommon, rectangleOverlap, filterMostCommon } from "./utils";
+import { MouseTracker } from "./mouse-tracker";
 
 interface Render {
   thingIndex: number;
@@ -25,11 +26,6 @@ const Rotation = {
   FACE_DOWN: new Euler(Math.PI, 0, 0),
   FACE_DOWN_REVERSE: new Euler(Math.PI, 0, Math.PI),
 };
-
-interface PlayerInfo {
-  mouse: { x: number; y: number; z: number } | null;
-  heldMouse: { x: number; y: number; z: number } | null;
-}
 
 interface ThingInfo {
   slotName: string;
@@ -54,17 +50,15 @@ export class World {
   held: Array<Thing> = [];
   movement: Movement | null = null;
   heldMouse: Vector3 | null = null;
+  mouseTracker: MouseTracker;
 
   scoreSlots: Array<Array<Slot>> = [[], [], [], []];
   playerNum = 0;
-  playerMouses: Array<Vector3 | null> = new Array(4).fill(null);
-  playerHeldMouses: Array<Vector3 | null> = new Array(4).fill(null);
 
   static WIDTH = 174;
 
   client: Client;
   clientThings: Collection<number, ThingInfo>;
-  clientPlayers: Collection<number, PlayerInfo>;
   clientMatch: Collection<number, MatchInfo>;
 
   constructor(client: Client) {
@@ -79,11 +73,11 @@ export class World {
 
     this.client = client;
     this.clientThings = client.collection('things');
-    this.clientPlayers = client.collection('players');
     this.clientMatch = client.collection<number, MatchInfo>('match');
 
+    this.mouseTracker = new MouseTracker(this.client);
+
     this.client.on('connect', this.onConnect.bind(this));
-    this.clientPlayers.on('update', this.onPlayers.bind(this));
     this.clientThings.on('update', this.onThings.bind(this));
 
     // TODO confirmation prompt
@@ -102,21 +96,6 @@ export class World {
 
   onConnect(game: Game): void {
     this.playerNum = game.num;
-  }
-
-  onPlayers(): void {
-    for (let i = 0; i < 4; i++) {
-      const player = this.clientPlayers.get(i);
-      if (player) {
-        this.playerMouses[i] = player.mouse && new Vector3(
-          player.mouse.x, player.mouse.y, player.mouse.z);
-        this.playerHeldMouses[i] = player.heldMouse && new Vector3(
-          player.heldMouse.x, player.heldMouse.y, player.heldMouse.z);
-      } else {
-        this.playerMouses[i] = null;
-        this.playerHeldMouses[i] = null;
-      }
-    }
   }
 
   onThings(entries: Array<[number, ThingInfo]>, full: boolean): void {
@@ -170,11 +149,8 @@ export class World {
     this.clientThings.update(entries);
   }
 
-  sendPlayer(): void {
-    this.clientPlayers.set(this.playerNum, {
-      mouse: this.mouse && {x: this.mouse.x, y: this.mouse.y, z: this.mouse.z},
-      heldMouse: this.heldMouse && {x: this.heldMouse.x, y: this.heldMouse.y, z: this.heldMouse.z},
-    });
+  sendMouse(): void {
+    this.mouseTracker.update(this.playerNum, this.mouse, this.heldMouse);
   }
 
   describeThing(thing: Thing): ThingInfo {
@@ -520,7 +496,7 @@ export class World {
     }
 
     this.mouse = mouse;
-    this.sendPlayer();
+    this.sendMouse();
 
     this.drag();
   }
@@ -651,7 +627,7 @@ export class World {
       this.heldMouse = this.mouse;
 
       this.sendUpdate(this.held);
-      this.sendPlayer();
+      this.sendMouse();
       this.drag();
 
       return true;
@@ -728,7 +704,7 @@ export class World {
     this.movement = null;
 
     this.sendUpdate(toDrop);
-    this.sendPlayer();
+    this.sendMouse();
   }
 
   canDrop(): boolean {
@@ -743,6 +719,7 @@ export class World {
 
   toRender(): Array<Render> {
     const canDrop = this.canDrop();
+    const now = new Date().getTime();
 
     const result = [];
     for (const thing of this.things) {
@@ -755,8 +732,8 @@ export class World {
           mouse = this.mouse;
           heldMouse = this.heldMouse;
         } else {
-          mouse = this.playerMouses[thing.heldBy];
-          heldMouse = this.playerHeldMouses[thing.heldBy];
+          mouse = this.mouseTracker.getMouse(thing.heldBy, now);
+          heldMouse = this.mouseTracker.getHeld(thing.heldBy);
         }
 
         if (mouse && heldMouse) {
