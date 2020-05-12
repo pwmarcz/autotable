@@ -549,7 +549,7 @@ export class World {
         continue;
       }
 
-      const place = slot.places[0];
+      const place = slot.placeWithOffset(0);
 
       const margin = Size.TILE.x / 2;
       const overlap1 = rectangleOverlap(
@@ -690,7 +690,7 @@ export class World {
 
   checkPushes(): void {
     for (const [source, target] of this.pushes) {
-      target?.thing?.handlePush(source.thing);
+      target.handlePush(source);
     }
   }
 
@@ -789,7 +789,7 @@ export class World {
     const result = [];
     if (this.canDrop()) {
       for (const slot of this.movement!.slots()) {
-        result.push(slot!.places[0]);
+        result.push(slot.placeWithOffset(0));
       }
     }
     return result;

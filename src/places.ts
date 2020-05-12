@@ -27,6 +27,7 @@ export class Slot {
   rotations: Array<Euler>;
 
   places: Array<Place>;
+  offset: Vector2;
 
   thing: Thing | null = null;
 
@@ -71,6 +72,7 @@ export class Slot {
     this.shadowRotation = params.shadowRotation ?? 0;
 
     this.places = this.rotations.map(this.makePlace.bind(this));
+    this.offset = new Vector2(0, 0);
   }
 
   rotated(suffix: string, rotation: number, worldWidth: number): Slot {
@@ -139,33 +141,9 @@ export class Slot {
   canBeUsed(playerNum: number): boolean {
     return this.thing === null || this.thing.heldBy === playerNum;
   }
-}
 
-export class Thing {
-  index: number;
-  type: ThingType;
-  typeIndex: number;
-  slot: Slot;
-  rotationIndex: number;
-  offset: Vector2;
-
-  heldBy: number | null;
-  // place: Place;
-
-  constructor(index: number, type: ThingType, typeIndex: number, slot: Slot) {
-    this.index = index;
-    this.type = type;
-    this.typeIndex = typeIndex;
-    this.slot = slot;
-    this.rotationIndex = 0;
-    this.offset = new Vector2(0, 0);
-    this.heldBy = null;
-
-    this.slot.thing = this;
-  }
-
-  place(): Place {
-    const place = this.slot.places[this.rotationIndex];
+  placeWithOffset(rotationIndex: number): Place {
+    const place = this.places[rotationIndex];
     if (this.offset.x === 0 && this.offset.y === 0) {
       return place;
     }
@@ -175,19 +153,20 @@ export class Thing {
     return {...place, position };
   }
 
-  handlePush(source: Thing | null): void {
-    this.offset.set(0, 0);
+  handlePush(source: Slot): void {
+    this.offset.copy(source.offset);
 
-    if (source === null) {
+    if (source.thing === null) {
       return;
     }
+    const rotationIndex = this.thing ? this.thing.rotationIndex : 0;
 
-    const place = this.slot.places[this.rotationIndex];
-    const sourcePlace = source.slot.places[source.rotationIndex];
+    const place = this.places[rotationIndex];
+    const sourcePlace = source.places[source.thing.rotationIndex];
 
     // Relative slot position
-    const sdx = this.slot.origin.x - source.slot.origin.x;
-    const sdy = this.slot.origin.y - source.slot.origin.y;
+    const sdx = this.origin.x - source.origin.x;
+    const sdy = this.origin.y - source.origin.y;
 
     if (Math.abs(sdx) > Math.abs(sdy)) {
       const dx = place.position.x - sourcePlace.position.x - source.offset.x;
@@ -206,6 +185,34 @@ export class Thing {
         this.offset.y = Math.sign(sdy) * dist;
       }
     }
+  }
+
+
+}
+
+export class Thing {
+  index: number;
+  type: ThingType;
+  typeIndex: number;
+  slot: Slot;
+  rotationIndex: number;
+
+  heldBy: number | null;
+  // place: Place;
+
+  constructor(index: number, type: ThingType, typeIndex: number, slot: Slot) {
+    this.index = index;
+    this.type = type;
+    this.typeIndex = typeIndex;
+    this.slot = slot;
+    this.rotationIndex = 0;
+    this.heldBy = null;
+
+    this.slot.thing = this;
+  }
+
+  place(): Place {
+    return this.slot.placeWithOffset(this.rotationIndex);
   }
 
   flip(rotationIndex?: number): void {
@@ -228,7 +235,6 @@ export class Thing {
     }
     this.slot = target;
     this.rotationIndex = rotationIndex ?? 0;
-    this.offset.set(0, 0);
     target.thing = this;
   }
 }
