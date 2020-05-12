@@ -115,7 +115,6 @@ export class MouseUi {
     if (!this.camera || !this.selectionBox || this.mouse2 === null) {
       this.world.onHover(null);
       this.world.onMove(null);
-      this.world.onSelect([]);
       this.selection.style.visibility = 'hidden';
       return;
     }
