@@ -124,6 +124,10 @@ export class World {
     for (const [thingIndex,] of entries) {
       const thing = this.things[thingIndex];
       thing.prepareMove();
+      const selectedIndex = this.selected.indexOf(thing);
+      if (selectedIndex !== -1) {
+        this.selected.splice(selectedIndex, 1);
+      }
     }
     for (const [thingIndex, thingInfo] of entries) {
       const thing = this.things[thingIndex];
