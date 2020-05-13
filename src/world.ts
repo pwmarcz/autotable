@@ -462,10 +462,11 @@ export class World {
 
       const slot = thing.slot;
 
-      let bottom = false;
-      if (this.held !== null && slot.links.up) {
-        bottom = slot.links.up.thing === null || slot.links.up.thing.heldBy !== null;
-      }
+      const bottom =
+        !held &&
+        slot.links.up !== undefined &&
+        (slot.links.up.thing === null ||
+         slot.links.up.thing.heldBy !== null);
 
       toRender.push({
         place,
