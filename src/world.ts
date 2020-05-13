@@ -4,7 +4,7 @@ import { Place, Slot, Thing, Size, ThingType, Movement } from "./places";
 import { Client, Collection, Game } from "./client";
 import { mostCommon, rectangleOverlap, filterMostCommon } from "./utils";
 import { MouseTracker } from "./mouse-tracker";
-import { Setup } from './setup';
+import { Setup, TileSet } from './setup';
 import { ObjectView, Render } from "./object-view";
 import { SoundPlayer, SoundType } from "./sound-player";
 
@@ -22,6 +22,7 @@ interface ThingInfo {
 export interface MatchInfo {
   dealer: number;
   honba: number;
+  tileSet: TileSet;
 }
 
 export class World {
@@ -52,12 +53,15 @@ export class World {
   private clientThings: Collection<number, ThingInfo>;
   private clientMatch: Collection<number, MatchInfo>;
 
+  tileSet: TileSet;
+
   constructor(objectView: ObjectView, soundPlayer: SoundPlayer, client: Client) {
     this.setup = new Setup();
     this.slots = this.setup.slots;
     this.things = this.setup.things;
     this.pushes = this.setup.pushes;
-    this.setup.setup();
+    this.tileSet = TileSet.initial();
+    this.setup.setup(this.tileSet);
 
     this.objectView = objectView;
     this.setupView();
@@ -72,16 +76,17 @@ export class World {
 
     this.client.on('connect', this.onConnect.bind(this));
     this.clientThings.on('update', this.onThings.bind(this));
+    this.clientMatch.on('update', this.onMatch.bind(this));
 
     // TODO confirmation prompt
     document.getElementById('deal')!.onclick = this.deal.bind(this);
     document.getElementById('toggle-dealer')!.onclick = () => {
-      const match = this.clientMatch.get(0) ?? { dealer: 3, honba: 0};
+      const match = this.clientMatch.get(0) ?? { dealer: 3, honba: 0, tileSet: TileSet.initial()};
       match.dealer = (match.dealer + 1) % 4;
       this.clientMatch.set(0, match);
     };
     document.getElementById('toggle-honba')!.onclick = () => {
-      const match = this.clientMatch.get(0) ?? { dealer: 0, honba: 0};
+      const match = this.clientMatch.get(0) ?? { dealer: 0, honba: 0, tileSet: TileSet.initial()};
       match.honba = (match.honba + 1) % 8;
       this.clientMatch.set(0, match);
     };
@@ -132,6 +137,24 @@ export class World {
     this.checkPushes();
   }
 
+  private onMatch(): void {
+    const match = this.clientMatch.get(0);
+    if (!match) {
+      return;
+    }
+
+    const tileSet = match.tileSet;
+    if (!TileSet.equals(tileSet, this.tileSet)) {
+      this.updateTileSet(tileSet);
+    }
+  }
+
+  updateTileSet(tileSet: TileSet): void {
+    this.tileSet = tileSet;
+    this.setup.updateTiles(tileSet);
+    this.objectView.replaceThings(this.things);
+  }
+
   private sendUpdate(things: Array<Thing>): void {
     const entries: Array<[number, ThingInfo]> = [];
     for (const thing of things) {
@@ -160,16 +183,23 @@ export class World {
     }
     this.setup.deal(this.playerNum);
     this.checkPushes();
-    this.sendUpdate(this.things);
 
-    const match = this.clientMatch.get(0);
+    let match = this.clientMatch.get(0);
     let honba;
+    const back = 1 - this.tileSet.back;
+    const tileSet = { ...this.tileSet, back };
     if (!match || match.dealer !== this.playerNum) {
       honba = 0;
     } else {
       honba = (match.honba + 1) % 8;
     }
-    this.clientMatch.set(0, {dealer: this.playerNum, honba});
+    this.updateTileSet(tileSet);
+    match = {dealer: this.playerNum, honba, tileSet};
+
+    this.client.transaction(() => {
+      this.sendUpdate(this.things);
+      this.clientMatch.set(0, match!);
+    });
   }
 
   onHover(id: any): void {
@@ -529,7 +559,7 @@ export class World {
   }
 
   setupView(): void {
-    this.objectView.addThings(this.things.map(thing => ({
+    this.objectView.replaceThings(this.things.map(thing => ({
       type: thing.type,
       typeIndex: thing.typeIndex,
     })));

@@ -1,4 +1,4 @@
-import { Group, Mesh, Vector3, PlaneGeometry, MeshBasicMaterial, MeshLambertMaterial } from "three";
+import { Group, Mesh, Vector3, PlaneGeometry, MeshBasicMaterial, MeshLambertMaterial, Material } from "three";
 
 import { World } from "./world";
 import { Client } from "./client";
@@ -57,8 +57,13 @@ export class ObjectView {
     this.addStatic();
   }
 
-  addThings(things: Array<{type: ThingType; typeIndex: number}>): void {
-    // TODO delete existing?
+  replaceThings(things: Array<{type: ThingType; typeIndex: number}>): void {
+    for (const obj of this.thingObjects) {
+      (obj.material as Material).dispose();
+      obj.geometry.dispose();
+      this.mainGroup.remove(obj);
+    }
+    this.thingObjects.splice(0);
 
     for (const thing of things) {
       const obj = this.makeObject(thing.type, thing.typeIndex);

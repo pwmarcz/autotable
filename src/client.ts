@@ -15,6 +15,7 @@ export class Client {
   private game: Game | null = null;
   private events: EventEmitter = new EventEmitter();
   private collections: Record<string, Collection<any, any>>;
+  private pending: Array<Entry> | null = null;
 
   constructor() {
     this.collections = {
@@ -77,8 +78,24 @@ export class Client {
     this.events.on(what, handler as Listener);
   }
 
+  transaction(func: () => void): void {
+    this.pending = [];
+    try {
+      func();
+      if (this.pending !== null && this.pending.length > 0) {
+        this.send({ type: 'UPDATE', entries: this.pending, full: false });
+      }
+    } finally {
+      this.pending = null;
+    }
+  }
+
   update(entries: Array<Entry>): void {
-    this.send({ type: 'UPDATE', entries, full: false });
+    if (this.pending !== null) {
+      this.pending.push(...entries);
+    } else {
+      this.send({ type: 'UPDATE', entries, full: false });
+    }
   }
 
   private send(message: Message): void {

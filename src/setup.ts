@@ -12,6 +12,20 @@ const Rotation = {
   FACE_DOWN_REVERSE: new Euler(Math.PI, 0, Math.PI),
 };
 
+export interface TileSet {
+  back: number; // 0 or 1
+  fives: '000' | '111' | '121';
+}
+
+export namespace TileSet {
+  export function initial(): TileSet {
+    return { back: 0, fives: '111' };
+  }
+
+  export function equals(a: TileSet, b: TileSet): boolean {
+    return a.back === b.back && a.fives === b.fives;
+  }
+}
 
 export class Setup {
   slots: Record<string, Slot> = {};
@@ -19,12 +33,12 @@ export class Setup {
   pushes: Array<[Slot, Slot]> = [];
   private scoreSlots: Array<Array<Slot>> = [[], [], [], []];
 
-  setup(): void {
+  setup(tileSet: TileSet): void {
     this.addSlots();
     for (const slotName in this.slots) {
       this.slots[slotName].setLinks(this.slots);
     }
-    this.addTiles();
+    this.addTiles(tileSet);
     this.addSticks();
     this.addMarker();
   }
@@ -42,24 +56,38 @@ export class Setup {
     return slots;
   }
 
-  private addTiles(): void {
+  private addTiles(tileSet: TileSet): void {
     const slots = this.wallSlots();
-    shuffle(slots);
 
     // Shuffle slots, not tiles - this way tiles are the same for everyone.
     shuffle(slots);
     for (let i = 0; i < 136; i++) {
-      let tileIndex = Math.floor(i / 4);
+      this.addThing(ThingType.TILE, this.tileIndex(i, tileSet), slots[i].name);
+    }
+  }
+
+  updateTiles(tileSet: TileSet): void {
+    for (let i = 0; i < 136; i++) {
+      this.things[i].typeIndex = this.tileIndex(i, tileSet);
+    }
+  }
+
+  private tileIndex(i: number, tileSet: TileSet): number {
+    let tileIndex = Math.floor(i / 4);
+
+    if (tileSet.fives !== '000') {
       if (tileIndex === 4 && i % 4 === 0) {
         tileIndex = 34;
-      } else if (tileIndex === 13 && i % 4 === 0) {
+      } else if (tileIndex === 13 &&
+          (i % 4 === 0 || (i % 4 === 1 && tileSet.fives === '121'))) {
         tileIndex = 35;
       } else if (tileIndex === 22 && i % 4 === 0) {
         tileIndex = 36;
       }
-
-      this.addThing(ThingType.TILE, tileIndex, slots[i].name);
     }
+
+    tileIndex += 37 * tileSet.back;
+    return tileIndex;
   }
 
   deal(playerNum: number): void {

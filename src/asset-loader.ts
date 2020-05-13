@@ -50,8 +50,9 @@ export class AssetLoader {
   makeTile(index: number): Mesh {
     const mesh = this.cloneMesh(this.meshes.tile);
 
-    const x = index % 8;
-    const y = Math.floor(index / 8);
+    const x = (index % 37) % 8;
+    const y = Math.floor((index % 37) / 8);
+    const back = Math.floor(index / 37);
 
     const du = 32 / 256;
     const dv = 40 / 256;
@@ -64,6 +65,8 @@ export class AssetLoader {
       if (uvs[i] <= du && uvs[i+1] <= dv) {
         uvs[i] += x * du;
         uvs[i+1] += y * dv;
+      } else if (uvs[i+1] >= 4 * dv) {
+        uvs[i+1] += back * dv;
       }
     }
 
