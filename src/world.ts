@@ -92,11 +92,8 @@ export class World {
     };
   }
 
-  onConnect(game: Game, isFirst: boolean): void {
+  onConnect(game: Game): void {
     this.playerNum = game.num;
-    if (isFirst) {
-      this.sendUpdate(this.things);
-    }
   }
 
   onThings(entries: Array<[number, ThingInfo]>): void {
