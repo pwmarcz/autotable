@@ -68,7 +68,7 @@ export class Client {
     };
   }
 
-  on(what: 'connect', handler: (game: Game) => void): void;
+  on(what: 'connect', handler: (game: Game, isFirst: boolean) => void): void;
   on(what: 'disconnect', handler: () => void): void;
   on(what: 'update', handler: (things: Array<Entry>, full: boolean) => void): void;
 
@@ -115,7 +115,7 @@ export class Client {
           num: message.num,
           secret: message.secret,
         };
-        this.events.emit('connect', this.game);
+        this.events.emit('connect', this.game, message.isFirst);
         break;
 
       case 'UPDATE':
@@ -202,8 +202,8 @@ export class Collection<K extends string | number, V> {
     }
   }
 
-  private onConnect(): void {
-    if (this.options.unique) {
+  private onConnect(game: Game, isFirst: boolean): void {
+    if (this.options.unique && isFirst) {
       this.client.update([['unique', this.kind, this.options.unique]]);
     }
     if (this.options.rateLimit) {

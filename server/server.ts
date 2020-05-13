@@ -6,6 +6,7 @@ import { Message, Entry } from './protocol';
 
 class Game {
   gameId: string;
+  private starting: boolean = true;
   private secrets: Map<number, string> = new Map();
   private clients: Map<number, Client> = new Map();
 
@@ -83,7 +84,9 @@ class Game {
       gameId: this.gameId,
       secret: this.secrets.get(num)!,
       num,
+      isFirst: this.starting,
     });
+    this.starting = false;
 
     this.send(num, {type: 'UPDATE', entries: this.allEntries(), full: true });
 

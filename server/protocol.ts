@@ -22,6 +22,7 @@ interface JoinedMessage {
   gameId: string;
   secret: string;
   num: number;
+  isFirst: boolean;
 }
 
 interface UpdateMessage {

@@ -82,16 +82,14 @@ export class World {
     };
   }
 
-  onConnect(game: Game): void {
+  onConnect(game: Game, isFirst: boolean): void {
     this.playerNum = game.num;
+    if (isFirst) {
+      this.sendUpdate(this.things);
+    }
   }
 
-  onThings(entries: Array<[number, ThingInfo]>, full: boolean): void {
-    if (entries.length === 0 && full) {
-      this.sendUpdate(this.things);
-      return;
-    }
-
+  onThings(entries: Array<[number, ThingInfo]>): void {
     for (const [thingIndex,] of entries) {
       const thing = this.things[thingIndex];
       thing.prepareMove();
