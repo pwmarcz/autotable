@@ -77,6 +77,7 @@ export class World {
     this.client.on('connect', this.onConnect.bind(this));
     this.clientThings.on('update', this.onThings.bind(this));
     this.clientMatch.on('update', this.onMatch.bind(this));
+    this.sendUpdate(this.things);
 
     // TODO confirmation prompt
     document.getElementById('deal')!.onclick = this.deal.bind(this);
@@ -92,11 +93,8 @@ export class World {
     };
   }
 
-  onConnect(game: Game, isFirst: boolean): void {
+  onConnect(game: Game): void {
     this.playerNum = game.num;
-    if (isFirst) {
-      this.sendUpdate(this.things);
-    }
   }
 
   onThings(entries: Array<[number, ThingInfo]>): void {

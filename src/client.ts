@@ -19,11 +19,11 @@ export class Client {
 
   constructor() {
     this.collections = {
-      things: new Collection('things', this, { unique: 'slotName' }),
+      things: new Collection('things', this, { unique: 'slotName', sendOnConnect: true }),
       nicks: new Collection('nicks', this),
       mouse: new Collection('mouse', this, { rateLimit: 100 }),
       online: new Collection('online', this),
-      match: new Collection('match', this),
+      match: new Collection('match', this, { sendOnConnect: true }),
       sound: new Collection('sound', this, { ephemeral: true }),
     };
     this.events.setMaxListeners(50);
@@ -147,6 +147,7 @@ interface CollectionOptions {
   rateLimit?: number;
   unique?: string;
   ephemeral?: boolean;
+  sendOnConnect?: boolean;
 }
 
 export class Collection<K extends string | number, V> {
@@ -222,11 +223,20 @@ export class Collection<K extends string | number, V> {
   }
 
   private onConnect(game: Game, isFirst: boolean): void {
-    if (isFirst && this.options.unique) {
-      this.client.update([['unique', this.kind, this.options.unique]]);
-    }
-    if (isFirst && this.options.ephemeral) {
-      this.client.update([['ephemeral', this.kind, true]]);
+    if (isFirst) {
+      if (this.options.unique) {
+        this.client.update([['unique', this.kind, this.options.unique]]);
+      }
+      if (this.options.ephemeral) {
+        this.client.update([['ephemeral', this.kind, true]]);
+      }
+      if (this.options.sendOnConnect) {
+        const entries: Array<Entry> = [];
+        for (const [key, value] of this.map.entries()) {
+          entries.push([this.kind, key, value]);
+        }
+        this.client.update(entries);
+      }
     }
     if (this.options.rateLimit) {
       this.intervalId = setInterval(this.sendPending.bind(this), this.options.rateLimit);
