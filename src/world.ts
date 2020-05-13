@@ -6,6 +6,7 @@ import { mostCommon, rectangleOverlap, filterMostCommon } from "./utils";
 import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
+import { SoundPlayer, SoundType } from "./sound-player";
 
 
 interface Select extends Place {
@@ -41,6 +42,8 @@ export class World {
   private heldMouse: Vector3 | null = null;
   mouseTracker: MouseTracker;
 
+  soundPlayer: SoundPlayer;
+
   playerNum = 0;
 
   static WIDTH = 174;
@@ -49,7 +52,7 @@ export class World {
   private clientThings: Collection<number, ThingInfo>;
   private clientMatch: Collection<number, MatchInfo>;
 
-  constructor(objectView: ObjectView, client: Client) {
+  constructor(objectView: ObjectView, soundPlayer: SoundPlayer, client: Client) {
     this.setup = new Setup();
     this.slots = this.setup.slots;
     this.things = this.setup.things;
@@ -64,6 +67,8 @@ export class World {
     this.clientMatch = client.collection<number, MatchInfo>('match');
 
     this.mouseTracker = new MouseTracker(this.client);
+
+    this.soundPlayer = soundPlayer;
 
     this.client.on('connect', this.onConnect.bind(this));
     this.clientThings.on('update', this.onThings.bind(this));
@@ -380,13 +385,36 @@ export class World {
   }
 
   private drop(): void {
+    if(!this.movement) {
+      return;
+    }
+
     for (const thing of this.held) {
       thing.heldBy = null;
     }
+
+    let discardSide = null;
+    for (const thing of this.movement.things()) {
+      const source = thing.slot;
+      const target = this.movement.get(thing)!;
+      if (source.name.match(/^discard/)) {
+        continue;
+      }
+      const m = target.name.match(/^discard.*@(\d+)$/);
+      if (m) {
+        discardSide = parseInt(m[1], 10);
+        break;
+      }
+    }
+
     this.movement!.apply();
-    this.sendUpdate([...this.movement!.things()]);
+    this.sendUpdate([...this.movement.things()]);
     this.checkPushes();
     this.finishDrop();
+
+    if (discardSide !== null) {
+      this.soundPlayer.play(SoundType.DISCARD, discardSide);
+    }
   }
 
   private dropInPlace(): void {

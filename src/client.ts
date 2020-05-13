@@ -23,6 +23,7 @@ export class Client {
       mouse: new Collection('mouse', this, { rateLimit: 100 }),
       online: new Collection('online', this),
       match: new Collection('match', this),
+      sound: new Collection('sound', this, { ephemeral: true }),
     };
     this.events.setMaxListeners(50);
   }

@@ -7,6 +7,7 @@ import { MouseUi } from "./mouse-ui";
 import { MainView } from "./main-view";
 import { Group } from "three";
 import { ClientUi } from "./client-ui";
+import { SoundPlayer } from "./sound-player";
 
 export class Game {
   private assetLoader: AssetLoader;
@@ -17,6 +18,7 @@ export class Game {
   private mainView: MainView;
   private mouseUi: MouseUi;
   private clientUi: ClientUi;
+  private soundPlayer: SoundPlayer;
 
   benchmark: boolean = false;
 
@@ -26,6 +28,7 @@ export class Game {
   settings: {
     perspective: HTMLInputElement;
     benchmark: HTMLInputElement;
+    muted: HTMLInputElement;
   };
 
   constructor(assetLoader: AssetLoader) {
@@ -33,7 +36,8 @@ export class Game {
     this.mainGroup = new Group;
     this.client = new Client();
     this.objectView = new ObjectView(this.mainGroup, assetLoader, this.client);
-    this.world = new World(this.objectView, this.client);
+    this.soundPlayer = new SoundPlayer(this.client);
+    this.world = new World(this.objectView, this.soundPlayer, this.client);
     this.mainView = new MainView(this.mainGroup);
     this.mouseUi = new MouseUi(this.world, this.mainGroup);
     this.clientUi = new ClientUi(this.client);
@@ -42,9 +46,11 @@ export class Game {
     this.settings = {
       perspective: document.getElementById('perspective') as HTMLInputElement,
       benchmark: document.getElementById('benchmark') as HTMLInputElement,
+      muted: document.getElementById('muted') as HTMLInputElement,
     };
 
     this.setupEvents();
+    this.updateSettings();
   }
 
   private setupEvents(): void {
@@ -53,11 +59,13 @@ export class Game {
     window.addEventListener('keyup', this.onKeyUp.bind(this));
     this.settings.perspective.addEventListener('change', this.updateSettings.bind(this));
     this.settings.benchmark.addEventListener('change', this.updateSettings.bind(this));
+    this.settings.muted.addEventListener('change', this.updateSettings.bind(this));
   }
 
   private updateSettings(): void {
     this.mainView.setPerspective(this.settings.perspective.checked);
     this.benchmark = this.settings.benchmark.checked;
+    this.soundPlayer.muted = this.settings.muted.checked;
   }
 
   start(): void {

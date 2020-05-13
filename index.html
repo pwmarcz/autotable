@@ -108,6 +108,8 @@
 </head>
 <body>
     <canvas id="center"></canvas>
+    <!-- https://opengameart.org/content/thwack-sounds -->
+    <audio preload id="sound-discard" src="./sound/discard.wav"></audio>
     <div id="full">
         <div id="main">
             <div id="selection"></div>
@@ -157,6 +159,10 @@
                 <label>
                     <input type="checkbox" id="benchmark">
                     Benchmark mode (don't limit FPS)
+                </label>
+                <label>
+                    <input type="checkbox" id="muted">
+                    Mute sound
                 </label>
             </div>
         </div>
