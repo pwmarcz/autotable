@@ -40,26 +40,26 @@ export interface MatchInfo {
 
 export class World {
   slots: Record<string, Slot> = {};
-  pushes: Array<[Slot, Slot]> = [];
+  private pushes: Array<[Slot, Slot]> = [];
   things: Array<Thing> = [];
 
-  hovered: Thing | null = null;
-  selected: Array<Thing> = [];
-  mouse: Vector3 | null = null;
+  private hovered: Thing | null = null;
+  private selected: Array<Thing> = [];
+  private mouse: Vector3 | null = null;
 
-  held: Array<Thing> = [];
-  movement: Movement | null = null;
-  heldMouse: Vector3 | null = null;
+  private held: Array<Thing> = [];
+  private movement: Movement | null = null;
+  private heldMouse: Vector3 | null = null;
   mouseTracker: MouseTracker;
 
-  scoreSlots: Array<Array<Slot>> = [[], [], [], []];
+  private scoreSlots: Array<Array<Slot>> = [[], [], [], []];
   playerNum = 0;
 
   static WIDTH = 174;
 
-  client: Client;
-  clientThings: Collection<number, ThingInfo>;
-  clientMatch: Collection<number, MatchInfo>;
+  private client: Client;
+  private clientThings: Collection<number, ThingInfo>;
+  private clientMatch: Collection<number, MatchInfo>;
 
   constructor(client: Client) {
     this.addSlots();
@@ -141,7 +141,7 @@ export class World {
     this.checkPushes();
   }
 
-  sendUpdate(things: Array<Thing>): void {
+  private sendUpdate(things: Array<Thing>): void {
     const entries: Array<[number, ThingInfo]> = [];
     for (const thing of things) {
       entries.push([thing.index, this.describeThing(thing)]);
@@ -149,11 +149,11 @@ export class World {
     this.clientThings.update(entries);
   }
 
-  sendMouse(): void {
+  private sendMouse(): void {
     this.mouseTracker.update(this.playerNum, this.mouse, this.heldMouse);
   }
 
-  describeThing(thing: Thing): ThingInfo {
+  private describeThing(thing: Thing): ThingInfo {
     return {
       slotName: thing.slot.name,
       rotationIndex: thing.rotationIndex,
@@ -161,7 +161,7 @@ export class World {
     };
   }
 
-  wallSlots(): Array<Slot> {
+  private wallSlots(): Array<Slot> {
     const slots = [];
 
     for (let num = 0; num < 4; num++) {
@@ -174,7 +174,7 @@ export class World {
     return slots;
   }
 
-  addTiles(): void {
+  private addTiles(): void {
     const slots = this.wallSlots();
     shuffle(slots);
 
@@ -194,7 +194,7 @@ export class World {
     }
   }
 
-  deal(): void {
+  private deal(): void {
     const tiles = this.things.filter(thing => thing.type === ThingType.TILE);
     const slots = this.wallSlots();
     shuffle(slots);
@@ -253,7 +253,7 @@ export class World {
     this.clientMatch.set(0, {dealer: this.playerNum, honba});
   }
 
-  addSticks(): void {
+  private addSticks(): void {
     const add = (index: number, n: number, slot: number): void => {
       for (let i = 0; i < 4; i++) {
         for (let j = 0; j < n; j++) {
@@ -276,11 +276,11 @@ export class World {
     add(0, 5, 5);
   }
 
-  addMarker(): void {
+  private addMarker(): void {
     this.addThing(ThingType.MARKER, 0, 'marker@0');
   }
 
-  addThing(type: ThingType, typeIndex: number, slotName: string): void {
+  private addThing(type: ThingType, typeIndex: number, slotName: string): void {
     if (this.slots[slotName] === undefined) {
       throw `Unknown slot: ${slotName}`;
     }
@@ -292,7 +292,7 @@ export class World {
     this.things.push(thing);
   }
 
-  addSlots(): void {
+  private addSlots(): void {
     for (let i = 0; i < 14; i++) {
       this.addSlot(new Slot({
         name: `hand.${i}`,
@@ -373,7 +373,7 @@ export class World {
           drawShadow: j < 6,
           links: {
             requires: j < 6 ? undefined : `discard.${i}.${j-1}`,
-          },
+      },
         }));
         if (j > 0) {
           this.addPush(`discard.${i}.${j-1}`, `discard.${i}.${j}`);
@@ -454,14 +454,14 @@ export class World {
     }));
   }
 
-  addSlot(slot: Slot): void {
+  private addSlot(slot: Slot): void {
     for (let i = 0; i < 4; i++) {
       const rotated = slot.rotated('@' + i, i * Math.PI / 2, World.WIDTH);
       this.slots[rotated.name] = rotated;
     }
   }
 
-  addPush(source: string, target: string): void {
+  private addPush(source: string, target: string): void {
     for (let i = 0; i < 4; i++) {
       this.pushes.push([this.slots[`${source}@${i}`], this.slots[`${target}@${i}`]]);
     }
@@ -501,7 +501,7 @@ export class World {
     this.drag();
   }
 
-  drag(): void {
+  private drag(): void {
     if (this.mouse === null || this.heldMouse === null) {
       return;
     }
@@ -533,7 +533,7 @@ export class World {
     }
   }
 
-  canSelect(thing: Thing, otherSelected: Array<Thing>): boolean {
+  private canSelect(thing: Thing, otherSelected: Array<Thing>): boolean {
     const upSlot = thing.slot.links.up;
     if (upSlot) {
       if (upSlot.thing !== null &&
@@ -545,7 +545,7 @@ export class World {
     return true;
   }
 
-  findSlot(x: number, y: number, w: number, h: number, thingType: ThingType): Slot | null {
+  private findSlot(x: number, y: number, w: number, h: number, thingType: ThingType): Slot | null {
     const minOverlap = 1;
     let bestOverlap = minOverlap ;
     let bestSlot = null;
@@ -679,7 +679,7 @@ export class World {
     }
   }
 
-  drop(): void {
+  private drop(): void {
     for (const thing of this.held) {
       thing.heldBy = null;
     }
@@ -689,14 +689,14 @@ export class World {
     this.finishDrop();
   }
 
-  dropInPlace(): void {
+  private dropInPlace(): void {
     for (const thing of this.held) {
       thing.heldBy = null;
     }
     this.finishDrop();
   }
 
-  finishDrop(): void {
+  private finishDrop(): void {
     const toDrop = this.held.slice();
     this.selected.splice(0);
     this.held.splice(0);
@@ -707,11 +707,11 @@ export class World {
     this.sendMouse();
   }
 
-  canDrop(): boolean {
+  private canDrop(): boolean {
     return this.movement ? this.movement.valid() : false;
   }
 
-  checkPushes(): void {
+  private checkPushes(): void {
     for (const [source, target] of this.pushes) {
       target.handlePush(source);
     }
