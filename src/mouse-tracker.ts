@@ -47,6 +47,15 @@ export class MouseTracker {
   }
 
   getMouse(playerNum: number, now: number): Vector3 | null {
+    // Debugging
+    // if (playerNum === 3) {
+    //   const waypoints = this.players[1].waypoints;
+    //   if (waypoints.length === 0) {
+    //     return null;
+    //   }
+    //   return waypoints[waypoints.length-1].pos;
+    // }
+
     const waypoints = this.players[playerNum].waypoints;
     if (waypoints.length === 0) {
       return null;
@@ -96,24 +105,28 @@ export class MouseTracker {
       if (mouseInfo.mouse === null) {
         player.waypoints.splice(0);
       } else {
-        const nextPos = new Vector3(mouseInfo.mouse.x, mouseInfo.mouse.y, mouseInfo.mouse.z);
+        const pos = new Vector3(mouseInfo.mouse.x, mouseInfo.mouse.y, mouseInfo.mouse.z);
         const remoteTime = mouseInfo.mouse.time;
-        const waypoints = player.waypoints.filter(w => w.time >= now - ANIMATION_TIME);
-        if (waypoints.length === 0) {
-          let lastPos;
-          if (player.waypoints.length > 0) {
-            lastPos = player.waypoints[player.waypoints.length-1].pos;
-          } else {
-            lastPos = nextPos;
-          }
-          waypoints.push({ time: now, pos: lastPos, remoteTime: remoteTime - ANIMATION_TIME });
-        }
-        const last = waypoints[waypoints.length-1];
-        let time = last.time + remoteTime - last.remoteTime;
-        time = clamp(time, now + ANIMATION_TIME * 0.5, now + ANIMATION_TIME);
 
-        waypoints.push({ time, remoteTime, pos: nextPos});
-        player.waypoints = waypoints;
+        if (player.waypoints.length === 0) {
+          player.waypoints.push({ pos, time: now, remoteTime});
+          player.waypoints.push({ pos, time: now + ANIMATION_TIME, remoteTime});
+        } else {
+          let last = player.waypoints[player.waypoints.length-1];
+          if (last.time < now - ANIMATION_TIME) {
+            last = { pos: last.pos, time: now, remoteTime: remoteTime - ANIMATION_TIME};
+            player.waypoints.push(last);
+          }
+
+          let time = last.time + remoteTime - last.remoteTime;
+          time = clamp(time, now + ANIMATION_TIME * 0.5, now + ANIMATION_TIME * 1.5);
+          time = Math.max(time, last.time);
+          player.waypoints.push({
+            pos, time, remoteTime
+          });
+        }
+
+        player.waypoints = player.waypoints.filter(w => w.time >= now - ANIMATION_TIME * 2);
       }
     }
   }
