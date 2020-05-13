@@ -1,10 +1,12 @@
 import { Vector3 } from "three";
 import { Collection, Client } from "./client";
+import { clamp } from "./utils";
 
 
 interface Waypoint {
   pos: Vector3;
   time: number;
+  remoteTime: number;
 }
 
 interface Player {
@@ -14,7 +16,7 @@ interface Player {
 
 interface MouseInfo {
   held: {x: number; y: number; z: number} | null;
-  mouse: {x: number; y: number; z: number} | null;
+  mouse: {x: number; y: number; z: number; time: number} | null;
 }
 
 const ANIMATION_TIME = 100;
@@ -37,8 +39,9 @@ export class MouseTracker {
   }
 
   update(playerNum: number, mouse: Vector3 | null, held: Vector3 | null): void {
+    const now = new Date().getTime();
     this.clientMouse.set(playerNum, {
-      mouse: mouse && {x: mouse.x, y: mouse.y, z: mouse.z},
+      mouse: mouse && {x: mouse.x, y: mouse.y, z: mouse.z, time: now},
       held: held && {x: held.x, y: held.y, z: held.z},
     });
   }
@@ -94,6 +97,7 @@ export class MouseTracker {
         player.waypoints.splice(0);
       } else {
         const nextPos = new Vector3(mouseInfo.mouse.x, mouseInfo.mouse.y, mouseInfo.mouse.z);
+        const remoteTime = mouseInfo.mouse.time;
         const waypoints = player.waypoints.filter(w => w.time >= now - ANIMATION_TIME);
         if (waypoints.length === 0) {
           let lastPos;
@@ -102,9 +106,13 @@ export class MouseTracker {
           } else {
             lastPos = nextPos;
           }
-          waypoints.push({ time: now, pos: lastPos });
+          waypoints.push({ time: now, pos: lastPos, remoteTime: remoteTime - ANIMATION_TIME });
         }
-        waypoints.push({ time: now + ANIMATION_TIME, pos: nextPos});
+        const last = waypoints[waypoints.length-1];
+        let time = last.time + remoteTime - last.remoteTime;
+        time = clamp(time, now + ANIMATION_TIME * 0.5, now + ANIMATION_TIME);
+
+        waypoints.push({ time, remoteTime, pos: nextPos});
         player.waypoints = waypoints;
       }
     }

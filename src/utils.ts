@@ -87,3 +87,7 @@ export function round3(vec: Vector3, factor: number): void {
   vec.y = Math.round(vec.y * factor) / factor;
   vec.z = Math.round(vec.z * factor) / factor;
 }
+
+export function clamp(val: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, val));
+}
