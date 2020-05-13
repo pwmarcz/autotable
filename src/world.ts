@@ -5,6 +5,7 @@ import { Client, Collection, Game } from "./client";
 import { mostCommon, rectangleOverlap, filterMostCommon } from "./utils";
 import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
+import { SoundPlayer } from "./sound-player";
 
 interface Render {
   thingIndex: number;
@@ -47,6 +48,8 @@ export class World {
   private heldMouse: Vector3 | null = null;
   mouseTracker: MouseTracker;
 
+  soundPlayer: SoundPlayer;
+
   playerNum = 0;
 
   static WIDTH = 174;
@@ -67,6 +70,8 @@ export class World {
     this.clientMatch = client.collection<number, MatchInfo>('match');
 
     this.mouseTracker = new MouseTracker(this.client);
+
+    this.soundPlayer = new SoundPlayer();
 
     this.client.on('connect', this.onConnect.bind(this));
     this.clientThings.on('update', this.onThings.bind(this));
@@ -103,8 +108,10 @@ export class World {
         this.selected.splice(selectedIndex, 1);
       }
     }
+    let discardSide = null;
     for (const [thingIndex, thingInfo] of entries) {
       const thing = this.things[thingIndex];
+      const oldSlot = thing.slot;
       const slot = this.slots[thingInfo.slotName];
       thing.moveTo(slot, thingInfo.rotationIndex);
 
