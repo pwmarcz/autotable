@@ -5,16 +5,8 @@ import { Client, Collection, Game } from "./client";
 import { mostCommon, rectangleOverlap, filterMostCommon } from "./utils";
 import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
+import { ObjectView, Render } from "./object-view";
 
-interface Render {
-  thingIndex: number;
-  place: Place;
-  selected: boolean;
-  hovered: boolean;
-  held: boolean;
-  temporary: boolean;
-  bottom: boolean;
-}
 
 interface Select extends Place {
   id: any;
@@ -33,6 +25,8 @@ export interface MatchInfo {
 
 export class World {
   private setup: Setup;
+
+  private objectView: ObjectView;
 
   slots: Record<string, Slot>;
   things: Array<Thing>;
@@ -55,12 +49,15 @@ export class World {
   private clientThings: Collection<number, ThingInfo>;
   private clientMatch: Collection<number, MatchInfo>;
 
-  constructor(client: Client) {
+  constructor(objectView: ObjectView, client: Client) {
     this.setup = new Setup();
     this.slots = this.setup.slots;
     this.things = this.setup.things;
     this.pushes = this.setup.pushes;
     this.setup.setup();
+
+    this.objectView = objectView;
+    this.setupView();
 
     this.client = client;
     this.clientThings = client.collection('things');
@@ -423,11 +420,17 @@ export class World {
     }
   }
 
-  toRender(): Array<Render> {
+  updateView(): void {
+    this.updateViewThings();
+    this.updateViewDropShadows();
+    this.objectView.updateScores(this.setup.getScores());
+  }
+
+  private updateViewThings(): void {
+    const toRender: Array<Render> = [];
     const canDrop = this.canDrop();
     const now = new Date().getTime();
 
-    const result = [];
     for (const thing of this.things) {
       let place = thing.place();
       const held = thing.heldBy !== null;
@@ -464,7 +467,7 @@ export class World {
         bottom = slot.links.up.thing === null || slot.links.up.thing.heldBy !== null;
       }
 
-      result.push({
+      toRender.push({
         place,
         thingIndex: thing.index,
         selected,
@@ -474,7 +477,17 @@ export class World {
         bottom,
       });
     }
-    return result;
+    this.objectView.updateThings(toRender);
+  }
+
+  private updateViewDropShadows(): void {
+    const places = [];
+    if (this.canDrop()) {
+      for (const slot of this.movement!.slots()) {
+        places.push(slot.placeWithOffset(0));
+      }
+    }
+    this.objectView.updateDropShadows(places);
   }
 
   toSelect(): Array<Select> {
@@ -489,28 +502,19 @@ export class World {
     return result;
   }
 
-  toRenderPlaces(): Array<Place> {
-    const result = [];
+  setupView(): void {
+    this.objectView.addThings(this.things.map(thing => ({
+      type: thing.type,
+      typeIndex: thing.typeIndex,
+    })));
+
+    const places = [];
     for (const slotName in this.slots) {
       const slot = this.slots[slotName];
       if (slot.drawShadow) {
-        result.push(slot.places[slot.shadowRotation]);
+        places.push(slot.places[slot.shadowRotation]);
       }
     }
-    return result;
-  }
-
-  toRenderShadows(): Array<Place> {
-    const result = [];
-    if (this.canDrop()) {
-      for (const slot of this.movement!.slots()) {
-        result.push(slot.placeWithOffset(0));
-      }
-    }
-    return result;
-  }
-
-  getScores(): Array<number> {
-    return this.setup.getScores();
+    this.objectView.addShadows(places);
   }
 }

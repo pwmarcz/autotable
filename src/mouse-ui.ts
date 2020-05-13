@@ -107,8 +107,10 @@ export class MouseUi {
   }
 
   setCamera(camera: Camera): void {
-    this.camera = camera;
-    this.selectionBox = new SelectionBox(camera);
+    if (this.camera !== camera) {
+      this.camera = camera;
+      this.selectionBox = new SelectionBox(camera);
+    }
   }
 
   update(): void {
