@@ -128,6 +128,7 @@ export class Client {
 interface CollectionOptions {
   rateLimit?: number;
   unique?: string;
+  ephemeral?: boolean;
 }
 
 export class Collection<K extends string | number, V> {
@@ -203,8 +204,11 @@ export class Collection<K extends string | number, V> {
   }
 
   private onConnect(game: Game, isFirst: boolean): void {
-    if (this.options.unique && isFirst) {
+    if (isFirst && this.options.unique) {
       this.client.update([['unique', this.kind, this.options.unique]]);
+    }
+    if (isFirst && this.options.ephemeral) {
+      this.client.update([['ephemeral', this.kind, true]]);
     }
     if (this.options.rateLimit) {
       this.intervalId = setInterval(this.sendPending.bind(this), this.options.rateLimit);

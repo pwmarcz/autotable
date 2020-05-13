@@ -12,6 +12,7 @@ class Game {
 
   numPlayers: number;
   unique: Map<string, string> = new Map();
+  ephemeral: Map<string, boolean> = new Map();
 
   private collections: Map<string, Map<string | number, any>> = new Map();
 
@@ -110,18 +111,20 @@ class Game {
     }
 
     for (const [kind, key, value] of entries) {
-      let collection = this.collections.get(kind);
-      if (!collection) {
-        collection = new Map();
-        this.collections.set(kind, collection);
+      if (!this.ephemeral.get(kind)) {
+        let collection = this.collections.get(kind);
+        if (!collection) {
+          collection = new Map();
+          this.collections.set(kind, collection);
+        }
+        collection.set(key, value);
       }
-      collection.set(key, value);
 
       if (kind === 'unique') {
         this.unique.set(key as string, value);
       }
-      if (kind === 'settings' && key === 'numPlayers') {
-        this.numPlayers = value;
+      if (kind === 'ephemeral') {
+        this.ephemeral.set(key as string, value);
       }
     }
     this.sendAll({type: 'UPDATE', entries, full: false});
