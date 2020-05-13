@@ -148,14 +148,13 @@ export class World {
   }
 
   private deal(): void {
-    this.setup.deal(this.playerNum);
+    this.held.splice(0);
 
     for (const thing of this.things) {
-      thing.prepareMove();
+      thing.heldBy = null;
     }
-
+    this.setup.deal(this.playerNum);
     this.checkPushes();
-    this.held.splice(0);
     this.sendUpdate(this.things);
 
     const match = this.clientMatch.get(0);
