@@ -1,6 +1,7 @@
 import { Vector3 } from "three";
 
-import { Place, Slot, Thing, Size, ThingType, Movement } from "./places";
+import { Place, Slot, Thing, Size, ThingType } from "./places";
+import { Movement } from "./movement";
 import { Client, Collection, Game } from "./client";
 import { mostCommon, rectangleOverlap, filterMostCommon } from "./utils";
 import { MouseTracker } from "./mouse-tracker";
