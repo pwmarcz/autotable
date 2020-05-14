@@ -24,6 +24,7 @@ export class Game {
 
   private lookDown = new Animation(150);
   private zoom = new Animation(150);
+  private lookDownState: number = 0;
 
   keys: Set<string> = new Set();
 
@@ -163,6 +164,9 @@ export class Game {
       case 'x':
         this.zoom.start(-1);
         break;
+      case 'q':
+        this.lookDownState = 1 - this.lookDownState;
+        this.lookDown.start(this.lookDownState);
     }
   }
 
