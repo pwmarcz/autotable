@@ -87,23 +87,27 @@ export class MouseUi {
     this.update();
   }
 
-  private onMouseDown(): void {
+  private onMouseDown(event: MouseEvent): void {
     if (this.mouse2 === null || this.mouse3 === null) {
       return;
     }
 
-    if (this.world.onDragStart()) {
-      this.dragStart3 = this.mouse3.clone();
-    } else {
-      this.selectStart3 = this.mouse3.clone();
+    if (event.button === 0) {
+      if (this.world.onDragStart()) {
+        this.dragStart3 = this.mouse3.clone();
+      } else {
+        this.selectStart3 = this.mouse3.clone();
+      }
+      this.update();
     }
-    this.update();
   }
 
-  private onMouseUp(): void {
-    this.dragStart3 = null;
-    this.selectStart3 = null;
-    this.world.onDragEnd();
+  private onMouseUp(event: MouseEvent): void {
+    if (event.button === 0) {
+      this.dragStart3 = null;
+      this.selectStart3 = null;
+      this.world.onDragEnd();
+    }
   }
 
   setCamera(camera: Camera): void {
