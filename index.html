@@ -97,6 +97,21 @@
 
         #center { display: none; }
 
+        #deal { position: relative; }
+        .btn-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 0%;
+            background: #fff2ca;
+            transition: width 600ms;
+        }
+
+        .btn-progress-text {
+            position: relative;
+        }
+
         /* https://fontlibrary.org/en/font/segment7 */
         @font-face {
             font-family: 'Segment7Standard';
@@ -119,7 +134,10 @@
             <div class="cursor rotate-3"></div>
         </div>
         <div id="sidebar" class="collapsed container text-light">
-            <button class="btn btn-warning btn-sm btn-block" id="deal">Deal</button></p>
+            <button class="btn btn-warning btn-sm btn-block" id="deal">
+                <div class="btn-progress"></div>
+                <span class="btn-progress-text">Deal</span>
+            </button></p>
             <button class="btn btn-secondary btn-sm btn-block" id="toggle-dealer">Toggle dealer</button></p>
             <button class="btn btn-secondary btn-sm btn-block" id="toggle-honba">Toggle honba</button></p>
 

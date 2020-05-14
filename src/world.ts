@@ -78,26 +78,25 @@ export class World {
     this.clientThings.on('update', this.onThings.bind(this));
     this.clientMatch.on('update', this.onMatch.bind(this));
     this.sendUpdate(this.things);
-
-    // TODO confirmation prompt
-    document.getElementById('deal')!.onclick = this.deal.bind(this);
-    document.getElementById('toggle-dealer')!.onclick = () => {
-      const match = this.clientMatch.get(0) ?? { dealer: 3, honba: 0, tileSet: TileSet.initial()};
-      match.dealer = (match.dealer + 1) % 4;
-      this.clientMatch.set(0, match);
-    };
-    document.getElementById('toggle-honba')!.onclick = () => {
-      const match = this.clientMatch.get(0) ?? { dealer: 0, honba: 0, tileSet: TileSet.initial()};
-      match.honba = (match.honba + 1) % 8;
-      this.clientMatch.set(0, match);
-    };
   }
 
-  onConnect(game: Game): void {
+  toggleDealer(): void {
+    const match = this.clientMatch.get(0) ?? { dealer: 3, honba: 0, tileSet: TileSet.initial()};
+    match.dealer = (match.dealer + 1) % 4;
+    this.clientMatch.set(0, match);
+  }
+
+  toggleHonba(): void {
+    const match = this.clientMatch.get(0) ?? { dealer: 0, honba: 0, tileSet: TileSet.initial()};
+    match.honba = (match.honba + 1) % 8;
+    this.clientMatch.set(0, match);
+  };
+
+  private onConnect(game: Game): void {
     this.playerNum = game.num;
   }
 
-  onThings(entries: Array<[number, ThingInfo]>): void {
+  private onThings(entries: Array<[number, ThingInfo]>): void {
     for (const [thingIndex,] of entries) {
       const thing = this.things[thingIndex];
       thing.prepareMove();
@@ -173,7 +172,7 @@ export class World {
     };
   }
 
-  private deal(): void {
+  deal(): void {
     this.held.splice(0);
 
     for (const thing of this.things) {

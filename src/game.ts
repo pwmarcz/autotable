@@ -25,6 +25,8 @@ export class Game {
   private lookDown = new Animation(150);
   private zoom = new Animation(150);
 
+  keys: Set<string> = new Set();
+
   settings: {
     perspective: HTMLInputElement;
     benchmark: HTMLInputElement;
@@ -50,6 +52,7 @@ export class Game {
     };
 
     this.setupEvents();
+    this.setupDealButton();
     this.updateSettings();
   }
 
@@ -60,6 +63,43 @@ export class Game {
     this.settings.perspective.addEventListener('change', this.updateSettings.bind(this));
     this.settings.benchmark.addEventListener('change', this.updateSettings.bind(this));
     this.settings.muted.addEventListener('change', this.updateSettings.bind(this));
+
+    document.getElementById('toggle-dealer')!.onclick = () => this.world.toggleDealer();
+    document.getElementById('toggle-honba')!.onclick = () => this.world.toggleHonba();
+  }
+
+  private setupDealButton(): void {
+    const buttonElement = document.getElementById('deal')!;
+    const progressElement = document.querySelector('#deal .btn-progress')! as HTMLElement;
+    let startPressed: number | null = null;
+    const transitionTime = 600;
+    const waitTime = transitionTime + 100;
+
+    const start = (): void => {
+      if (startPressed === null) {
+        progressElement.style.width = '100%';
+        startPressed = new Date().getTime();
+      }
+    };
+    const cancel = (): void => {
+      progressElement.style.width = '0%';
+      startPressed = null;
+      buttonElement.blur();
+    };
+    const commit = (): void => {
+      const deal = startPressed !== null && new Date().getTime() - startPressed > waitTime;
+      progressElement.style.width = '0%';
+      startPressed = null;
+      buttonElement.blur();
+
+      if (deal) {
+        this.world.deal();
+      }
+    };
+
+    buttonElement.onmousedown = start;
+    buttonElement.onmouseup = commit;
+    buttonElement.onmouseleave = cancel;
   }
 
   private updateSettings(): void {
@@ -101,6 +141,12 @@ export class Game {
       return;
     }
 
+    if (this.keys.has(event.key)) {
+      return;
+    }
+
+    this.keys.add(event.key);
+
     switch(event.key) {
       case 'f':
         this.world.onFlip(1);
@@ -121,6 +167,8 @@ export class Game {
   }
 
   private onKeyUp(event: KeyboardEvent): void {
+    this.keys.delete(event.key);
+
     switch(event.key) {
       case ' ':
         this.lookDown.start(0);
