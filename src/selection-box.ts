@@ -12,7 +12,6 @@ export class SelectionBox {
 
   frustum: Frustum = new Frustum();
 
-  tmpPoint = new Vector3();
   vectemp1 = new Vector3();
   vectemp2 = new Vector3();
   vectemp3 = new Vector3();
@@ -28,37 +27,37 @@ export class SelectionBox {
   vecFarDownRight = new Vector3();
   vecFarDownLeft = new Vector3();
 
-  enabled = false;
-
   constructor(camera: Camera) {
     this.camera = camera as (PerspectiveCamera | OrthographicCamera);
     this.deep = Number.MAX_VALUE;
   }
 
   update(startPoint: Vector2, endPoint: Vector2): void {
-    if (Math.abs(startPoint.x - endPoint.x) < 0.01 ||
-      Math.abs(startPoint.y - endPoint.y) < 0.01) {
-      this.enabled = false;
-      return;
-    }
-    this.enabled = true;
-
     this.camera.updateProjectionMatrix();
     this.camera.updateMatrixWorld();
 
+    let left = Math.min(startPoint.x, endPoint.x);
+    let right = Math.max(startPoint.x, endPoint.x);
+    let down = Math.min(startPoint.y, endPoint.y);
+    let top = Math.max(startPoint.y, endPoint.y);
+    const eps = 0.01;
+
+    // Fix narrow / empty selection breaking
+    if (right - left < eps) {
+      left -= eps / 2;
+      right += eps / 2;
+    }
+    if (top - down < eps) {
+      down -= eps / 2;
+      top += eps / 2;
+    }
+
     if ((this.camera as PerspectiveCamera).isPerspectiveCamera) {
-
-      this.tmpPoint.set( startPoint.x, startPoint.y, 0);
-      this.tmpPoint.x = Math.min( startPoint.x, endPoint.x );
-      this.tmpPoint.y = Math.max( startPoint.y, endPoint.y );
-      endPoint.x = Math.max( startPoint.x, endPoint.x );
-      endPoint.y = Math.min( startPoint.y, endPoint.y );
-
       this.vecNear.copy( this.camera.position );
-      this.vecTopLeft.copy( this.tmpPoint );
-      this.vecTopRight.set( endPoint.x, this.tmpPoint.y, 0 );
-      this.vecDownRight.set( endPoint.x, endPoint.y, 0 );
-      this.vecDownLeft.set( this.tmpPoint.x, endPoint.y, 0 );
+      this.vecTopLeft.set( left, top, 0 );
+      this.vecTopRight.set( right, top, 0 );
+      this.vecDownRight.set( right, down, 0 );
+      this.vecDownLeft.set( left, down, 0 );
 
       this.vecTopLeft.unproject( this.camera );
       this.vecTopRight.unproject( this.camera );
@@ -90,13 +89,6 @@ export class SelectionBox {
       planes[ 5 ].normal.multiplyScalar( - 1 );
 
     } else if ( (this.camera as OrthographicCamera).isOrthographicCamera ) {
-
-      if ( startPoint.equals( endPoint ) ) endPoint.addScalar( Number.EPSILON ); // avoid invalid frustum
-
-      const left = Math.min( startPoint.x, endPoint.x );
-      const top = Math.max( startPoint.y, endPoint.y );
-      const right = Math.max( startPoint.x, endPoint.x );
-      const down = Math.min( startPoint.y, endPoint.y );
 
       this.vecTopLeft.set( left, top, - 1 );
       this.vecTopRight.set( right, top, - 1 );
@@ -135,19 +127,17 @@ export class SelectionBox {
 
   select(objects: Array<Mesh>): Array<Mesh> {
     const result = [];
-    if (this.enabled) {
-      const box = new Box3();
-      for (const object of objects) {
-        if (!object.geometry.boundingBox) {
-          object.geometry.computeBoundingBox();
-        }
+    const box = new Box3();
+    for (const object of objects) {
+      if (!object.geometry.boundingBox) {
+        object.geometry.computeBoundingBox();
+      }
 
-        box.copy(object.geometry.boundingBox!);
-        box.applyMatrix4(object.matrixWorld);
+      box.copy(object.geometry.boundingBox!);
+      box.applyMatrix4(object.matrixWorld);
 
-        if (this.frustum.intersectsBox(box)) {
-          result.push(object);
-        }
+      if (this.frustum.intersectsBox(box)) {
+        result.push(object);
       }
     }
     return result;
