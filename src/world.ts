@@ -421,12 +421,13 @@ export class World {
     }
 
     let discardSide = null;
+    let hasStick = false;
     for (const thing of this.movement.things()) {
       const target = this.movement.get(thing)!;
-      const m = target.name.match(/^discard.*@(\d+)$/);
-      if (m) {
-        discardSide = parseInt(m[1], 10);
-        break;
+      if (target.group.match(/^discard/)) {
+        discardSide = target.side();
+      } else if (target.group.match(/^riichi/)) {
+        hasStick = true;
       }
     }
 
@@ -437,6 +438,9 @@ export class World {
 
     if (discardSide !== null) {
       this.soundPlayer.play(SoundType.DISCARD, discardSide);
+    }
+    if (hasStick) {
+      this.soundPlayer.play(SoundType.STICK, 0);
     }
   }
 

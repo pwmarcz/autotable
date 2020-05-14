@@ -76,6 +76,11 @@ export class Slot {
     this.links = {};
   }
 
+  side(): number {
+    const m = this.name.match(/@(\d+)$/);
+    return m !== null ? parseInt(m[1], 10) : 0;
+  }
+
   setLinks(slots: Record<string, Slot>): void {
     for (const key in this.linkDesc) {
       const linkName = key as keyof SlotLinks;

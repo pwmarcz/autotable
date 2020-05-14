@@ -323,7 +323,7 @@ export class Setup {
 
     this.addSlot(new Slot({
       name: 'marker',
-      group: 'marker@',
+      group: 'marker',
       type: ThingType.MARKER,
       origin: new Vector3(
         -4, -8, 0,

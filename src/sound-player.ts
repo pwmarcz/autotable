@@ -2,6 +2,7 @@ import { Client, Collection } from "./client";
 
 export enum SoundType {
   DISCARD = 'DISCARD',
+  STICK = 'STICK',
 };
 
 interface SoundInfo {
@@ -63,6 +64,7 @@ export class SoundPlayer {
     this.clientSound.on('update', this.onUpdate.bind(this));
     this.urls = {
       [SoundType.DISCARD]: this.getSource('sound-discard'),
+      [SoundType.STICK]: this.getSource('sound-stick'),
     };
   }
 
