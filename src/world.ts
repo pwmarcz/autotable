@@ -422,11 +422,7 @@ export class World {
 
     let discardSide = null;
     for (const thing of this.movement.things()) {
-      const source = thing.slot;
       const target = this.movement.get(thing)!;
-      if (source.name.match(/^discard/)) {
-        continue;
-      }
       const m = target.name.match(/^discard.*@(\d+)$/);
       if (m) {
         discardSide = parseInt(m[1], 10);
