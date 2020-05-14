@@ -73,7 +73,7 @@ export class Game {
     const progressElement = document.querySelector('#deal .btn-progress')! as HTMLElement;
     let startPressed: number | null = null;
     const transitionTime = 600;
-    const waitTime = transitionTime + 100;
+    const waitTime = transitionTime + 0;
 
     const start = (): void => {
       if (startPressed === null) {
