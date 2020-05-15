@@ -4,10 +4,14 @@
   "main": "dist/server.js",
   "license": "MIT",
   "devDependencies": {
+    "@types/jest": "^25.2.2",
+    "jest": "^26.0.1",
+    "ts-jest": "^25.5.1",
     "typescript": "^3.8.3"
   },
   "scripts": {
-    "start": "tsc && node dist/server.js"
+    "start": "tsc && node dist/index.js",
+    "test": "jest"
   },
   "dependencies": {
     "@types/ws": "^7.2.4",
