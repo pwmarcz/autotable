@@ -4,7 +4,7 @@ import jpg from '../img/*.jpg';
 import glbModels from '../img/models.auto.glb';
 
 import { Texture, Mesh, TextureLoader, Material, LinearEncoding,
-   MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, BufferGeometry } from 'three';
+   MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, BufferGeometry, RepeatWrapping } from 'three';
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { World } from './world';
 import { Size } from './places';
@@ -94,8 +94,8 @@ export class AssetLoader {
       this.loadModels(glbModels),
       (document as any).fonts.load('40px "Segment7Standard"'),
     ]).then(() => {
-      this.textures.table.wrapS = 3;
-      this.textures.table.wrapT = 3;
+      this.textures.table.wrapS = RepeatWrapping;
+      this.textures.table.wrapT = RepeatWrapping;
       this.textures.table.repeat.set(3, 3);
       (this.meshes.tile.material as MeshStandardMaterial).color.setHex(0xeeeeee);
     });
