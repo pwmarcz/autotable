@@ -125,8 +125,7 @@ export class Game {
 
     this.world.updateView();
     this.mainView.updateViewport();
-    this.mainView.updateCamera(this.lookDown.pos, this.zoom.pos, this.mouseUi.mouse2);
-    this.mainView.updateRotation(this.world.playerNum);
+    this.mainView.updateCamera(this.world.playerNum, this.lookDown.pos, this.zoom.pos, this.mouseUi.mouse2);
     this.mainView.updateOutline(this.objectView.selectedObjects);
     this.mouseUi.setCamera(this.mainView.camera);
     this.mouseUi.update();

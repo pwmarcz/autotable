@@ -77,42 +77,65 @@ export class MainView {
 
   private makeCamera(perspective: boolean): Camera {
     if (perspective) {
-      const camera = new PerspectiveCamera(30, 800 / 600, 0.1, 1000);
-      camera.position.set(World.WIDTH/2, -World.WIDTH*0.8, World.WIDTH * 0.9);
-      camera.rotateX(Math.PI * 0.3);
+      const camera = new PerspectiveCamera(30, RATIO, 0.1, 1000);
+      return camera;
+    } else {
+      const w = World.WIDTH * 1.2;
+      const h = w / RATIO;
+      const camera = new OrthographicCamera(
+        -w / 2, w / 2,
+        h / 2, -h / 2,
+        0.1, 1000);
       return camera;
     }
-
-    const w = World.WIDTH * 1.2;
-    const h = w / RATIO;
-    const camera = new OrthographicCamera(
-      -w / 2, w / 2,
-      h / 2, -h / 2,
-      0.1, 1000);
-    return camera;
   }
 
-  updateCamera(lookDown: number, zoom: number, mouse2: Vector2 | null): void {
+  updateCamera(seat: number | null, lookDown: number, zoom: number, mouse2: Vector2 | null): void {
+    this.updateRotation((seat ?? 0) * Math.PI/2);
+
     if (this.perspective) {
-      return;
+      this.updatePespectiveCamera(seat === null, zoom);
+    } else {
+      this.updateOrthographicCamera(seat === null, lookDown, zoom, mouse2);
+    }
+  }
+
+  private updatePespectiveCamera(fromTop: boolean, zoom: number): void {
+    if (fromTop) {
+      this.camera.position.set(World.WIDTH/2, World.WIDTH / 2, 370);
+      this.camera.rotation.set(0, 0, 0);
+    } else {
+      this.camera.position.set(World.WIDTH/2, -World.WIDTH*0.8, World.WIDTH * 0.9);
+      this.camera.rotation.set(Math.PI * 0.3, 0, 0);
+    }
+  }
+
+  private updateOrthographicCamera(
+    fromTop: boolean,
+    lookDown: number,
+    zoom: number,
+    mouse2: Vector2 | null): void
+  {
+    if (fromTop) {
+      this.camera.position.set(World.WIDTH/2, World.WIDTH / 2, 100);
+      this.camera.rotation.set(0, 0, 0);
+      this.camera.scale.setScalar(1.4 - 0.45 * zoom);
+    } else {
+      this.camera.position.set(
+        World.WIDTH / 2,
+        -53 * lookDown - World.WIDTH / 2,
+        174);
+      this.camera.rotation.set(Math.PI * 0.25, 0, 0);
+      this.camera.scale.setScalar(1 - 0.45 * zoom);
     }
 
-    this.camera.position.set(
-      World.WIDTH / 2,
-      -53 * lookDown - World.WIDTH / 2,
-      174);
-    this.camera.rotation.set(Math.PI * 0.25, 0, 0);
-
-    this.camera.scale.setScalar(1 - 0.45 * zoom);
     if (zoom > 0 && mouse2) {
       this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.6;
       this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
     }
   }
 
-  updateRotation(playerNum: number): void {
-    const angle = playerNum * Math.PI/2;
-
+  private updateRotation(angle: number): void {
     const adjust = new Vector3(World.WIDTH/2, World.WIDTH/2, 0);
     adjust.applyAxisAngle(new Vector3(0, 0, 1), -angle);
 
