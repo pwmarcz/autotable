@@ -1,15 +1,5 @@
-import { Client, Collection } from "./client";
-
-export enum SoundType {
-  DISCARD = 'DISCARD',
-  STICK = 'STICK',
-};
-
-interface SoundInfo {
-  type: SoundType;
-  playerNum: number;
-  side: number;
-}
+import { Client } from "./client";
+import { SoundInfo, SoundType } from "./types";
 
 class Channel {
   private element: HTMLAudioElement;
@@ -49,7 +39,6 @@ export class SoundPlayer {
   private audioContext: AudioContext;
   private channels: Array<Channel>;
   private client: Client;
-  private clientSound: Collection<number, SoundInfo>;
   private urls: Record<SoundType, string>;
   muted: boolean = false;
 
@@ -60,8 +49,7 @@ export class SoundPlayer {
       this.channels.push(new Channel(this.audioContext));
     }
     this.client = client;
-    this.clientSound = this.client.collection('sound');
-    this.clientSound.on('update', this.onUpdate.bind(this));
+    this.client.sound.on('update', this.onUpdate.bind(this));
     this.urls = {
       [SoundType.DISCARD]: this.getSource('sound-discard'),
       [SoundType.STICK]: this.getSource('sound-stick'),
@@ -70,7 +58,7 @@ export class SoundPlayer {
 
   play(type: SoundType, side: number): void {
     this.doPlay(type, side);
-    this.clientSound.set(0, {type, side, playerNum: this.playerNum()});
+    this.client.sound.set(0, {type, side, playerNum: this.playerNum()});
   }
 
   private playerNum(): number {

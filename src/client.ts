@@ -3,6 +3,7 @@
 import { EventEmitter, Listener } from 'events';
 
 import { Message, Entry } from '../server/protocol';
+import { ThingInfo, MatchInfo, MouseInfo, SoundInfo } from './types';
 
 export interface Game {
   gameId: string;
@@ -14,22 +15,21 @@ export class Client {
   private ws: WebSocket | null = null;
   private game: Game | null = null;
   private events: EventEmitter = new EventEmitter();
-  private collections: Record<string, Collection<any, any>>;
   private pending: Array<Entry> | null = null;
 
-  constructor() {
-    this.collections = {
-      things: new Collection('things', this, { unique: 'slotName', sendOnConnect: true }),
-      nicks: new Collection('nicks', this, { perPlayer: true }),
-      mouse: new Collection('mouse', this, { rateLimit: 100, perPlayer: true }),
-      match: new Collection('match', this, { sendOnConnect: true }),
-      sound: new Collection('sound', this, { ephemeral: true }),
-    };
-    this.events.setMaxListeners(50);
-  }
+  things: Collection<number, ThingInfo>;
+  match: Collection<number, MatchInfo>;
+  nicks: Collection<number, string>;
+  mouse: Collection<number, MouseInfo>;
+  sound: Collection<number, SoundInfo>;
 
-  collection<K extends string | number, V>(name: string): Collection<K, V> {
-    return this.collections[name];
+  constructor() {
+    this.events.setMaxListeners(50);
+    this.things = new Collection('things', this, { unique: 'slotName', sendOnConnect: true });
+    this.match = new Collection('match', this, { sendOnConnect: true }),
+    this.nicks = new Collection('nicks', this, { perPlayer: true });
+    this.mouse = new Collection('mouse', this, { rateLimit: 100, perPlayer: true });
+    this.sound = new Collection('sound', this, { ephemeral: true });
   }
 
   new(url: string, num: number | null, numPlayers: number): void {

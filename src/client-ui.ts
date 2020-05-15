@@ -1,6 +1,6 @@
 import qs from 'qs';
 
-import { Client, Collection, Game } from "./client";
+import { Client, Game } from "./client";
 
 interface UrlState {
   gameId: string | null;
@@ -18,14 +18,11 @@ export class ClientUi {
   client: Client;
   nickElement: HTMLInputElement;
 
-  clientNicks: Collection<number, string>;
-
   success = false;
 
   constructor(client: Client) {
     this.url = this.getUrl();
     this.client = client;
-    this.clientNicks = this.client.collection('nicks');
 
     this.nickElement = document.getElementById('nick')! as HTMLInputElement;
     this.nickElement.value = localStorage.getItem('autotable.nick') ?? '';
@@ -99,7 +96,7 @@ export class ClientUi {
 
   onNickChange(): void {
     if (this.client.connected()) {
-      this.clientNicks.set(this.client.num()!, this.nickElement.value);
+      this.client.nicks.set(this.client.num()!, this.nickElement.value);
     }
     localStorage.setItem('autotable.nick', this.nickElement.value);
   }

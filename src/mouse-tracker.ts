@@ -1,5 +1,5 @@
 import { Vector3 } from "three";
-import { Collection, Client } from "./client";
+import { Client } from "./client";
 import { clamp } from "./utils";
 
 
@@ -14,30 +14,24 @@ interface Player {
   waypoints: Array<Waypoint>;
 }
 
-interface MouseInfo {
-  held: {x: number; y: number; z: number} | null;
-  mouse: {x: number; y: number; z: number; time: number} | null;
-}
-
 const ANIMATION_TIME = 100;
 
 export class MouseTracker {
   private players: Array<Player>;
-
-  private clientMouse: Collection<number, MouseInfo>;
+  private client: Client;
 
   constructor(client: Client) {
     this.players = [];
     for (let i = 0; i < 4; i++) {
       this.players.push({held: null, waypoints: []});
     }
-    this.clientMouse = client.collection('mouse');
-    this.clientMouse.on('update', this.onUpdate.bind(this));
+    this.client = client;
+    this.client.mouse.on('update', this.onUpdate.bind(this));
   }
 
   update(playerNum: number, mouse: Vector3 | null, held: Vector3 | null): void {
     const now = new Date().getTime();
-    this.clientMouse.set(playerNum, {
+    this.client.mouse.set(playerNum, {
       mouse: mouse && {x: mouse.x, y: mouse.y, z: mouse.z, time: now},
       held: held && {x: held.x, y: held.y, z: held.z},
     });
@@ -80,7 +74,7 @@ export class MouseTracker {
     const now = new Date().getTime();
 
     for (let i = 0; i < 4; i++) {
-      const mouseInfo = this.clientMouse.get(i);
+      const mouseInfo = this.client.mouse.get(i);
       const player = this.players[i];
 
       if (!mouseInfo) {

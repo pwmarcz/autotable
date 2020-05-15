@@ -2,28 +2,17 @@ import { Vector3 } from "three";
 
 import { Place, Slot, Thing, Size, ThingType } from "./places";
 import { Movement } from "./movement";
-import { Client, Collection, Game } from "./client";
+import { Client, Game } from "./client";
 import { mostCommon, rectangleOverlap, filterMostCommon } from "./utils";
 import { MouseTracker } from "./mouse-tracker";
-import { Setup, TileSet } from './setup';
+import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
-import { SoundPlayer, SoundType } from "./sound-player";
+import { SoundPlayer } from "./sound-player";
+import { TileSet, ThingInfo, SoundType } from "./types";
 
 
 interface Select extends Place {
   id: any;
-}
-
-interface ThingInfo {
-  slotName: string;
-  rotationIndex: number;
-  heldBy: number | null;
-}
-
-export interface MatchInfo {
-  dealer: number;
-  honba: number;
-  tileSet: TileSet;
 }
 
 export class World {
@@ -51,8 +40,6 @@ export class World {
   static WIDTH = 174;
 
   private client: Client;
-  private clientThings: Collection<number, ThingInfo>;
-  private clientMatch: Collection<number, MatchInfo>;
 
   tileSet: TileSet;
 
@@ -68,29 +55,26 @@ export class World {
     this.setupView();
 
     this.client = client;
-    this.clientThings = client.collection('things');
-    this.clientMatch = client.collection<number, MatchInfo>('match');
-
     this.mouseTracker = new MouseTracker(this.client);
 
     this.soundPlayer = soundPlayer;
 
     this.client.on('connect', this.onConnect.bind(this));
-    this.clientThings.on('update', this.onThings.bind(this));
-    this.clientMatch.on('update', this.onMatch.bind(this));
+    this.client.things.on('update', this.onThings.bind(this));
+    this.client.match.on('update', this.onMatch.bind(this));
     this.sendUpdate(this.things);
   }
 
   toggleDealer(): void {
-    const match = this.clientMatch.get(0) ?? { dealer: 3, honba: 0, tileSet: TileSet.initial()};
+    const match = this.client.match.get(0) ?? { dealer: 3, honba: 0, tileSet: TileSet.initial()};
     match.dealer = (match.dealer + 1) % 4;
-    this.clientMatch.set(0, match);
+    this.client.match.set(0, match);
   }
 
   toggleHonba(): void {
-    const match = this.clientMatch.get(0) ?? { dealer: 0, honba: 0, tileSet: TileSet.initial()};
+    const match = this.client.match.get(0) ?? { dealer: 0, honba: 0, tileSet: TileSet.initial()};
     match.honba = (match.honba + 1) % 8;
-    this.clientMatch.set(0, match);
+    this.client.match.set(0, match);
   };
 
   private onConnect(game: Game): void {
@@ -145,7 +129,7 @@ export class World {
   }
 
   private onMatch(): void {
-    const match = this.clientMatch.get(0);
+    const match = this.client.match.get(0);
     if (!match) {
       return;
     }
@@ -167,7 +151,7 @@ export class World {
     for (const thing of things) {
       entries.push([thing.index, this.describeThing(thing)]);
     }
-    this.clientThings.update(entries);
+    this.client.things.update(entries);
   }
 
   private sendMouse(): void {
@@ -191,7 +175,7 @@ export class World {
     this.setup.deal(this.playerNum);
     this.checkPushes();
 
-    let match = this.clientMatch.get(0);
+    let match = this.client.match.get(0);
     let honba;
     const back = 1 - this.tileSet.back;
     const tileSet = { ...this.tileSet, back };
@@ -205,7 +189,7 @@ export class World {
 
     this.client.transaction(() => {
       this.sendUpdate(this.things);
-      this.clientMatch.set(0, match!);
+      this.client.match.set(0, match!);
     });
   }
 

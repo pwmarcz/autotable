@@ -2,6 +2,7 @@ import { Slot, Thing, ThingType, Size } from "./places";
 import { shuffle } from "./utils";
 import { Vector3, Euler, Vector2 } from "three";
 import { World } from "./world";
+import { TileSet } from "./types";
 
 
 const Rotation = {
@@ -11,21 +12,6 @@ const Rotation = {
   FACE_DOWN: new Euler(Math.PI, 0, 0),
   FACE_DOWN_REVERSE: new Euler(Math.PI, 0, Math.PI),
 };
-
-export interface TileSet {
-  back: number; // 0 or 1
-  fives: '000' | '111' | '121';
-}
-
-export namespace TileSet {
-  export function initial(): TileSet {
-    return { back: 0, fives: '111' };
-  }
-
-  export function equals(a: TileSet, b: TileSet): boolean {
-    return a.back === b.back && a.fives === b.fives;
-  }
-}
 
 export class Setup {
   slots: Record<string, Slot> = {};

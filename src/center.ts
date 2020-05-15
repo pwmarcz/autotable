@@ -1,7 +1,6 @@
 import { AssetLoader } from "./asset-loader";
 import { Mesh, CanvasTexture, Vector2, MeshLambertMaterial } from "three";
-import { Client, Collection } from "./client";
-import { MatchInfo } from './world';
+import { Client } from "./client";
 
 export class Center {
   mesh: Mesh;
@@ -15,8 +14,6 @@ export class Center {
   honba = 0;
 
   client: Client;
-  clientNicks: Collection<number, string>;
-  clientMatch: Collection<number, MatchInfo>;
 
   dirty = true;
 
@@ -40,11 +37,8 @@ export class Center {
     material.map = this.texture;
 
     this.client = client;
-    this.clientNicks = client.collection('nicks');
-    this.clientNicks.on('update', this.update.bind(this));
-
-    this.clientMatch = client.collection('match');
-    this.clientMatch.on('update', this.update.bind(this));
+    this.client.nicks.on('update', this.update.bind(this));
+    this.client.match.on('update', this.update.bind(this));
 
     client.on('disconnect', this.update.bind(this));
   }
@@ -52,15 +46,15 @@ export class Center {
   update(): void {
     for (let i = 0; i < 4; i++) {
       if (this.client.connected()) {
-        const nick = this.clientNicks.get(i);
+        const nick = this.client.nicks.get(i);
         this.nicks[i] = nick ?? null;
       } else {
         this.nicks[i] = null;
       }
     }
 
-    this.dealer = this.clientMatch.get(0)?.dealer ?? null;
-    this.honba = this.clientMatch.get(0)?.honba ?? 0;
+    this.dealer = this.client.match.get(0)?.dealer ?? null;
+    this.honba = this.client.match.get(0)?.honba ?? 0;
 
     this.dirty = true;
   }
