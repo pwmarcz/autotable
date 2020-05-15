@@ -47,6 +47,8 @@ export class Server {
         this.onClose(client);
       });
     });
+
+    console.log(`listening at ${this.port}`);
   }
 
   onMessage(client: Client, message: Message): void {
