@@ -1,6 +1,8 @@
 
 all: files
 
+SERVER = pwmarcz.pl
+
 TEXTURES = img/sticks.auto.png img/tiles.auto.png img/center.auto.png img/winds.auto.png
 
 ICONS = img/icon-16.auto.png img/icon-32.auto.png img/icon-96.auto.png
@@ -35,6 +37,16 @@ build: files
 	rm -rf build
 	./node_modules/.bin/parcel build index.html --public-url /autotable/ --cache-dir .cache/build/ --out-dir build/
 
+.PHONY: build-server
+build-server:
+	cd server && yarn build
+
 .PHONY: deploy
 deploy: build
-	rsync -rva --checksum --delete build/ pwmarcz.pl:homepage/autotable/
+	rsync -rva --checksum --delete build/ $(SERVER):autotable/dist/
+
+.PHONY: deploy-server
+deploy-server: build-server
+	rsync -rva --checksum --delete --exclude node_modules/ server/ $(SERVER):autotable/server/
+	ssh $(SERVER) 'cd autotable/server && yarn'
+	ssh $(SERVER) 'sudo systemctl restart autotable-server.service'
