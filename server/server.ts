@@ -13,6 +13,7 @@ class Game {
   numPlayers: number;
   unique: Map<string, string> = new Map();
   ephemeral: Map<string, boolean> = new Map();
+  perPlayer: Map<string, boolean> = new Map();
 
   private collections: Map<string, Map<string | number, any>> = new Map();
 
@@ -90,8 +91,6 @@ class Game {
     this.starting = false;
 
     this.send(num, {type: 'UPDATE', entries: this.allEntries(), full: true });
-
-    this.update([['online', num, true]]);
   }
 
   private allEntries(): Array<Entry> {
@@ -117,7 +116,11 @@ class Game {
           collection = new Map();
           this.collections.set(kind, collection);
         }
-        collection.set(key, value);
+        if (value !== null) {
+          collection.set(key, value);
+        } else {
+          collection.delete(key);
+        }
       }
 
       if (kind === 'unique') {
@@ -125,6 +128,9 @@ class Game {
       }
       if (kind === 'ephemeral') {
         this.ephemeral.set(key as string, value);
+      }
+      if (kind === 'perPlayer') {
+        this.perPlayer.set(key as string, value);
       }
     }
     this.sendAll({type: 'UPDATE', entries, full: false});
@@ -158,6 +164,9 @@ class Game {
       }
 
       for (const [, , item] of filtered) {
+        if (!item) {
+          continue;
+        }
         const value = item[field];
         if (value !== null && value !== undefined) {
           if (occupied.has(value)) {
@@ -173,7 +182,20 @@ class Game {
 
   leave(num: number): void {
     this.clients.delete(num);
-    this.update([['online', num, false]]);
+    const toUpdate: Array<Entry> = [];
+    for (const [kind, isPerPlayer] of this.perPlayer.entries()) {
+      const collection = this.collections.get(kind);
+      if (isPerPlayer && collection) {
+        for (const key of collection.keys()) {
+          if (key === num) {
+            toUpdate.push([kind, key, null]);
+          }
+        }
+      }
+    }
+    if (toUpdate.length > 0) {
+      this.update(toUpdate);
+    }
   }
 
   private send(num: number, message: Message): void {

@@ -16,7 +16,6 @@ export class Center {
 
   client: Client;
   clientNicks: Collection<number, string>;
-  clientOnline: Collection<number, string>;
   clientMatch: Collection<number, MatchInfo>;
 
   dirty = true;
@@ -41,9 +40,6 @@ export class Center {
     material.map = this.texture;
 
     this.client = client;
-    this.clientOnline = client.collection('online');
-    this.clientOnline.on('update', this.update.bind(this));
-
     this.clientNicks = client.collection('nicks');
     this.clientNicks.on('update', this.update.bind(this));
 
@@ -55,7 +51,7 @@ export class Center {
 
   update(): void {
     for (let i = 0; i < 4; i++) {
-      if (this.client.connected() && this.clientOnline.get(i)) {
+      if (this.client.connected()) {
         const nick = this.clientNicks.get(i);
         this.nicks[i] = nick ?? null;
       } else {

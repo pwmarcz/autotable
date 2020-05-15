@@ -32,7 +32,7 @@ interface UpdateMessage {
   full: boolean;
 }
 
-export type Entry = [string, string | number, any];
+export type Entry = [string, string | number, any | null];
 
 export type Message = NewMessage
   | JoinMessage

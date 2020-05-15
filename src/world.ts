@@ -97,8 +97,13 @@ export class World {
     this.playerNum = game.num;
   }
 
-  private onThings(entries: Array<[number, ThingInfo]>): void {
-    for (const [thingIndex,] of entries) {
+  private onThings(entries: Array<[number, ThingInfo | null]>): void {
+    for (const [thingIndex, thingInfo] of entries) {
+      // TODO handle deletion
+      if (thingInfo === null) {
+        continue;
+      }
+
       const thing = this.things[thingIndex];
       thing.prepareMove();
       const selectedIndex = this.selected.indexOf(thing);
@@ -107,6 +112,10 @@ export class World {
       }
     }
     for (const [thingIndex, thingInfo] of entries) {
+      if (thingInfo === null) {
+        continue;
+      }
+
       const thing = this.things[thingIndex];
       const slot = this.slots[thingInfo.slotName];
       thing.moveTo(slot, thingInfo.rotationIndex);

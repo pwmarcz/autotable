@@ -20,9 +20,8 @@ export class Client {
   constructor() {
     this.collections = {
       things: new Collection('things', this, { unique: 'slotName', sendOnConnect: true }),
-      nicks: new Collection('nicks', this),
-      mouse: new Collection('mouse', this, { rateLimit: 100 }),
-      online: new Collection('online', this),
+      nicks: new Collection('nicks', this, { perPlayer: true }),
+      mouse: new Collection('mouse', this, { rateLimit: 100, perPlayer: true }),
       match: new Collection('match', this, { sendOnConnect: true }),
       sound: new Collection('sound', this, { ephemeral: true }),
     };
@@ -144,9 +143,11 @@ export class Client {
 }
 
 interface CollectionOptions {
-  rateLimit?: number;
   unique?: string;
   ephemeral?: boolean;
+  perPlayer?: boolean;
+
+  rateLimit?: number;
   sendOnConnect?: boolean;
 }
 
@@ -154,7 +155,7 @@ export class Collection<K extends string | number, V> {
   private kind: string;
   private client: Client;
   private map: Map<K, V> = new Map();
-  private pending: Map<K, V> = new Map();
+  private pending: Map<K, V | null> = new Map();
   private events: EventEmitter = new EventEmitter;
   private options: CollectionOptions;
   private intervalId: number | null = null;
@@ -174,15 +175,18 @@ export class Collection<K extends string | number, V> {
     this.client.on('disconnect', this.onDisconnect.bind(this));
   }
 
-  get(key: K): V | undefined {
-    return this.map.get(key);
+  get(key: K): V | null {
+    return this.map.get(key) ?? null;
   }
 
-  update(localEntries: Array<[K, V]>): void {
-
+  update(localEntries: Array<[K, V | null]>): void {
     if (!this.client.connected()) {
       for (const [key, value] of localEntries) {
-        this.map.set(key, value);
+        if (value !== null) {
+          this.map.set(key, value);
+        } else {
+          this.map.delete(key);
+        }
       }
       this.events.emit('update', localEntries, false);
     } else {
@@ -196,11 +200,11 @@ export class Collection<K extends string | number, V> {
     }
   }
 
-  set(key: K, value: V): void {
+  set(key: K, value: V | null): void {
     this.update([[key, value]]);
   }
 
-  on(what: 'update', handler: (localEntries: Array<[K, V]>, full: boolean) => void): void;
+  on(what: 'update', handler: (localEntries: Array<[K, V | null]>, full: boolean) => void): void;
   on(what: string, handler: Function): void {
     this.events.on(what, handler as Listener);
   }
@@ -213,7 +217,11 @@ export class Collection<K extends string | number, V> {
     for (const [kind, key, value] of entries) {
       if (kind === this.kind) {
         localEntries.push([key, value]);
-        this.map.set(key as K, value);
+        if (value !== null) {
+          this.map.set(key as K, value);
+        } else {
+          this.map.delete(key as K);
+        }
       }
     }
     if (full || localEntries.length > 0) {
@@ -229,6 +237,9 @@ export class Collection<K extends string | number, V> {
       }
       if (this.options.ephemeral) {
         this.client.update([['ephemeral', this.kind, true]]);
+      }
+      if (this.options.perPlayer) {
+        this.client.update([['perPlayer', this.kind, true]]);
       }
       if (this.options.sendOnConnect) {
         const entries: Array<Entry> = [];

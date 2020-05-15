@@ -25,7 +25,6 @@ export class MouseTracker {
   private players: Array<Player>;
 
   private clientMouse: Collection<number, MouseInfo>;
-  private clientOnline: Collection<number, boolean>;
 
   constructor(client: Client) {
     this.players = [];
@@ -34,8 +33,6 @@ export class MouseTracker {
     }
     this.clientMouse = client.collection('mouse');
     this.clientMouse.on('update', this.onUpdate.bind(this));
-    this.clientOnline = client.collection('online');
-    this.clientOnline.on('update', this.onUpdate.bind(this));
   }
 
   update(playerNum: number, mouse: Vector3 | null, held: Vector3 | null): void {
@@ -83,11 +80,10 @@ export class MouseTracker {
     const now = new Date().getTime();
 
     for (let i = 0; i < 4; i++) {
-      const online = this.clientOnline.get(i);
       const mouseInfo = this.clientMouse.get(i);
       const player = this.players[i];
 
-      if (!online || !mouseInfo) {
+      if (!mouseInfo) {
         player.held = null;
         player.waypoints.splice(0);
         continue;
