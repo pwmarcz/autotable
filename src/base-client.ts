@@ -6,8 +6,7 @@ import { Message, Entry } from '../server/protocol';
 
 export interface Game {
   gameId: string;
-  num: number;
-  secret: string;
+  playerId: string;
 }
 
 export class BaseClient {
@@ -20,21 +19,15 @@ export class BaseClient {
     this.events.setMaxListeners(50);
   }
 
-  new(url: string, num: number | null, numPlayers: number): void {
+  new(url: string): void {
     this.connect(url, () => {
-      this.send({ type: 'NEW', num, numPlayers});
+      this.send({ type: 'NEW' });
     });
   }
 
-  join(url: string, gameId: string, num: number | null): void {
+  join(url: string, gameId: string): void {
     this.connect(url, () => {
-      this.send({ type: 'JOIN', num, gameId });
-    });
-  }
-
-  rejoin(url: string, gameId: string, num: number, secret: string): void {
-    this.connect(url, () => {
-      this.send({ type: 'REJOIN', num, gameId, secret });
+      this.send({ type: 'JOIN', gameId });
     });
   }
 
@@ -102,8 +95,8 @@ export class BaseClient {
     return this.open() && this.game !== null;
   }
 
-  num(): number | undefined {
-    return this.game?.num;
+  playerId(): string {
+    return this.game?.playerId ?? 'offline';
   }
 
   private onClose(): void {
@@ -117,8 +110,7 @@ export class BaseClient {
       case 'JOINED':
         this.game = {
           gameId: message.gameId,
-          num: message.num,
-          secret: message.secret,
+          playerId: message.playerId,
         };
         this.events.emit('connect', this.game, message.isFirst);
         break;

@@ -29,9 +29,9 @@ export class MouseTracker {
     this.client.mouse.on('update', this.onUpdate.bind(this));
   }
 
-  update(playerNum: number, mouse: Vector3 | null, held: Vector3 | null): void {
+  update(mouse: Vector3 | null, held: Vector3 | null): void {
     const now = new Date().getTime();
-    this.client.mouse.set(playerNum, {
+    this.client.mouse.set(this.client.playerId(), {
       mouse: mouse && {x: mouse.x, y: mouse.y, z: mouse.z, time: now},
       held: held && {x: held.x, y: held.y, z: held.z},
     });
@@ -74,7 +74,8 @@ export class MouseTracker {
     const now = new Date().getTime();
 
     for (let i = 0; i < 4; i++) {
-      const mouseInfo = this.client.mouse.get(i);
+      const playerId = this.client.seatPlayers[i];
+      const mouseInfo = playerId !== null ? this.client.mouse.get(playerId) : null;
       const player = this.players[i];
 
       if (!mouseInfo) {

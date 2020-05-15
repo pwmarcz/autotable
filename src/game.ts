@@ -34,6 +34,14 @@ export class Game {
     muted: HTMLInputElement;
   };
 
+  buttons: {
+    deal: HTMLButtonElement;
+    toggleDealer: HTMLButtonElement;
+    toggleHonba: HTMLButtonElement;
+    takeSeat: Array<HTMLButtonElement>;
+    leaveSeat: HTMLButtonElement;
+  }
+
   constructor(assetLoader: AssetLoader) {
     this.assetLoader = assetLoader;
     this.mainGroup = new Group;
@@ -52,6 +60,18 @@ export class Game {
       muted: document.getElementById('muted') as HTMLInputElement,
     };
 
+    this.buttons = {
+      deal: document.getElementById('deal') as HTMLButtonElement,
+      toggleDealer: document.getElementById('toggle-dealer') as HTMLButtonElement,
+      toggleHonba: document.getElementById('toggle-honba') as HTMLButtonElement,
+      takeSeat: [],
+      leaveSeat: document.getElementById('leave-seat') as HTMLButtonElement,
+    };
+    for (let i = 0; i < 4; i++) {
+      this.buttons.takeSeat[i] = document.querySelector(
+        `.seat-button-${i} button`) as HTMLButtonElement;
+    }
+
     this.setupEvents();
     this.setupDealButton();
     this.updateSettings();
@@ -65,8 +85,52 @@ export class Game {
     this.settings.benchmark.addEventListener('change', this.updateSettings.bind(this));
     this.settings.muted.addEventListener('change', this.updateSettings.bind(this));
 
-    document.getElementById('toggle-dealer')!.onclick = () => this.world.toggleDealer();
-    document.getElementById('toggle-honba')!.onclick = () => this.world.toggleHonba();
+    this.buttons.toggleDealer.onclick = () => this.world.toggleDealer();
+    this.buttons.toggleHonba.onclick = () => this.world.toggleHonba();
+
+    this.client.seats.on('update', this.updateSeats.bind(this));
+    for (let i = 0; i < 4; i++) {
+      this.buttons.takeSeat[i].onclick = () => {
+        this.client.seats.set(this.client.playerId(), { seat: i });
+      };
+    }
+    this.buttons.leaveSeat.onclick = () => {
+      this.client.seats.set(this.client.playerId(), { seat: null });
+    };
+  }
+
+  private updateSeats(): void {
+    const toDisable = [
+      this.buttons.deal,
+      this.buttons.toggleDealer,
+      this.buttons.toggleHonba,
+      this.buttons.leaveSeat,
+    ];
+    if (this.client.seat === null) {
+      (document.querySelector('.seat-buttons')! as HTMLElement).style.display = 'block';
+      for (let i = 0; i < 4; i++) {
+        const playerId = this.client.seatPlayers[i];
+        const button = document.querySelector(`.seat-button-${i} button`) as HTMLButtonElement;
+        if (playerId !== null) {
+          const nick = this.client.nicks.get(playerId) ?? 'Player';
+          button.disabled = true;
+          button.className = 'btn btn-secondary';
+          button.textContent = nick;
+        } else {
+          button.className = 'btn btn-primary';
+          button.disabled = false;
+          button.textContent = 'Take seat';
+        }
+      }
+      for (const button of toDisable) {
+        button.disabled = true;
+      }
+    } else {
+      (document.querySelector('.seat-buttons')! as HTMLElement).style.display = 'none';
+      for (const button of toDisable) {
+        button.disabled = false;
+      }
+    }
   }
 
   private setupDealButton(): void {
@@ -125,7 +189,7 @@ export class Game {
 
     this.world.updateView();
     this.mainView.updateViewport();
-    this.mainView.updateCamera(this.world.playerNum, this.lookDown.pos, this.zoom.pos, this.mouseUi.mouse2);
+    this.mainView.updateCamera(this.world.seat, this.lookDown.pos, this.zoom.pos, this.mouseUi.mouse2);
     this.mainView.updateOutline(this.objectView.selectedObjects);
     this.mouseUi.setCamera(this.mainView.camera);
     this.mouseUi.update();

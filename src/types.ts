@@ -43,6 +43,10 @@ export enum SoundType {
 
 export interface SoundInfo {
   type: SoundType;
-  playerNum: number;
+  seat: number;
   side: number;
+}
+
+export interface SeatInfo {
+  seat: number | null;
 }

@@ -39,6 +39,7 @@ export class Center {
     this.client = client;
     this.client.nicks.on('update', this.update.bind(this));
     this.client.match.on('update', this.update.bind(this));
+    this.client.seats.on('update', this.update.bind(this));
 
     client.on('disconnect', this.update.bind(this));
   }
@@ -46,7 +47,8 @@ export class Center {
   update(): void {
     for (let i = 0; i < 4; i++) {
       if (this.client.connected()) {
-        const nick = this.client.nicks.get(i);
+        const playerId = this.client.seatPlayers[i];
+        const nick = playerId !== null ? this.client.nicks.get(playerId) : null;
         this.nicks[i] = nick ?? null;
       } else {
         this.nicks[i] = null;

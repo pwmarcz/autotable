@@ -177,13 +177,14 @@ export class MouseUi {
 
     const now = new Date().getTime();
 
+    const rotation = this.world.seat ?? 0;
     for (let i = 0; i < 4; i++) {
-      const j = (4 + i - this.world.playerNum) % 4;
+      const j = (4 + i - rotation) % 4;
 
       const cursorElement = this.cursors[j];
       const cursorPos = this.world.mouseTracker.getMouse(i, now);
 
-      if (cursorPos && i !== this.world.playerNum) {
+      if (cursorPos && i !== this.world.seat) {
         const v = cursorPos.clone();
         this.mainGroup.localToWorld(v);
         v.project(this.camera);

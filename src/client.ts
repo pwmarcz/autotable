@@ -5,23 +5,42 @@ import { EventEmitter, Listener } from 'events';
 import { Entry } from '../server/protocol';
 
 import { BaseClient, Game } from './base-client';
-import { ThingInfo, MatchInfo, MouseInfo, SoundInfo } from './types';
+import { ThingInfo, MatchInfo, MouseInfo, SoundInfo, SeatInfo } from './types';
 
 
 export class Client extends BaseClient {
+  seats: Collection<string, SeatInfo>;
   things: Collection<number, ThingInfo>;
   match: Collection<number, MatchInfo>;
-  nicks: Collection<number, string>;
-  mouse: Collection<number, MouseInfo>;
+  nicks: Collection<string, string>;
+  mouse: Collection<string, MouseInfo>;
   sound: Collection<number, SoundInfo>;
+
+  seat: number | null = 0;
+  seatPlayers: Array<string | null> = new Array(4).fill(null);
 
   constructor() {
     super();
+    this.seats = new Collection('seats', this, { unique: 'seat', perPlayer: true });
     this.things = new Collection('things', this, { unique: 'slotName', sendOnConnect: true });
     this.match = new Collection('match', this, { sendOnConnect: true }),
     this.nicks = new Collection('nicks', this, { perPlayer: true });
     this.mouse = new Collection('mouse', this, { rateLimit: 100, perPlayer: true });
     this.sound = new Collection('sound', this, { ephemeral: true });
+    this.seats.on('update', this.onSeats.bind(this));
+  }
+
+  private onSeats(): void {
+    this.seat = null;
+    this.seatPlayers.fill(null);
+    for (const [playerId, seatInfo] of this.seats.entries()) {
+      if (playerId === this.playerId()) {
+        this.seat = seatInfo.seat;
+      }
+      if (seatInfo.seat !== null) {
+        this.seatPlayers[seatInfo.seat] = playerId;
+      }
+    }
   }
 }
 
@@ -56,6 +75,10 @@ export class Collection<K extends string | number, V> {
     this.client.on('update', this.onUpdate.bind(this));
     this.client.on('connect', this.onConnect.bind(this));
     this.client.on('disconnect', this.onDisconnect.bind(this));
+  }
+
+  entries(): Iterable<[K, V]> {
+    return this.map.entries();
   }
 
   get(key: K): V | null {
@@ -141,6 +164,13 @@ export class Collection<K extends string | number, V> {
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
       this.intervalId = null;
+    }
+    if (this.options.perPlayer) {
+      const localEntries: Array<Entry> = [];
+      for (const key of this.map.keys()) {
+        localEntries.push([this.kind, key, null]);
+      }
+      this.onUpdate(localEntries, true);
     }
   }
 

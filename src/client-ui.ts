@@ -3,12 +3,6 @@ import qs from 'qs';
 import { Client } from "./client";
 import { Game } from './base-client';
 
-interface UrlState {
-  gameId: string | null;
-  num: number | null;
-  secret: string | null;
-}
-
 
 const TITLE_DISCONNECTED = 'Autotable';
 const TITLE_CONNECTED = 'Autotable (online)';
@@ -41,22 +35,16 @@ export class ClientUi {
     disconnectButton.onclick = this.disconnect.bind(this);
   }
 
-  getUrlState(): UrlState {
+  getUrlState(): string | null {
     const query = window.location.search.substr(1);
     const q = qs.parse(query) as any;
-    return {
-      gameId: q.gameId ?? null,
-      num: q.num === undefined ? null : parseInt(q.num, 10),
-      secret: q.secret ?? null,
-    };
+    return q.gameId ?? null;
   }
 
-  setUrlState(state: UrlState): void {
+  setUrlState(gameId: string | null): void {
     const query = window.location.search.substr(1);
     const q = qs.parse(query) as any;
-    q.gameId = state.gameId ?? undefined;
-    q.num = state.num ?? undefined;
-    q.secret = state.secret ?? undefined;
+    q.gameId = gameId ?? undefined;
     const newQuery = qs.stringify(q);
     if (newQuery !== query) {
       history.pushState(undefined, '', '?' + qs.stringify(q));
@@ -64,18 +52,10 @@ export class ClientUi {
   }
 
   start(): void {
-    const {gameId, num, secret: urlSecret} = this.getUrlState();
-    if (gameId !== null && num !== null) {
-      const secret = urlSecret ?? localStorage.getItem(`autotable.secret.${gameId}.${num}`);
-      if (secret) {
-        this.success = false;
-        this.client.rejoin(this.url, gameId, num, secret);
-        return;
-      }
-    }
+    const gameId = this.getUrlState();
     if (gameId) {
       this.success = false;
-      this.client.join(this.url, gameId, num ?? null);
+      this.client.join(this.url, gameId);
     }
   }
 
@@ -97,7 +77,7 @@ export class ClientUi {
 
   onNickChange(): void {
     if (this.client.connected()) {
-      this.client.nicks.set(this.client.num()!, this.nickElement.value);
+      this.client.nicks.set(this.client.playerId(), this.nickElement.value);
     }
     localStorage.setItem('autotable.nick', this.nickElement.value);
   }
@@ -106,8 +86,7 @@ export class ClientUi {
     this.success = true;
     document.getElementById('server')!.classList.add('connected');
     this.onNickChange();
-    localStorage.setItem(`autotable.secret.${game.gameId}.${game.num}`, game.secret);
-    this.setUrlState({gameId: game.gameId, num: game.num, secret: game.secret});
+    this.setUrlState(game.gameId);
     document.getElementsByTagName('title')[0].innerText = TITLE_CONNECTED;
 
     const query = qs.stringify({gameId: game.gameId});
@@ -123,7 +102,7 @@ export class ClientUi {
     (document.getElementById('connect')! as HTMLButtonElement).disabled = false;
     document.getElementsByTagName('title')[0].innerText = TITLE_DISCONNECTED;
     if (!this.success) {
-      this.setUrlState({ gameId: null, num: null, secret: null });
+      this.setUrlState(null);
     }
   }
 
@@ -134,11 +113,11 @@ export class ClientUi {
     (document.getElementById('connect')! as HTMLButtonElement).disabled = true;
 
     this.success = false;
-    this.client.new(this.url, null, 4);
+    this.client.new(this.url);
   }
 
   disconnect(): void {
     this.client.disconnect();
-    this.setUrlState({ gameId: null, num: null, secret: null });
+    this.setUrlState(null);
   }
 }

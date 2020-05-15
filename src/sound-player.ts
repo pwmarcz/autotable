@@ -58,16 +58,12 @@ export class SoundPlayer {
 
   play(type: SoundType, side: number): void {
     this.doPlay(type, side);
-    this.client.sound.set(0, {type, side, playerNum: this.playerNum()});
-  }
-
-  private playerNum(): number {
-    return this.client.num() ?? 0;
+    this.client.sound.set(0, {type, side, seat: this.client.seat!});
   }
 
   private onUpdate(entries: Array<[number, SoundInfo | null]>): void {
     for (const [, sound] of entries) {
-      if (sound !== null && sound.playerNum !== this.playerNum()) {
+      if (sound !== null && sound.seat !== this.client.seat) {
         this.doPlay(sound.type, sound.side);
       }
     }
@@ -84,8 +80,9 @@ export class SoundPlayer {
 
     this.audioContext.resume();
     for (const channel of this.channels) {
+      const rotation = this.client.seat ?? 0;
       if (!channel.playing) {
-        side = (side + 4 - this.playerNum()) % 4;
+        side = (side + 4 - rotation) % 4;
         let pan = 0;
         switch(side) {
           case 1: pan = 0.5; break;

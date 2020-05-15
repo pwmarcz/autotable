@@ -89,7 +89,7 @@
         }
 
         #sidebar.collapsed {
-            width: 180px;
+            width: 220px;
         }
         #sidebar.collapsed .more { display: none; }
         #sidebar:not(.collapsed) .show-more { display: none; }
@@ -119,6 +119,7 @@
             bottom: 0;
             left: 0;
             right: 0;
+            background-color: rgba(30, 30, 30, 0.4);
             display: none;
         }
         .seat-button {
@@ -170,7 +171,7 @@
         </div>
         <div class="seat-buttons">
             <div class="seat-button seat-button-0">
-                <button class="btn btn-secondary" disabled>Take seat</button>
+                <button class="btn btn-primary">Take seat</button>
             </div>
             <div class="seat-button seat-button-1">
                 <button class="btn btn-primary">Take seat</button>
@@ -187,15 +188,21 @@
             <button class="btn btn-warning btn-sm btn-block" id="deal">
                 <div class="btn-progress"></div>
                 <span class="btn-progress-text">Deal</span>
-            </button></p>
-            <button class="btn btn-secondary btn-sm btn-block" id="toggle-dealer">Toggle dealer</button></p>
-            <button class="btn btn-secondary btn-sm btn-block" id="toggle-honba">Toggle honba</button></p>
+            </button>
+            <div class="btn-group mt-1 d-flex">
+                <button class="btn btn-secondary btn-sm mr-1" id="toggle-dealer">Dealer</button>
+                <button class="btn btn-secondary btn-sm" id="toggle-honba">Honba</button>
+            </div>
+            <button class="btn btn-dark btn-sm btn-block mt-1" id="leave-seat">Leave seat</button>
+            <p class="mt-1 show-more">
+                <a class="text-muted" href="#" id="showMore">show more</a>
+            </p>
 
-            <a class="text-muted show-more" href="#" id="showMore">show more</a>
 
             <div class="more">
-                <a class="text-muted" href="#" id="hideMore">hide more</a>
-
+                <p class="mt-1">
+                    <a class="text-muted" href="#" id="hideMore">hide more</a>
+                </p>
                 <div id="server">
                     <h4>Server</h4>
                     <div class="server-disconnected">

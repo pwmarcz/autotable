@@ -8,7 +8,7 @@ import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
 import { SoundPlayer } from "./sound-player";
-import { TileSet, ThingInfo, SoundType, Game } from "./types";
+import { TileSet, ThingInfo, SoundType } from "./types";
 
 
 interface Select extends Place {
@@ -35,7 +35,7 @@ export class World {
 
   soundPlayer: SoundPlayer;
 
-  playerNum = 0;
+  seat: number | null = 0;
 
   static WIDTH = 174;
 
@@ -59,7 +59,7 @@ export class World {
 
     this.soundPlayer = soundPlayer;
 
-    this.client.on('connect', this.onConnect.bind(this));
+    this.client.seats.on('update', this.onSeat.bind(this));
     this.client.things.on('update', this.onThings.bind(this));
     this.client.match.on('update', this.onMatch.bind(this));
     this.sendUpdate(this.things);
@@ -77,8 +77,8 @@ export class World {
     this.client.match.set(0, match);
   };
 
-  private onConnect(game: Game): void {
-    this.playerNum = game.num;
+  private onSeat(): void {
+    this.seat = this.client.seat;
   }
 
   private onThings(entries: Array<[number, ThingInfo | null]>): void {
@@ -106,9 +106,9 @@ export class World {
 
       // TODO: remove held?
       // TODO: move targetSlots to thing.targetSlot?
-      if (thing.heldBy !== thingInfo.heldBy) {
+      if (thing.heldBy !== thingInfo.heldBy && this.seat !== null) {
         // Someone else grabbed the thing
-        if (thing.heldBy === this.playerNum) {
+        if (thing.heldBy !== this.seat) {
           const heldIndex = this.held.indexOf(thing);
           if (heldIndex !== -1) {
             this.held.splice(heldIndex, 1);
@@ -116,7 +116,7 @@ export class World {
           }
         }
         // Someone gave us the thing back - might be a conflict.
-        if (thingInfo.heldBy === this.playerNum) {
+        if (thingInfo.heldBy === this.seat) {
           // eslint-disable-next-line no-console
           console.error(`received thing to hold: ${thing.index}, current heldBy: ${thing.heldBy}`);
           thing.heldBy = null;
@@ -155,7 +155,9 @@ export class World {
   }
 
   private sendMouse(): void {
-    this.mouseTracker.update(this.playerNum, this.mouse, this.heldMouse);
+    if (this.seat !== null) {
+      this.mouseTracker.update(this.mouse, this.heldMouse);
+    }
   }
 
   private describeThing(thing: Thing): ThingInfo {
@@ -167,25 +169,29 @@ export class World {
   }
 
   deal(): void {
+    if (this.seat === null) {
+      return;
+    }
+
     this.held.splice(0);
 
     for (const thing of this.things) {
       thing.heldBy = null;
     }
-    this.setup.deal(this.playerNum);
+    this.setup.deal(this.seat);
     this.checkPushes();
 
     let match = this.client.match.get(0);
     let honba;
     const back = 1 - this.tileSet.back;
     const tileSet = { ...this.tileSet, back };
-    if (!match || match.dealer !== this.playerNum) {
+    if (!match || match.dealer !== this.seat) {
       honba = 0;
     } else {
       honba = (match.honba + 1) % 8;
     }
     this.updateTileSet(tileSet);
-    match = {dealer: this.playerNum, honba, tileSet};
+    match = {dealer: this.seat, honba, tileSet};
 
     this.client.transaction(() => {
       this.sendUpdate(this.things);
@@ -283,7 +289,7 @@ export class World {
         continue;
       }
 
-      if (slot.thing !== null && slot.thing.heldBy !== this.playerNum) {
+      if (slot.thing !== null && slot.thing.heldBy !== this.seat) {
         // Occupied. But can it be potentially shifted?
         if (!slot.links.shiftLeft && !slot.links.shiftRight) {
           continue;
@@ -319,6 +325,10 @@ export class World {
   }
 
   onDragStart(): boolean {
+    if (this.seat === null) {
+      return false;
+    }
+
     if (this.hovered !== null) {
       this.held.splice(0);
 
@@ -347,7 +357,7 @@ export class World {
       });
 
       for (const thing of this.held) {
-        thing.heldBy = this.playerNum;
+        thing.heldBy = this.seat;
       }
       // this.hovered = null;
       this.heldMouse = this.mouse;
@@ -483,7 +493,7 @@ export class World {
 
       if (thing.heldBy !== null) {
         let mouse = null, heldMouse = null;
-        if (thing.heldBy === this.playerNum) {
+        if (thing.heldBy === this.seat) {
           mouse = this.mouse;
           heldMouse = this.heldMouse;
         } else {
@@ -504,7 +514,7 @@ export class World {
       const selected = this.selected.indexOf(thing) !== -1;
       const hovered = thing === this.hovered ||
         (selected && this.selected.indexOf(this.hovered!) !== -1);
-      const temporary = thing.heldBy === this.playerNum && !canDrop;
+      const temporary = this.seat !== null && thing.heldBy === this.seat && !canDrop;
 
       const slot = thing.slot;
 
@@ -539,7 +549,7 @@ export class World {
 
   toSelect(): Array<Select> {
     const result = [];
-    if (this.held.length === 0) {
+    if (this.held.length === 0 && this.seat !== null) {
       // Things
       for (const thing of this.things) {
         const place = thing.place();

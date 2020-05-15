@@ -1,7 +1,7 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "main": "dist/server.js",
+  "main": "dist/index.js",
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^25.2.2",
