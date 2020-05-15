@@ -43,12 +43,26 @@ export class Setup {
   }
 
   private addTiles(tileSet: TileSet): void {
-    const slots = this.wallSlots();
+    const wallSlots = this.wallSlots().map(slot => slot.name);
+    wallSlots.splice(132);
+    const windTiles = [108, 112, 116, 120];
+    const handSlots = [
+      'hand.5@0',
+      'hand.6@0',
+      'hand.7@0',
+      'hand.8@0',
+    ];
 
     // Shuffle slots, not tiles - this way tiles are the same for everyone.
-    shuffle(slots);
+    shuffle(wallSlots);
+    shuffle(handSlots);
     for (let i = 0; i < 136; i++) {
-      this.addThing(ThingType.TILE, this.tileIndex(i, tileSet), slots[i].name);
+      const tileIndex = this.tileIndex(i, tileSet);
+      if (windTiles.indexOf(i) !== -1) {
+        this.addThing(ThingType.TILE, tileIndex, handSlots.pop()!, 2);
+      } else {
+        this.addThing(ThingType.TILE, tileIndex, wallSlots.pop()!);
+      }
     }
   }
 
@@ -148,7 +162,12 @@ export class Setup {
     this.addThing(ThingType.MARKER, 0, 'marker@0');
   }
 
-  private addThing(type: ThingType, typeIndex: number, slotName: string): void {
+  private addThing(
+    type: ThingType,
+    typeIndex: number,
+    slotName: string,
+    rotationIndex?: number
+  ): void {
     if (this.slots[slotName] === undefined) {
       throw `Unknown slot: ${slotName}`;
     }
@@ -158,6 +177,9 @@ export class Setup {
 
     const thing = new Thing(thingIndex, type, typeIndex, slot);
     this.things.push(thing);
+    if (rotationIndex !== undefined) {
+      thing.rotationIndex = rotationIndex;
+    }
   }
 
   private addSlots(): void {
