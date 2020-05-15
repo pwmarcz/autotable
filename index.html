@@ -109,9 +109,40 @@
             background: #fff2ca;
             transition: width 600ms;
         }
-
         .btn-progress-text {
             position: relative;
+        }
+
+        .seat-buttons {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: none;
+        }
+        .seat-button {
+            position: absolute;
+        }
+        .seat-button-0 {
+            bottom: 20px;
+            left: 50%;
+            transform: translate(-50%, 0);
+        }
+        .seat-button-1 {
+            top: 50%;
+            left: 20%;
+            transform: translate(0, -50%);
+        }
+        .seat-button-2 {
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%, 0);
+        }
+        .seat-button-3 {
+            top: 50%;
+            right: 20%;
+            transform: translate(0, -50%);
         }
 
         /* https://fontlibrary.org/en/font/segment7 */
@@ -137,6 +168,21 @@
             <div class="cursor rotate-2"></div>
             <div class="cursor rotate-3"></div>
         </div>
+        <div class="seat-buttons">
+            <div class="seat-button seat-button-0">
+                <button class="btn btn-secondary" disabled>Take seat</button>
+            </div>
+            <div class="seat-button seat-button-1">
+                <button class="btn btn-primary">Take seat</button>
+            </div>
+            <div class="seat-button seat-button-2">
+                <button class="btn btn-primary">Take seat</button>
+            </div>
+            <div class="seat-button seat-button-3">
+                <button class="btn btn-primary">Take seat</button>
+            </div>
+        </div>
+
         <div id="sidebar" class="collapsed container text-light">
             <button class="btn btn-warning btn-sm btn-block" id="deal">
                 <div class="btn-progress"></div>

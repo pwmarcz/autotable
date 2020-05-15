@@ -102,7 +102,7 @@ export class MainView {
 
   private updatePespectiveCamera(fromTop: boolean, zoom: number): void {
     if (fromTop) {
-      this.camera.position.set(World.WIDTH/2, World.WIDTH / 2, 370);
+      this.camera.position.set(World.WIDTH/2, World.WIDTH / 2, 400);
       this.camera.rotation.set(0, 0, 0);
     } else {
       this.camera.position.set(World.WIDTH/2, -World.WIDTH*0.8, World.WIDTH * 0.9);
@@ -119,7 +119,7 @@ export class MainView {
     if (fromTop) {
       this.camera.position.set(World.WIDTH/2, World.WIDTH / 2, 100);
       this.camera.rotation.set(0, 0, 0);
-      this.camera.scale.setScalar(1.4 - 0.45 * zoom);
+      this.camera.scale.setScalar(1.55 - 0.45 * zoom);
     } else {
       this.camera.position.set(
         World.WIDTH / 2,
