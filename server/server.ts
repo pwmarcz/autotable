@@ -73,9 +73,11 @@ export class Server {
       }
 
       case 'JOIN': {
-        const game = this.games.get(message.gameId);
+        let game = this.games.get(message.gameId);
         if (!game) {
-          throw `game not found: ${message.gameId}`;
+          console.warn(`game not found, creating: ${message.gameId}`);
+          game = new Game(message.gameId);
+          this.games.set(message.gameId, game);
         }
         game.join(client);
         break;

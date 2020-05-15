@@ -52,10 +52,8 @@ export class ClientUi {
   }
 
   start(): void {
-    const gameId = this.getUrlState();
-    if (gameId) {
-      this.success = false;
-      this.client.join(this.url, gameId);
+    if (this.getUrlState() !== null) {
+      this.connect();
     }
   }
 
@@ -111,9 +109,13 @@ export class ClientUi {
       return;
     }
     (document.getElementById('connect')! as HTMLButtonElement).disabled = true;
-
     this.success = false;
-    this.client.new(this.url);
+    const gameId = this.getUrlState();
+    if (gameId !== null) {
+      this.client.join(this.url, gameId);
+    } else {
+      this.client.new(this.url);
+    }
   }
 
   disconnect(): void {
