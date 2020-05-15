@@ -77,9 +77,9 @@ export class SoundPlayer {
     return this.client.num() ?? 0;
   }
 
-  private onUpdate(entries: Array<[number, SoundInfo]>): void {
+  private onUpdate(entries: Array<[number, SoundInfo | null]>): void {
     for (const [, sound] of entries) {
-      if (sound.playerNum !== this.playerNum()) {
+      if (sound !== null && sound.playerNum !== this.playerNum()) {
         this.doPlay(sound.type, sound.side);
       }
     }
