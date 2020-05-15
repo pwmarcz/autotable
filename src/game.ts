@@ -52,7 +52,6 @@ export class Game {
     this.mainView = new MainView(this.mainGroup);
     this.mouseUi = new MouseUi(this.world, this.mainGroup);
     this.clientUi = new ClientUi(this.client);
-    this.clientUi.start();
 
     this.settings = {
       perspective: document.getElementById('perspective') as HTMLInputElement,
@@ -174,6 +173,7 @@ export class Game {
   }
 
   start(): void {
+    this.clientUi.start();
     this.update();
   }
 

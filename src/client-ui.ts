@@ -53,6 +53,10 @@ export class ClientUi {
 
   start(): void {
     if (this.getUrlState() !== null) {
+      // If connecting right on page load, start from empty seat
+      // (to prevent sudden change)
+      this.client.seats.set(this.client.playerId(), { seat: null });
+
       this.connect();
     }
   }
