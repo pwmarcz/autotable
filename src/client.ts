@@ -160,15 +160,18 @@ export class Collection<K extends string | number, V> {
     }
   }
 
-  private onDisconnect(): void {
+  private onDisconnect(game: Game | null): void {
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
     if (this.options.perPlayer) {
       const localEntries: Array<Entry> = [];
-      for (const key of this.map.keys()) {
+      for (const [key, value] of this.map.entries()) {
         localEntries.push([this.kind, key, null]);
+        if (game && key === game.playerId) {
+          localEntries.push([this.kind, 'offline', value]);
+        }
       }
       this.onUpdate(localEntries, true);
     }

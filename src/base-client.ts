@@ -51,7 +51,7 @@ export class BaseClient {
   }
 
   on(what: 'connect', handler: (game: Game, isFirst: boolean) => void): void;
-  on(what: 'disconnect', handler: () => void): void;
+  on(what: 'disconnect', handler: (game: Game | null) => void): void;
   on(what: 'update', handler: (things: Array<Entry>, full: boolean) => void): void;
 
   on(what: string, handler: Function): void {
@@ -101,8 +101,9 @@ export class BaseClient {
 
   private onClose(): void {
     this.ws = null;
+    const game = this.game;
     this.game = null;
-    this.events.emit('disconnect');
+    this.events.emit('disconnect', game);
   }
 
   private onMessage(message: Message): void {
