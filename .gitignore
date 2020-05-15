@@ -4,3 +4,4 @@ build/
 .cache/
 *.auto.*
 *.blend1
+.vscode/
