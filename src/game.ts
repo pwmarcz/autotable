@@ -111,7 +111,7 @@ export class Game {
         const playerId = this.client.seatPlayers[i];
         const button = document.querySelector(`.seat-button-${i} button`) as HTMLButtonElement;
         if (playerId !== null) {
-          const nick = this.client.nicks.get(playerId) ?? 'Player';
+          const nick = this.client.nicks.get(playerId) || 'Player';
           button.disabled = true;
           button.className = 'btn btn-secondary';
           button.textContent = nick;
