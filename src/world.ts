@@ -106,7 +106,7 @@ export class World {
 
       // TODO: remove held?
       // TODO: move targetSlots to thing.targetSlot?
-      if (thing.heldBy !== thingInfo.heldBy && this.seat !== null) {
+      if (thing.heldBy !== thingInfo.heldBy) {
         // Someone else grabbed the thing
         if (thing.heldBy !== this.seat) {
           const heldIndex = this.held.indexOf(thing);
@@ -116,7 +116,7 @@ export class World {
           }
         }
         // Someone gave us the thing back - might be a conflict.
-        if (thingInfo.heldBy === this.seat) {
+        if (this.seat !== null && thingInfo.heldBy === this.seat) {
           // eslint-disable-next-line no-console
           console.error(`received thing to hold: ${thing.index}, current heldBy: ${thing.heldBy}`);
           thing.heldBy = null;
