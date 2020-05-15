@@ -2,13 +2,13 @@ import { Vector3 } from "three";
 
 import { Place, Slot, Thing, Size, ThingType } from "./places";
 import { Movement } from "./movement";
-import { Client, Game } from "./client";
+import { Client } from "./client";
 import { mostCommon, rectangleOverlap, filterMostCommon } from "./utils";
 import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
 import { SoundPlayer } from "./sound-player";
-import { TileSet, ThingInfo, SoundType } from "./types";
+import { TileSet, ThingInfo, SoundType, Game } from "./types";
 
 
 interface Select extends Place {

@@ -1,6 +1,7 @@
 import qs from 'qs';
 
-import { Client, Game } from "./client";
+import { Client } from "./client";
+import { Game } from './base-client';
 
 interface UrlState {
   gameId: string | null;
