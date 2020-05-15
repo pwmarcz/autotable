@@ -8,7 +8,7 @@ type WebSocketClient = WebSocket & Client;
 
 export class Server {
   port: number;
-  games: Record<string, Game> = {};
+  games: Map<string, Game> = new Map();
 
   constructor(port: number) {
     this.port = port;
@@ -48,6 +48,8 @@ export class Server {
       });
     });
 
+    setInterval(this.checkExpiry.bind(this), 5000);
+
     console.log(`listening at ${this.port}`);
   }
 
@@ -62,16 +64,16 @@ export class Server {
         let gameId: string;
         do {
           gameId = randomString();
-        } while (this.games[gameId] !== undefined);
+        } while (this.games.has(gameId));
 
         const game = new Game(gameId);
-        this.games[gameId] = game;
+        this.games.set(gameId, game);
         game.join(client);
         break;
       }
 
       case 'JOIN': {
-        const game = this.games[message.gameId];
+        const game = this.games.get(message.gameId);
         if (!game) {
           throw `game not found: ${message.gameId}`;
         }
@@ -86,6 +88,16 @@ export class Server {
   onClose(client: Client): void {
     if (client.game !== null) {
       client.game.leave(client);
+    }
+  }
+
+  checkExpiry(): void {
+    const now = new Date().getTime();
+    for (const [gameId, game] of this.games.entries()) {
+      if (game.expiryTime !== null && game.expiryTime < now) {
+        console.log(`deleting expired: ${gameId}`);
+        this.games.delete(gameId);
+      }
     }
   }
 }

@@ -10,19 +10,24 @@ export type Client = {
 
 const MAX_PLAYERS = 8;
 
+const EXPIRY_HOURS = 2;
+const EXPIRY_TIME = EXPIRY_HOURS * 60 * 60 * 1000;
+
 export class Game {
   gameId: string;
+  expiryTime: number | null;
   private starting: boolean = true;
   private clients: Map<string, Client> = new Map();
 
-  unique: Map<string, string> = new Map();
-  ephemeral: Map<string, boolean> = new Map();
-  perPlayer: Map<string, boolean> = new Map();
+  private unique: Map<string, string> = new Map();
+  private ephemeral: Map<string, boolean> = new Map();
+  private perPlayer: Map<string, boolean> = new Map();
 
   private collections: Map<string, Map<string | number, any>> = new Map();
 
   constructor(gameId: string) {
     this.gameId = gameId;
+    this.expiryTime = new Date().getTime() + EXPIRY_TIME;
   }
 
   join(client: Client): void {
@@ -45,6 +50,7 @@ export class Game {
       isFirst: this.starting,
     });
     this.starting = false;
+    this.expiryTime = null;
 
     this.send(client, {type: 'UPDATE', entries: this.allEntries(), full: true });
   }
@@ -151,6 +157,9 @@ export class Game {
     }
     if (toUpdate.length > 0) {
       this.update(toUpdate);
+    }
+    if (this.clients.size === 0) {
+      this.expiryTime = new Date().getTime() + EXPIRY_TIME;
     }
   }
 
