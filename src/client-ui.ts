@@ -6,8 +6,8 @@ import { Game } from './base-client';
 
 const TITLE_DISCONNECTED = 'Autotable';
 const TITLE_CONNECTED = 'Autotable (online)';
-const RECONNECT_DELAY = 500;
-const RECONNECT_ATTEMPTS = 5;
+const RECONNECT_DELAY = 2000;
+const RECONNECT_ATTEMPTS = 15;
 
 export class ClientUi {
   url: string;
