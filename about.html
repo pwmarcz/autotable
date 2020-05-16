@@ -6,9 +6,144 @@
     <link href="img/icon-96.auto.png" rel="shortcut icon" sizes="96x96">
     <link href="img/icon-32.auto.png" rel="shortcut icon" sizes="32x32">
     <link href="img/icon-16.auto.png" rel="shortcut icon" sizes="16x16">
+    <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.css">
+    <style>
+        body {
+            display: flex;
+            background: #000;
+            color: #ccc;
+        }
+
+        .main {
+            max-width: 720px;
+            background: rgb(7, 46, 66);
+            box-shadow: 0 0 20px 20px rgb(7, 46, 66);
+        }
+
+        .pic {
+            text-align: center;
+            margin-bottom: 1em;
+        }
+
+        h1, h2, h3 {
+            color: #fff;
+            margin-top: 1em;
+        }
+        h3 { font-size: 1.3rem; }
+
+        a { color: #59a8fd; }
+        a:hover { color: #b1d7ff; }
+    </style>
 </head>
 <body>
-    <h1>Autotable</h1>
-    <h2>An online Riichi Mahjong table</h2>
-    <p>Lorem ipsum</p>
+    <div class="container-md main ">
+        <h1 class="mt-4">
+            Autotable
+        </h1>
+        <div class="pic mt-4">
+            <video controls autoplay src="img/about/game.mp4"></video>
+        </div>
+        <p class="text-center">
+            <a class="btn btn-warning text-dark" href="/">Play now</a>
+        </p>
+        <p>
+            <b>Autotable</b> is an online platform for playing
+            <a href="https://en.wikipedia.org/wiki/Japanese_Mahjong">Riichi Mahjong</a>.
+        </p>
+        <p>
+            Unlike other mahjong programs, it's not really a game, but rather a tabletop simulator. The computer does not enforce the rules or make any moves for you. You are expected to do almost everything yourself: draw the tiles from the wall, sort them, call, make payments, and so on.
+        </p>
+        <p>This is all to make the experience feel more like real-life Mahjong. Think about it as an <a href="https://www.youtube.com/watch?v=N1fY2xH062w">automatic mahjong table</a>, but on the Internet.</p>
+        <p>
+            Autotable should be played with other people over a <b>voice call</b>, such as Jitsi, Google Meet or Discord.
+        </p>
+
+        <h2>FAQ</h2>
+
+        <h3>Who's the dealer?</h3>
+        <p>The first dealer is indicated by the round marker. You can move it around, or flip it to South side when needed.</p>
+
+        <div class="pic">
+            <img src="./img/about/round.png">
+        </div>
+
+
+        <p>The current dealer is shown on the center display, as an orange bar. The repeat count (honba) is also displayed there.</p>
+
+        <div class="pic">
+            <img src="./img/about/dealer.png">
+        </div>
+
+        <p>This information is updated automatically when somebody presses Deal, but you can also change it manually using the "Dealer" and "Honba" buttons.</p>
+
+        <h3>How do I pay?</h3>
+        <p>Use Space or Q to look down, to your tenbo sticks drawer.</p>
+        <p>You can put down the sticks on the table, next to the discards. Then the other person will be able to take them:</p>
+
+        <div class="pic">
+            <img src="./img/about/pay.png">
+        </div>
+
+        <h3>How do I decide seats?</h3>
+        <p>
+            You can deal random wind tiles to do that. Select "Wind tiles" from the dropdown, press "Deal", and grab tiles to determine your seats:
+        </p>
+
+        <div class="pic">
+            <img src="./img/about/winds.png">
+        </div>
+
+        <p>
+            The player that took East stays in their seat. You can move the round marker to that player's side. The other players can switch seats around the table using the "Leave seat" button. You can also move the round marker to any side of the table.
+        </p>
+
+        <h3>Can I play with less than 4 people?</h3>
+
+        <p>
+            Three-player Mahjong (the one with 1 and 9 Man) is planned. For now, we have had some success playing with a "bot", i.e. manually drawing and dealing tiles for the absent fourth player.
+        </p>
+
+        <h2>Attribution</h2>
+
+        <p>To make the game, I used some freely available images and sounds:</p>
+
+        <ul>
+            <li>
+                The tile images were originally posted at <a href="https://web.archive.org/web/20160717012415/http://blog.kanojo.de/2011/07/01/more-shirt-stuff-t-shirt-logo-ideas/">Kanojo.de blog</a>. They're licensed as CC BY-NC-SA.
+            </li>
+            <li>
+                The table texture is from <a href="https://cc0textures.com/view?id=Fabric030">CC0 Textures</a>. It's licensed as CC0.
+            </li>
+            <li>
+                The sounds come from <a href="https://opengameart.org/">OpenGameArt</a> (<a href="https://opengameart.org/content/thwack-sounds">Thwack Sounds</a>, <a href="https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips">Casino sound effects</a>) and are licensed as CC0.
+            </li>
+        </ul>
+
+        <p>The project was made using the following excellent pieces of software:</p>
+        <ul>
+            <li><a href="https://threejs.org/">three.js</a></li>
+            <li><a href="https://parceljs.org/">Parcel</a></li>
+            <li><a href="https://inkscape.org/">Inkscape</a></li>
+            <li><a href="https://blender.org/">Blender</a></li>
+            <li><a href="https://getbootstrap.com/">Bootstrap</a></li>
+            <li><a href="https://www.typescriptlang.org/">TypeScript</a></li>
+            <li><a href="https://code.visualstudio.com/">Visual Studio Code</a></li>
+        </ul>
+
+        <h2>Contact me</h2>
+
+        <p>If you play with Autotable, and have any wishes, suggestions or opinions, email me! I will be really happy to hear it's being used. And I'm interested in what are the most most demanded features, or things that need fixing.</p>
+
+        <p>You can contact me at <a href="mailto:pwmarcz@gmail.com">pwmarcz@gmail.com</a>.</p>
+
+        <h2>Links</h2>
+
+        <ul>
+            <li><a href="/">Play the game</a></li>
+            <li><a href="https://mahjong.guide/a-beginners-guide-to-riichi-mahjong/">A Beginner’s Guide to Riichi Mahjong</a></li>
+            <li><a href="https://pwmarcz.pl">My website</a>, including a <a href="https://pwmarcz.pl">mahjong section</a></li>
+            <li><a href="https://pwmarcz.pl/minefield">Minefield Mahjong</a>, a game based on Kaiji comics</li>
+        </ul>
+
+    </div>
 </body>
