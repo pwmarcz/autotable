@@ -35,7 +35,7 @@ img/models.auto.glb: img/models.blend $(TEXTURES)
 .PHONY: build
 build: files
 	rm -rf build
-	./node_modules/.bin/parcel build *.html --public-url /autotable/ --cache-dir .cache/build/ --out-dir build/
+	./node_modules/.bin/parcel build *.html --public-url /autotable/ --cache-dir .cache/build/ --out-dir build/ --no-source-maps
 
 .PHONY: build-server
 build-server:
