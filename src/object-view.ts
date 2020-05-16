@@ -23,6 +23,7 @@ interface ThingParams {
 
 const MAX_SHADOWS = 300;
 const MAX_TILES = 136;
+const MAX_STICKS = 60;
 
 export class ObjectView {
   mainGroup: Group;
@@ -55,6 +56,9 @@ export class ObjectView {
     this.instancedObjects = new Map();
     this.instancedObjects.set(
       ThingType.TILE, assetLoader.makeTileInstancedMesh(MAX_TILES),
+    );
+    this.instancedObjects.set(
+      ThingType.STICK, assetLoader.makeStickInstancedMesh(MAX_STICKS),
     );
     for (const instancedMesh of this.instancedObjects.values()) {
       this.mainGroup.add(instancedMesh);
@@ -173,6 +177,8 @@ export class ObjectView {
           this.thingObjects[thing.thingIndex].visible = false;
           if (thingParams.type === ThingType.TILE) {
             this.assetLoader.setTileInstanceParams(instancedMesh, idx, thingParams.typeIndex);
+          } else if (thingParams.type === ThingType.STICK) {
+            this.assetLoader.setStickInstanceParams(instancedMesh, idx, thingParams.typeIndex);
           }
           continue;
         }

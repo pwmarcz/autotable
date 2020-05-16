@@ -4,7 +4,7 @@ import jpg from '../img/*.jpg';
 import glbModels from '../img/models.auto.glb';
 
 import { Texture, Mesh, TextureLoader, Material, LinearEncoding,
-   MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, BufferGeometry, RepeatWrapping, InstancedMesh, InstancedBufferAttribute, Float32BufferAttribute } from 'three';
+   MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, BufferGeometry, RepeatWrapping, InstancedMesh, InstancedBufferAttribute, Float32BufferAttribute, InstancedBufferGeometry } from 'three';
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { World } from './world';
 import { Size } from './places';
@@ -12,7 +12,7 @@ import { Size } from './places';
 
 const TILE_DU = 32 / 256;
 const TILE_DV = 40 / 256;
-
+const STICK_DV = 1 / 6;
 
 export class AssetLoader {
   textures: Record<string, Texture> = {};
@@ -39,13 +39,11 @@ export class AssetLoader {
   makeStick(index: number): Mesh {
     const mesh = this.cloneMesh(this.meshes.stick);
 
-    const dv = index / 6;
-
     const geometry = mesh.geometry.clone() as BufferGeometry;
     mesh.geometry = geometry;
     const uvs: Float32Array = geometry.attributes.uv.array as Float32Array;
     for (let i = 0; i < uvs.length; i += 2) {
-      uvs[i+1] += dv;
+      uvs[i+1] += index * STICK_DV;
     }
 
     return mesh;
@@ -75,7 +73,11 @@ export class AssetLoader {
   }
 
   makeTileInstancedMesh(count: number): InstancedMesh {
-    const material = (this.meshes.tile.material as MeshLambertMaterial).clone();
+    const origMaterial = this.meshes.tile.material as MeshLambertMaterial;
+    const material = new MeshLambertMaterial({
+      map: origMaterial.map,
+      color: origMaterial.color,
+    });
 
     const paramChunk = [
       'attribute vec2 frontOffset;',
@@ -84,12 +86,15 @@ export class AssetLoader {
     ].join('\n');
     const uvChunk = [
       `#include <uv_vertex>`,
-      //`attribute vec2 backOffset`,
       `if (vUv.x <= ${TILE_DU} && vUv.y <= ${TILE_DV})`,
       `    vUv += frontOffset;`,
       `else if (vUv.y >= ${4*TILE_DV})`,
       `    vUv += backOffset;`
     ].join('\n');
+
+    // Fix cache conflict: https://github.com/mrdoob/three.js/issues/19377
+    material.defines = material.defines ?? {};
+    material.defines.THING_TYPE = 'tile';
 
     material.onBeforeCompile = shader => {
       shader.vertexShader = shader.vertexShader
@@ -97,12 +102,46 @@ export class AssetLoader {
         .replace('#include <uv_vertex>', uvChunk);
     };
 
-    const geometry = (this.meshes.tile.geometry as BufferGeometry).clone();
+    const geometry = new InstancedBufferGeometry().copy(this.meshes.tile.geometry as BufferGeometry);
     geometry.setAttribute(
       'frontOffset',
       new InstancedBufferAttribute(new Float32Array(count * 2), 2));
     geometry.setAttribute(
       'backOffset',
+      new InstancedBufferAttribute(new Float32Array(count * 2), 2));
+    const mesh = new InstancedMesh(geometry, material, count);
+    mesh.count = 0;
+    return mesh;
+  }
+
+  makeStickInstancedMesh(count: number): InstancedMesh {
+    const origMaterial = this.meshes.stick.material as MeshLambertMaterial;
+    const material = new MeshLambertMaterial({
+      map: origMaterial.map,
+      color: origMaterial.color,
+    });
+    const paramChunk = [
+      'attribute vec2 offset;',
+      '#include <common>',
+    ].join('\n');
+    const uvChunk = [
+      `#include <uv_vertex>`,
+      `vUv.y += offset.y;`,
+    ].join('\n');
+
+    // Fix cache conflict: https://github.com/mrdoob/three.js/issues/19377
+    material.defines = material.defines ?? {};
+    material.defines.THING_TYPE = 'stick';
+
+    material.onBeforeCompile = shader => {
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', paramChunk)
+        .replace('#include <uv_vertex>', uvChunk);
+    };
+
+    const geometry = new InstancedBufferGeometry().copy(this.meshes.stick.geometry as BufferGeometry);
+    geometry.setAttribute(
+      'offset',
       new InstancedBufferAttribute(new Float32Array(count * 2), 2));
     const mesh = new InstancedMesh(geometry, material, count);
     mesh.count = 0;
@@ -123,6 +162,14 @@ export class AssetLoader {
     (backOffset.array as Float32Array)[2 * i + 1] = back * TILE_DV;
     frontOffset.needsUpdate = true;
     backOffset.needsUpdate = true;
+  }
+
+  setStickInstanceParams(instancedMesh: InstancedMesh, i: number, index: number): void {
+    const geometry = instancedMesh.geometry as BufferGeometry;
+    const offset = geometry.attributes.offset as Float32BufferAttribute;
+    (offset.array as Float32Array)[2 * i] = 0;
+    (offset.array as Float32Array)[2 * i + 1] = index * STICK_DV;
+    offset.needsUpdate = true;
   }
 
   makeMarker(): Mesh {
