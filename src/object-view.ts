@@ -1,4 +1,4 @@
-import { Group, Mesh, Vector3, PlaneGeometry, MeshBasicMaterial, MeshLambertMaterial, Material } from "three";
+import { Group, Mesh, Vector3, MeshBasicMaterial, MeshLambertMaterial, Material, Object3D, PlaneBufferGeometry, InstancedMesh } from "three";
 
 import { World } from "./world";
 import { Client } from "./client";
@@ -16,17 +16,26 @@ export interface Render {
   bottom: boolean;
 }
 
+interface ThingParams {
+  type: ThingType;
+  typeIndex: number;
+}
+
+const MAX_SHADOWS = 300;
+const MAX_TILES = 136;
+
 export class ObjectView {
   mainGroup: Group;
   private assetLoader: AssetLoader;
 
   private center: Center;
   private thingObjects: Array<Mesh>;
+  private thingParams: Array<ThingParams>;
 
-  private shadowProto: Mesh;
+  private instancedObjects: Map<ThingType, InstancedMesh>;
+
+  private shadowObject: InstancedMesh;
   private dropShadowProto: Mesh;
-
-  private shadowObjects: Array<Mesh>;
   private dropShadowObjects: Array<Mesh>;
 
   selectedObjects: Array<Mesh>;
@@ -38,26 +47,39 @@ export class ObjectView {
     this.center = new Center(this.assetLoader, client);
     this.center.mesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0.75);
     this.thingObjects = [];
-    this.shadowObjects = [];
     this.dropShadowObjects = [];
     this.selectedObjects = [];
 
-    const geometry = new PlaneGeometry(1, 1);
+    this.thingParams = [];
+
+    this.instancedObjects = new Map();
+    this.instancedObjects.set(
+      ThingType.TILE, assetLoader.makeTileInstancedMesh(MAX_TILES),
+    );
+    for (const instancedMesh of this.instancedObjects.values()) {
+      this.mainGroup.add(instancedMesh);
+    }
+
+    const plane = new PlaneBufferGeometry(1, 1, 1);
     let material = new MeshBasicMaterial({
       transparent: true,
       opacity: 0.1,
       color: 0,
       depthWrite: false,
     });
-    this.shadowProto = new Mesh(geometry, material);
+    this.shadowObject = new InstancedMesh(plane, material, MAX_SHADOWS);
+    this.shadowObject.visible = true;
+    this.mainGroup.add(this.shadowObject);
+
     material = material.clone();
     material.opacity = 0.2;
-    this.dropShadowProto = new Mesh(geometry, material);
+
+    this.dropShadowProto = new Mesh(plane, material);
 
     this.addStatic();
   }
 
-  replaceThings(things: Array<{type: ThingType; typeIndex: number}>): void {
+  replaceThings(things: Array<ThingParams>): void {
     for (const obj of this.thingObjects) {
       (obj.material as Material).dispose();
       obj.geometry.dispose();
@@ -70,16 +92,23 @@ export class ObjectView {
       this.thingObjects.push(obj);
       this.mainGroup.add(obj);
     }
+
+    this.thingParams = things;
   }
 
   addShadows(places: Array<Place>): void {
+    const dummy = new Object3D();
+
+    this.shadowObject.count = 0;
     for (const place of places) {
-      const object = this.shadowProto.clone();
-      object.position.set(place.position.x, place.position.y, 0.1);
-      object.scale.set(place.size.x, place.size.y, 1);
-      this.shadowObjects.push(object);
-      this.mainGroup.add(object);
+      dummy.position.set(place.position.x, place.position.y, 0.1);
+      dummy.scale.set(place.size.x, place.size.y, 1);
+      dummy.updateMatrix();
+
+      const idx = this.shadowObject.count++;
+      this.shadowObject.setMatrixAt(idx, dummy.matrix);
     }
+    this.shadowObject.instanceMatrix.needsUpdate = true;
   }
 
   private addStatic(): void {
@@ -126,7 +155,28 @@ export class ObjectView {
 
   updateThings(things: Array<Render>): void {
     this.selectedObjects.splice(0);
+    for (const instancedMesh of this.instancedObjects.values()) {
+      instancedMesh.count = 0;
+    }
+    const dummy = new Object3D();
     for (const thing of things) {
+      if (!thing.hovered && !thing.selected && !thing.held) {
+        const thingParams = this.thingParams[thing.thingIndex];
+        const instancedMesh = this.instancedObjects.get(thingParams.type);
+        if (instancedMesh !== undefined) {
+          const idx = instancedMesh.count++;
+          dummy.position.copy(thing.place.position);
+          dummy.rotation.copy(thing.place.rotation);
+          dummy.updateMatrix();
+          instancedMesh.setMatrixAt(idx, dummy.matrix);
+          instancedMesh.instanceMatrix.needsUpdate = true;
+          this.thingObjects[thing.thingIndex].visible = false;
+          if (thingParams.type === ThingType.TILE) {
+            this.assetLoader.setTileInstanceParams(instancedMesh, idx, thingParams.typeIndex);
+          }
+          continue;
+        }
+      }
       const obj = this.thingObjects[thing.thingIndex];
       obj.visible = true;
       obj.position.copy(thing.place.position);

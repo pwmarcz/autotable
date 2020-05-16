@@ -4,10 +4,14 @@ import jpg from '../img/*.jpg';
 import glbModels from '../img/models.auto.glb';
 
 import { Texture, Mesh, TextureLoader, Material, LinearEncoding,
-   MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, BufferGeometry, RepeatWrapping } from 'three';
+   MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, BufferGeometry, RepeatWrapping, InstancedMesh, InstancedBufferAttribute, Float32BufferAttribute } from 'three';
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { World } from './world';
 import { Size } from './places';
+
+
+const TILE_DU = 32 / 256;
+const TILE_DV = 40 / 256;
 
 
 export class AssetLoader {
@@ -54,23 +58,71 @@ export class AssetLoader {
     const y = Math.floor((index % 37) / 8);
     const back = Math.floor(index / 37);
 
-    const du = 32 / 256;
-    const dv = 40 / 256;
-
     // Clone geometry and modify front face
     const geometry = mesh.geometry.clone() as BufferGeometry;
     mesh.geometry = geometry;
     const uvs: Float32Array = geometry.attributes.uv.array as Float32Array;
     for (let i = 0; i < uvs.length; i += 2) {
-      if (uvs[i] <= du && uvs[i+1] <= dv) {
-        uvs[i] += x * du;
-        uvs[i+1] += y * dv;
-      } else if (uvs[i+1] >= 4 * dv) {
-        uvs[i+1] += back * dv;
+      if (uvs[i] <= TILE_DU && uvs[i+1] <= TILE_DV) {
+        uvs[i] += x * TILE_DU;
+        uvs[i+1] += y * TILE_DV;
+      } else if (uvs[i+1] >= 4 * TILE_DV) {
+        uvs[i+1] += back * TILE_DV;
       }
     }
 
     return mesh;
+  }
+
+  makeTileInstancedMesh(count: number): InstancedMesh {
+    const material = (this.meshes.tile.material as MeshLambertMaterial).clone();
+
+    const paramChunk = [
+      'attribute vec2 frontOffset;',
+      'attribute vec2 backOffset;',
+      '#include <common>',
+    ].join('\n');
+    const uvChunk = [
+      `#include <uv_vertex>`,
+      //`attribute vec2 backOffset`,
+      `if (vUv.x <= ${TILE_DU} && vUv.y <= ${TILE_DV})`,
+      `    vUv += frontOffset;`,
+      `else if (vUv.y >= ${4*TILE_DV})`,
+      `    vUv += backOffset;`
+    ].join('\n');
+
+    material.onBeforeCompile = shader => {
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', paramChunk)
+        .replace('#include <uv_vertex>', uvChunk);
+    };
+
+    const geometry = (this.meshes.tile.geometry as BufferGeometry).clone();
+    geometry.setAttribute(
+      'frontOffset',
+      new InstancedBufferAttribute(new Float32Array(count * 2), 2));
+    geometry.setAttribute(
+      'backOffset',
+      new InstancedBufferAttribute(new Float32Array(count * 2), 2));
+    const mesh = new InstancedMesh(geometry, material, count);
+    mesh.count = 0;
+    return mesh;
+  }
+
+  setTileInstanceParams(instancedMesh: InstancedMesh, i: number, index: number): void {
+    const x = (index % 37) % 8;
+    const y = Math.floor((index % 37) / 8);
+    const back = Math.floor(index / 37);
+
+    const geometry = instancedMesh.geometry as BufferGeometry;
+    const frontOffset = geometry.attributes.frontOffset as Float32BufferAttribute;
+    const backOffset = geometry.attributes.backOffset as Float32BufferAttribute;
+    (frontOffset.array as Float32Array)[2 * i] = x * TILE_DU;
+    (frontOffset.array as Float32Array)[2 * i + 1] = y * TILE_DV;
+    (backOffset.array as Float32Array)[2 * i] = 0;
+    (backOffset.array as Float32Array)[2 * i + 1] = back * TILE_DV;
+    frontOffset.needsUpdate = true;
+    backOffset.needsUpdate = true;
   }
 
   makeMarker(): Mesh {
