@@ -230,6 +230,11 @@ export class Game {
       case 'q':
         this.lookDownState = 1 - this.lookDownState;
         this.lookDown.start(this.lookDownState);
+        break;
+      case 'p':
+        this.settings.perspective.checked = !this.settings.perspective.checked;
+        this.updateSettings();
+        break;
     }
   }
 
