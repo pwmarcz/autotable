@@ -38,6 +38,8 @@ export class ClientUi {
     connectButton.onclick = () => this.connect();
     const disconnectButton = document.getElementById('disconnect')!;
     disconnectButton.onclick = this.disconnect.bind(this);
+    const newGameButton = document.getElementById('new-game')!;
+    newGameButton.onclick = this.newGame.bind(this);
 
     this.statusElement = document.getElementById('status') as HTMLElement;
     this.statusTextElement = document.getElementById('status-text') as HTMLElement;
@@ -155,6 +157,10 @@ export class ClientUi {
   disconnect(): void {
     this.disconnecting = true;
     this.client.disconnect();
-    this.setUrlState(null);
+    // this.setUrlState(null);
+  }
+
+  newGame(): void {
+    window.location.search = '';
   }
 }
