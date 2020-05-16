@@ -164,7 +164,9 @@ export class ObjectView {
     }
     const dummy = new Object3D();
     for (const thing of things) {
-      if (!thing.hovered && !thing.selected && !thing.held) {
+      const custom = thing.hovered || thing.selected || thing.held || thing.bottom;
+
+      if (!custom) {
         const thingParams = this.thingParams[thing.thingIndex];
         const instancedMesh = this.instancedObjects.get(thingParams.type);
         if (instancedMesh !== undefined) {
