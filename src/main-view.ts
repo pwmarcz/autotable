@@ -110,7 +110,7 @@ export class MainView {
       this.camera.position.set(World.WIDTH/2, World.WIDTH / 2, 400);
       this.camera.rotation.set(0, 0, 0);
     } else {
-      this.camera.position.set(World.WIDTH/2, -World.WIDTH*0.9, World.WIDTH * 1);
+      this.camera.position.set(World.WIDTH/2, -World.WIDTH*0.94, World.WIDTH * 1.05);
       this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2, 0, 0);
       if (zoom !== 0) {
         const dist = new Vector3(0, 1.37, -1).multiplyScalar(zoom * 55);
