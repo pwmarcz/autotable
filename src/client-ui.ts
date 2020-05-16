@@ -90,13 +90,6 @@ export class ClientUi {
     this.onNickChange();
     this.setUrlState(game.gameId);
     document.getElementsByTagName('title')[0].innerText = TITLE_CONNECTED;
-
-    const query = qs.stringify({gameId: game.gameId});
-    const protocol = window.location.protocol;
-    const host = window.location.host;
-    const path = window.location.pathname;
-    const link = `${protocol}//${host}${path}?${query}`;
-    (document.getElementById('game-link')! as HTMLInputElement).value = link;
   }
 
   onDisconnect(): void {

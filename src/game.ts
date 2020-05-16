@@ -1,3 +1,5 @@
+import $ from 'jquery';
+
 import { ObjectView } from "./object-view";
 import { World } from "./world";
 import { Client } from "./client";
@@ -96,6 +98,17 @@ export class Game {
     this.buttons.leaveSeat.onclick = () => {
       this.client.seats.set(this.client.playerId(), { seat: null });
     };
+
+    // Hack for settings menu
+    for (const menu of Array.from(document.querySelectorAll('.dropdown-menu'))) {
+      $(menu.parentElement!).on('hide.bs.dropdown', (e: Event) => {
+        // @ts-ignore
+        const target: HTMLElement | undefined = e.clickEvent?.target;
+        if (target && target.tagName === 'LABEL') {
+          e.preventDefault();
+        }
+      });
+    }
   }
 
   private updateSeats(): void {

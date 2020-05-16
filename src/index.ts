@@ -1,17 +1,8 @@
 //import 'normalize.css';
 import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap/dist/js/bootstrap';
 import { AssetLoader } from './asset-loader';
 import { Game } from './game';
-
-// UI
-document.getElementById('showMore')!.onclick = event => {
-  event.preventDefault();
-  document.getElementById('sidebar')!.classList.remove('collapsed');
-};
-document.getElementById('hideMore')!.onclick = event => {
-  event.preventDefault();
-  document.getElementById('sidebar')!.classList.add('collapsed');
-};
 
 const assetLoader = new AssetLoader();
 

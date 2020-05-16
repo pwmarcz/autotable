@@ -79,20 +79,16 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 250px;
+            width: 220px;
             max-height: 100%;
-            overflow-y: auto;
             padding: 1em;
             background: rgba(30,30,30, 0.6);
-
             user-select: none;
         }
 
-        #sidebar.collapsed {
-            width: 220px;
+        .dropdown-menu {
+            background: rgba(30,30,30, 0.8) !important;
         }
-        #sidebar.collapsed .more { display: none; }
-        #sidebar:not(.collapsed) .show-more { display: none; }
 
         #server:not(.connected) .server-connected { display: none; }
         #server.connected .server-disconnected { display: none; }
@@ -189,35 +185,37 @@
                 <div class="btn-progress"></div>
                 <span class="btn-progress-text">Deal</span>
             </button>
-            <div class="btn-group mt-2 d-flex">
-                <button class="btn btn-secondary btn-sm mr-2" id="toggle-dealer">Dealer</button>
-                <button class="btn btn-secondary btn-sm" id="toggle-honba">Honba</button>
+            <div class="mt-2 d-flex">
+                <button class="btn btn-secondary btn-sm mr-2 w-100" id="toggle-dealer">Dealer</button>
+                <button class="btn btn-secondary btn-sm w-100" id="toggle-honba">Honba</button>
             </div>
             <button class="btn btn-dark btn-sm btn-block mt-2" id="leave-seat">Leave seat</button>
-            <p class="mt-1 show-more">
-                <a class="text-muted" href="#" id="showMore">show more</a>
-            </p>
 
 
-            <div class="more">
-                <p class="mt-1">
-                    <a class="text-muted" href="#" id="hideMore">hide more</a>
-                </p>
-                <div id="server">
-                    <h4>Server</h4>
-                    <div class="server-disconnected">
-                        <button class="btn btn-primary btn-sm btn-block" id="connect">Connect</button></p>
-                    </div>
-                    <div class="server-connected">
-                        <button class="btn btn-warning btn-sm btn-block" id="disconnect">Disconnect</button></p>
-                        <p>Link for joining:
-                            <input class="form-control form-control-sm" id="game-link" type="text" onfocus="this.select()" readonly value=""></input></p>
-                        <p>Nick: <input class="form-control form-control-sm" id="nick" type="text"></input></p>
+            <div class="mt-4 d-flex" id="server">
+                <button class="btn btn-secondary btn-sm w-100 server-disconnected mr-2" id="connect">
+                    Connect
+                </button>
+                <button class="btn btn-warning btn-sm w-100 server-connected mr-2" id="disconnect">
+                    Disconnect
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-secondary btn-sm btn-block dropdown-toggle" data-toggle="dropdown">
+                        Nick
+                    </button>
+                    <div class="dropdown-menu p-3 text-light">
+                        <input class="form-control form-control-sm" id="nick" type="text"></input>
                     </div>
                 </div>
+            </div>
 
-                <h4>Instructions</h4>
-                <p>
+            <div class="dropdown mt-2">
+                <button class="btn btn-dark btn-sm btn-block dropdown-toggle" data-toggle="dropdown">
+                    More
+                </button>
+                <div class="dropdown-menu p-3 text-light" style="width: 300px;">
+                    <h4>Instructions</h4>
+                    <p>
                     <b>Drag mouse</b> to move or select<br>
                     Press <b>F</b> to flip or rotate<br>
                     Press <b>R</b> to rotate backwards; for example hide your hand<br>
@@ -225,21 +223,21 @@
                     Hold <b>Z</b> to zoom in<br>
                     Hold <b>X</b> to zoom out<br>
                     Press <b>P</b> to toggle perspective mode
-                </p>
-
-                <h4>Settings</h4>
-                <label>
-                    <input type="checkbox" id="perspective">
-                    Perspective mode (experimental)
-                </label>
-                <label>
-                    <input type="checkbox" id="benchmark">
-                    Benchmark mode (don't limit FPS)
-                </label>
-                <label>
-                    <input type="checkbox" id="muted">
-                    Mute sound
-                </label>
+                    </p>
+                    <h4>Settings</h4>
+                    <label class="dropdown-menu-item">
+                        <input type="checkbox" id="perspective">
+                        Perspective mode (experimental)
+                    </label>
+                    <label>
+                        <input type="checkbox" id="benchmark">
+                        Benchmark mode (don't limit FPS)
+                    </label>
+                    <label>
+                        <input type="checkbox" id="muted">
+                        Mute sound
+                    </label>
+                </div>
             </div>
         </div>
     </div>

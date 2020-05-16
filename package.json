@@ -6,6 +6,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/events": "^3.0.0",
+    "@types/jquery": "^3.3.38",
     "@types/qs": "^6.9.2",
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
