@@ -9,7 +9,7 @@ ICONS = img/icon-16.auto.png img/icon-32.auto.png img/icon-96.auto.png
 
 .PHONY: parcel
 parcel: files
-	./node_modules/.bin/parcel index.html
+	node run-parcel.js
 
 .PHONY: files
 files: img/models.auto.glb $(ICONS)
@@ -35,7 +35,7 @@ img/models.auto.glb: img/models.blend $(TEXTURES)
 .PHONY: build
 build: files
 	rm -rf build
-	./node_modules/.bin/parcel build index.html --public-url /autotable/ --cache-dir .cache/build/ --out-dir build/
+	./node_modules/.bin/parcel build *.html --public-url /autotable/ --cache-dir .cache/build/ --out-dir build/
 
 .PHONY: build-server
 build-server:
