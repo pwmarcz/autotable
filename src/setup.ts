@@ -44,6 +44,7 @@ export class Setup {
 
   private addTiles(tileSet: TileSet): void {
     const wallSlots = this.wallSlots().map(slot => slot.name);
+    shuffle(wallSlots);
     for (let i = 0; i < 136; i++) {
       const tileIndex = this.tileIndex(i, tileSet);
       this.addThing(ThingType.TILE, tileIndex, wallSlots[i]);
@@ -86,10 +87,10 @@ export class Setup {
     for (let i = 0; i < 136; i++) {
       const tile = tiles[i];
       if (windTiles.indexOf(i) !== -1) {
-        tile.moveTo(handSlots.pop(), 2);
+        tile.moveTo(handSlots.pop()!, 2);
       } else {
 
-        tile.moveTo(wallSlots.pop());
+        tile.moveTo(wallSlots.pop()!);
       }
     }
   }
