@@ -165,11 +165,11 @@ export class Collection<K extends string | number, V> {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
-    if (this.options.perPlayer) {
+    if (game && this.options.perPlayer) {
       const localEntries: Array<Entry> = [];
       for (const [key, value] of this.map.entries()) {
         localEntries.push([this.kind, key, null]);
-        if (game && key === game.playerId) {
+        if (key === game.playerId) {
           localEntries.push([this.kind, 'offline', value]);
         }
       }
