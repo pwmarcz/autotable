@@ -192,16 +192,25 @@ export class Game {
 
   start(): void {
     this.clientUi.start();
-    this.update();
+    this.mainLoop();
+  }
+
+  mainLoop(): void {
+    requestAnimationFrame(this.mainLoop.bind(this));
+
+    if (this.benchmark) {
+      const start = new Date().getTime();
+      let end;
+      do {
+        this.update();
+        end = new Date().getTime();
+      } while (end - start < 15);
+    } else {
+      this.update();
+    }
   }
 
   private update(): void {
-    if (this.benchmark) {
-      setTimeout(this.update.bind(this));
-    } else {
-      requestAnimationFrame(this.update.bind(this));
-    }
-
     this.lookDown.update();
     this.zoom.update();
 
