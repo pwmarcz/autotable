@@ -6,6 +6,7 @@
     <link href="img/icon-96.auto.png" rel="shortcut icon" sizes="96x96">
     <link href="img/icon-32.auto.png" rel="shortcut icon" sizes="32x32">
     <link href="img/icon-16.auto.png" rel="shortcut icon" sizes="16x16">
+    <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.css">
     <link rel="stylesheet" href="./src/style.css">
 </head>
 <body>
@@ -42,6 +43,14 @@
                 <div class="btn-progress"></div>
                 <span class="btn-progress-text">Deal</span>
             </button>
+
+            <select class="form-control form-control-sm mt-2" id="setup">
+                <option disabled value="">Deal:</option>
+                <option value="INITIAL">Only walls</option>
+                <option value="WINDS">Wind tiles (for seats)</option>
+                <option value="HANDS" selected>Hands</option>
+            </select>
+
             <div class="mt-2 d-flex">
                 <button class="btn btn-secondary btn-sm mr-2 w-100" id="toggle-dealer">Dealer</button>
                 <button class="btn btn-secondary btn-sm w-100" id="toggle-honba">Honba</button>

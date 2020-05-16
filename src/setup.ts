@@ -2,7 +2,7 @@ import { Slot, Thing, ThingType, Size } from "./places";
 import { shuffle } from "./utils";
 import { Vector3, Euler, Vector2 } from "three";
 import { World } from "./world";
-import { TileSet } from "./types";
+import { TileSet, SetupType } from "./types";
 
 
 const Rotation = {
@@ -44,24 +44,52 @@ export class Setup {
 
   private addTiles(tileSet: TileSet): void {
     const wallSlots = this.wallSlots().map(slot => slot.name);
-    wallSlots.splice(132);
-    const windTiles = [108, 112, 116, 120];
-    const handSlots = [
-      'hand.5@0',
-      'hand.6@0',
-      'hand.7@0',
-      'hand.8@0',
-    ];
-
-    // Shuffle slots, not tiles - this way tiles are the same for everyone.
-    shuffle(wallSlots);
-    shuffle(handSlots);
     for (let i = 0; i < 136; i++) {
       const tileIndex = this.tileIndex(i, tileSet);
+      this.addThing(ThingType.TILE, tileIndex, wallSlots[i]);
+
+    }
+  }
+
+  private dealWalls(): void {
+    const tiles = this.things.filter(thing => thing.type === ThingType.TILE);
+    const slots = this.wallSlots();
+    shuffle(slots);
+    for (const thing of tiles) {
+      thing.prepareMove();
+    }
+    for (let i = 0; i < 136; i++) {
+      tiles[i].moveTo(slots[i]);
+    }
+  }
+
+  private dealWinds(seat: number): void {
+    const tiles = this.things.filter(thing => thing.type === ThingType.TILE);
+    const wallSlots = this.wallSlots();
+    wallSlots.splice(132);
+
+    const windTiles = [108, 112, 116, 120];
+    const handSlots = [
+      `hand.5@${seat}`,
+      `hand.6@${seat}`,
+      `hand.7@${seat}`,
+      `hand.8@${seat}`,
+    ].map(name => this.slots[name]);
+
+    shuffle(wallSlots);
+    shuffle(handSlots);
+
+    for (const thing of tiles) {
+      thing.prepareMove();
+    }
+
+    for (let i = 0; i < 136; i++) {
+      const tile = tiles[i];
       if (windTiles.indexOf(i) !== -1) {
-        this.addThing(ThingType.TILE, tileIndex, handSlots.pop()!, 2);
+        tile.moveTo(handSlots.pop(), 2);
       } else {
-        this.addThing(ThingType.TILE, tileIndex, wallSlots.pop()!);
+
+        tile.moveTo(wallSlots.pop());
       }
     }
   }
@@ -90,7 +118,21 @@ export class Setup {
     return tileIndex;
   }
 
-  deal(playerNum: number): void {
+  deal(seat: number, setupType: SetupType): void {
+    switch (setupType) {
+      case SetupType.HANDS:
+        this.dealHands(seat);
+        break;
+      case SetupType.WINDS:
+        this.dealWinds(seat);
+        break;
+      case SetupType.INITIAL:
+        this.dealWalls();
+        break;
+    }
+  }
+
+  private dealHands(seat: number): void {
     const tiles = this.things.filter(thing => thing.type === ThingType.TILE);
     const slots = this.wallSlots();
     shuffle(slots);
@@ -103,7 +145,7 @@ export class Setup {
 
     const slotsToDeal = this.wallSlots();
     const dice = Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6);
-    const wallNum = (playerNum + dice - 1) % 4;
+    const wallNum = (seat + dice - 1) % 4;
     const deadWallBegin = 136 + (wallNum+1) * 17 * 2 - dice * 2;
 
     let index = deadWallBegin - 1;

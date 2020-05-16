@@ -140,3 +140,12 @@
     font-weight: normal;
     font-style: italic;
 }
+
+#setup {
+    background-color: #343a40;
+    border-color: #343a40;
+    color: #fff;
+}
+#setup:focus {
+    box-shadow: 0 0 0 0.2rem rgba(130, 138, 145, 0.5);
+}

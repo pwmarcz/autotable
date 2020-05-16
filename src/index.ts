@@ -1,5 +1,4 @@
 //import 'normalize.css';
-import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/js/bootstrap';
 import { AssetLoader } from './asset-loader';
 import { Game } from './game';

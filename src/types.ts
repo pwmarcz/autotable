@@ -16,6 +16,12 @@ export interface Game {
   secret: string;
 }
 
+export enum SetupType {
+  INITIAL = 'INITIAL',
+  WINDS = 'WINDS',
+  HANDS = 'HANDS',
+}
+
 export interface TileSet {
   back: number; // 0 or 1
   fives: '000' | '111' | '121';

@@ -8,7 +8,7 @@ import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
 import { SoundPlayer } from "./sound-player";
-import { TileSet, ThingInfo, SoundType } from "./types";
+import { TileSet, ThingInfo, SoundType, SetupType } from "./types";
 
 
 interface Select extends Place {
@@ -168,7 +168,7 @@ export class World {
     };
   }
 
-  deal(): void {
+  deal(setupType: SetupType): void {
     if (this.seat === null) {
       return;
     }
@@ -178,17 +178,20 @@ export class World {
     for (const thing of this.things) {
       thing.heldBy = null;
     }
-    this.setup.deal(this.seat);
+    this.setup.deal(this.seat, setupType);
     this.checkPushes();
+
+    const back = 1 - this.tileSet.back;
+    const tileSet = { ...this.tileSet, back };
 
     let match = this.client.match.get(0);
     let honba;
-    const back = 1 - this.tileSet.back;
-    const tileSet = { ...this.tileSet, back };
     if (!match || match.dealer !== this.seat) {
       honba = 0;
-    } else {
+    } else if (setupType === SetupType.HANDS) {
       honba = (match.honba + 1) % 8;
+    } else {
+      honba = match.honba;
     }
     this.updateTileSet(tileSet);
     match = {dealer: this.seat, honba, tileSet};

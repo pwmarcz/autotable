@@ -10,6 +10,7 @@ import { MainView } from "./main-view";
 import { Group } from "three";
 import { ClientUi } from "./client-ui";
 import { SoundPlayer } from "./sound-player";
+import { SetupType } from './types';
 
 export class Game {
   private assetLoader: AssetLoader;
@@ -148,6 +149,8 @@ export class Game {
   private setupDealButton(): void {
     const buttonElement = document.getElementById('deal')!;
     const progressElement = document.querySelector('#deal .btn-progress')! as HTMLElement;
+    const setupElement = document.getElementById('setup') as HTMLInputElement;
+
     let startPressed: number | null = null;
     const transitionTime = 600;
     const waitTime = transitionTime + 0;
@@ -170,7 +173,9 @@ export class Game {
       buttonElement.blur();
 
       if (deal) {
-        this.world.deal();
+        const setupType = setupElement.value as SetupType;
+        this.world.deal(setupType);
+        setupElement.value = SetupType.HANDS;
       }
     };
 
