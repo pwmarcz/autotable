@@ -94,19 +94,32 @@ export class MainView {
     this.updateRotation((seat ?? 0) * Math.PI/2);
 
     if (this.perspective) {
-      this.updatePespectiveCamera(seat === null, zoom);
+      this.updatePespectiveCamera(seat === null, lookDown, zoom, mouse2);
     } else {
       this.updateOrthographicCamera(seat === null, lookDown, zoom, mouse2);
     }
   }
 
-  private updatePespectiveCamera(fromTop: boolean, zoom: number): void {
+  private updatePespectiveCamera(
+    fromTop: boolean,
+    lookDown: number,
+    zoom: number,
+    mouse2: Vector2 | null): void
+  {
     if (fromTop) {
       this.camera.position.set(World.WIDTH/2, World.WIDTH / 2, 400);
       this.camera.rotation.set(0, 0, 0);
     } else {
-      this.camera.position.set(World.WIDTH/2, -World.WIDTH*0.8, World.WIDTH * 0.9);
-      this.camera.rotation.set(Math.PI * 0.3, 0, 0);
+      this.camera.position.set(World.WIDTH/2, -World.WIDTH*0.9, World.WIDTH * 1);
+      this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2, 0, 0);
+      if (zoom !== 0) {
+        const dist = new Vector3(0, 1.37, -1).multiplyScalar(zoom * 55);
+        this.camera.position.add(dist);
+      }
+      if (zoom > 0 && mouse2) {
+        this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.6;
+        this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
+      }
     }
   }
 
@@ -119,7 +132,7 @@ export class MainView {
     if (fromTop) {
       this.camera.position.set(World.WIDTH/2, World.WIDTH / 2, 100);
       this.camera.rotation.set(0, 0, 0);
-      this.camera.scale.setScalar(1.55 - 0.45 * zoom);
+      this.camera.scale.setScalar(1);
     } else {
       this.camera.position.set(
         World.WIDTH / 2,
@@ -127,11 +140,11 @@ export class MainView {
         174);
       this.camera.rotation.set(Math.PI * 0.25, 0, 0);
       this.camera.scale.setScalar(1 - 0.45 * zoom);
-    }
 
-    if (zoom > 0 && mouse2) {
-      this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.6;
-      this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
+      if (zoom > 0 && mouse2) {
+        this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.6;
+        this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
+      }
     }
   }
 
