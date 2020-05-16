@@ -6,14 +6,19 @@ import { Game } from './base-client';
 
 const TITLE_DISCONNECTED = 'Autotable';
 const TITLE_CONNECTED = 'Autotable (online)';
-
+const RECONNECT_DELAY = 500;
+const RECONNECT_ATTEMPTS = 5;
 
 export class ClientUi {
   url: string;
   client: Client;
   nickElement: HTMLInputElement;
+  statusElement: HTMLElement;
+  statusTextElement: HTMLElement;
 
-  success = false;
+  disconnecting = false;
+  reconnectAttempts: number = 0;
+  reconnectSeat: number | null = null;
 
   constructor(client: Client) {
     this.url = this.getUrl();
@@ -30,9 +35,12 @@ export class ClientUi {
     this.onNickChange();
 
     const connectButton = document.getElementById('connect')!;
-    connectButton.onclick = this.connect.bind(this);
+    connectButton.onclick = () => this.connect();
     const disconnectButton = document.getElementById('disconnect')!;
     disconnectButton.onclick = this.disconnect.bind(this);
+
+    this.statusElement = document.getElementById('status') as HTMLElement;
+    this.statusTextElement = document.getElementById('status-text') as HTMLElement;
   }
 
   getUrlState(): string | null {
@@ -85,37 +93,67 @@ export class ClientUi {
   }
 
   onConnect(game: Game): void {
-    this.success = true;
+    this.setStatus(null);
     document.getElementById('server')!.classList.add('connected');
     this.onNickChange();
     this.setUrlState(game.gameId);
     document.getElementsByTagName('title')[0].innerText = TITLE_CONNECTED;
-  }
 
-  onDisconnect(): void {
-    document.getElementById('server')!.classList.remove('connected');
-    (document.getElementById('connect')! as HTMLButtonElement).disabled = false;
-    document.getElementsByTagName('title')[0].innerText = TITLE_DISCONNECTED;
-    if (!this.success) {
-      this.setUrlState(null);
+    if (this.reconnectSeat !== null) {
+      this.client.seats.set(this.client.playerId(), { seat: this.reconnectSeat });
     }
   }
 
-  connect(): void {
+  onDisconnect(game: Game | null): void {
+    document.getElementById('server')!.classList.remove('connected');
+    document.getElementsByTagName('title')[0].innerText = TITLE_DISCONNECTED;
+
+    if (game && !this.disconnecting) {
+      this.reconnectSeat = this.client.seat;
+      setTimeout(
+        () => this.connect(RECONNECT_ATTEMPTS, this.client.seat ?? undefined),
+        RECONNECT_DELAY
+      );
+      this.setStatus('Trying to reconnect...');
+    } else if (!game && this.reconnectAttempts > 0) {
+      setTimeout(
+        () => this.connect(this.reconnectAttempts - 1, this.reconnectSeat ?? undefined),
+        RECONNECT_DELAY);
+    } else {
+      (document.getElementById('connect')! as HTMLButtonElement).disabled = false;
+      if (!this.disconnecting) {
+        this.setStatus('Failed to connect.');
+      }
+    }
+  }
+
+  setStatus(status: string | null): void {
+    if (status !== null) {
+      this.statusElement.style.display = 'block';
+      this.statusTextElement.innerText = status;
+    } else {
+      this.statusElement.style.display = 'none';
+    }
+  }
+
+  connect(reconnectAttempts?: number, reconnectSeat?: number): void {
     if (this.client.connected()) {
       return;
     }
     (document.getElementById('connect')! as HTMLButtonElement).disabled = true;
-    this.success = false;
+    this.reconnectSeat = null;
     const gameId = this.getUrlState();
     if (gameId !== null) {
       this.client.join(this.url, gameId);
     } else {
       this.client.new(this.url);
     }
+    this.reconnectAttempts = reconnectAttempts ?? 0;
+    this.reconnectSeat = reconnectSeat ?? null;
   }
 
   disconnect(): void {
+    this.disconnecting = true;
     this.client.disconnect();
     this.setUrlState(null);
   }
