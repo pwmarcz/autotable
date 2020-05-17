@@ -246,11 +246,22 @@ export class MouseUi {
   private prepareObjects(): Array<Mesh> {
     const toSelect = this.world.toSelect();
     const objs = [];
+
+    const minSize = 3;
+
     for (let i = 0; i < toSelect.length; i++) {
       const select = toSelect[i];
       const obj = this.raycastObjects[i];
       obj.position.copy(select.position);
       obj.scale.copy(select.size);
+
+      if (obj.scale.x < minSize) {
+        obj.scale.x = minSize;
+      }
+      if (obj.scale.y < minSize) {
+        obj.scale.y = minSize;
+      }
+
       obj.updateMatrix();
       obj.updateMatrixWorld();
       obj.userData.id = select.id;
