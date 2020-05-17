@@ -42,7 +42,9 @@ export class MouseUi {
     this.raycastObjects = [];
     for (let i = 0; i < Object.keys(this.world.slots).length; i++) {
       const obj = new Mesh(new BoxGeometry(1, 1, 1));
+      obj.name = 'raycastBox';
       obj.visible = false;
+      obj.matrixAutoUpdate = false;
       this.raycastObjects.push(obj);
       this.mainGroup.add(obj);
     }
@@ -245,6 +247,7 @@ export class MouseUi {
       const obj = this.raycastObjects[i];
       obj.position.copy(select.position);
       obj.scale.copy(select.size);
+      obj.updateMatrix();
       obj.updateMatrixWorld();
       obj.userData.id = select.id;
       objs.push(obj);

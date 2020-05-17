@@ -79,6 +79,7 @@ export class ObjectView {
     material.opacity = 0.2;
 
     this.dropShadowProto = new Mesh(plane, material);
+    this.dropShadowProto.name = 'dropShadow';
 
     this.addStatic();
   }
