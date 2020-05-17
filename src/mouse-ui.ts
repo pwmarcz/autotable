@@ -42,6 +42,7 @@ export class MouseUi {
 
     this.raycastObjects = [];
     this.raycastGroup = new Group();
+    this.mainGroup.add(this.raycastGroup);
     this.raycastGroup.visible = false;
     for (let i = 0; i < Object.keys(this.world.slots).length; i++) {
       const obj = new Mesh(new BoxGeometry(1, 1, 1));
