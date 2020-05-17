@@ -377,7 +377,7 @@ export class Setup {
       group: 'marker',
       type: ThingType.MARKER,
       origin: new Vector3(
-        -4, -8, 0,
+        166, -8, 0,
       ),
       rotations: [Rotation.FACE_DOWN_REVERSE, Rotation.FACE_UP],
       drawShadow: false,
