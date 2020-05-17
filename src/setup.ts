@@ -246,6 +246,19 @@ export class Setup {
       }));
     }
 
+    this.addSlot(new Slot({
+      name: `hand.extra`,
+      group: `hand`,
+      origin: new Vector3(
+        46 + 14.5*Size.TILE.x,
+        0,
+        0,
+      ),
+      rotations: [Rotation.STANDING, Rotation.FACE_UP, Rotation.FACE_DOWN],
+      canFlipMultiple: true,
+      drawShadow: false,
+    }));
+
     for (let i = 0; i < 4; i++) {
       for (let j = 0; j < 4; j++) {
         this.addSlot(new Slot({
