@@ -177,6 +177,7 @@ export class ObjectView {
           instancedMesh.setMatrixAt(idx, dummy.matrix);
           instancedMesh.instanceMatrix.needsUpdate = true;
           this.thingObjects[thing.thingIndex].visible = false;
+          this.thingObjects[thing.thingIndex].matrixAutoUpdate = false;
           if (thingParams.type === ThingType.TILE) {
             this.assetLoader.setTileInstanceParams(instancedMesh, idx, thingParams.typeIndex);
           } else if (thingParams.type === ThingType.STICK) {
@@ -187,6 +188,7 @@ export class ObjectView {
       }
       const obj = this.thingObjects[thing.thingIndex];
       obj.visible = true;
+      obj.matrixAutoUpdate = true;
       obj.position.copy(thing.place.position);
       obj.rotation.copy(thing.place.rotation);
 
