@@ -5,6 +5,7 @@ import { SelectionBox } from "./selection-box";
 export class MouseUi {
   private world: World;
   private mainGroup: Group;
+  private raycastGroup: Group;
   private raycaster: Raycaster;
 
   private selectionBox: SelectionBox | null;
@@ -40,13 +41,15 @@ export class MouseUi {
     ];
 
     this.raycastObjects = [];
+    this.raycastGroup = new Group();
+    this.raycastGroup.visible = false;
     for (let i = 0; i < Object.keys(this.world.slots).length; i++) {
       const obj = new Mesh(new BoxGeometry(1, 1, 1));
       obj.name = 'raycastBox';
       obj.visible = false;
       obj.matrixAutoUpdate = false;
       this.raycastObjects.push(obj);
-      this.mainGroup.add(obj);
+      this.raycastGroup.add(obj);
     }
 
     this.raycastTable = new Mesh(new PlaneGeometry(
@@ -55,7 +58,7 @@ export class MouseUi {
     ));
     this.raycastTable.visible = false;
     this.raycastTable.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
-    this.mainGroup.add(this.raycastTable);
+    this.raycastGroup.add(this.raycastTable);
 
     this.mouse2 = null;
     this.mouse3 = null;
@@ -136,7 +139,7 @@ export class MouseUi {
     if (intersects.length > 0) {
       hovered = intersects[0].object.userData.id;
       hoverPos = intersects[0].point.clone();
-      this.mainGroup.worldToLocal(hoverPos);
+      this.raycastGroup.worldToLocal(hoverPos);
     }
     this.world.onHover(hovered);
 
@@ -146,7 +149,7 @@ export class MouseUi {
     let levelPos = null;
     if (intersectsTable.length > 0) {
       levelPos = intersectsTable[0].point.clone();
-      this.mainGroup.worldToLocal(levelPos);
+      this.raycastGroup.worldToLocal(levelPos);
     }
 
     if (this.prepareSelection()) {
@@ -188,7 +191,7 @@ export class MouseUi {
 
       if (cursorPos && i !== this.world.seat) {
         const v = cursorPos.clone();
-        this.mainGroup.localToWorld(v);
+        this.raycastGroup.localToWorld(v);
         v.project(this.camera);
 
         const x = Math.floor((v.x + 1) / 2 * w);
@@ -216,7 +219,7 @@ export class MouseUi {
     const h = this.main.clientHeight;
 
     const p = this.selectStart3.clone();
-    this.mainGroup.localToWorld(p);
+    this.raycastGroup.localToWorld(p);
     const selectStart2 = p.project(this.camera!);
 
     const x1 = Math.min(selectStart2.x, this.mouse2.x);
