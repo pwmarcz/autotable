@@ -412,26 +412,49 @@ export class World {
 
   }
 
-  onFlip(direction: number): void {
+  onFlip(direction: number, animated?: boolean): void {
     if (this.held.length > 0) {
       return;
     }
 
     if (this.selected.length > 0) {
       const rotationIndex = mostCommon(this.selected, thing => thing.rotationIndex)!;
+      const toFlip = [];
       for (const thing of this.selected) {
-        if (this.selected.length > 1 && !thing.slot.canFlipMultiple) {
-          continue;
+        if (this.selected.length === 1 || thing.slot.canFlipMultiple) {
+          toFlip.push(thing);
         }
-        thing.flip(rotationIndex + direction);
       }
-      this.sendUpdate(this.selected);
-      this.checkPushes();
-      this.selected.splice(0);
+      if (toFlip.length > 1 && animated) {
+        toFlip.sort((a, b) => a.slot.name.localeCompare(b.slot.name, undefined, { numeric: true }));
+        this.flipAnimated(toFlip, 0, rotationIndex + direction);
+      } else {
+        for (const thing of toFlip) {
+          thing.flip(rotationIndex + direction);
+        }
+        this.sendUpdate(this.selected);
+        this.checkPushes();
+        this.selected.splice(0);
+      }
     } else if (this.hovered !== null) {
       this.hovered.flip(this.hovered.rotationIndex + direction);
       this.sendUpdate([this.hovered]);
       this.checkPushes();
+    }
+  }
+
+  private flipAnimated(things: Array<Thing>, i: number, rotationIndex: number): void {
+    const thing = things[i];
+    if (this.selected.indexOf(things[i]) === -1) {
+      this.selected.splice(0);
+      return;
+    }
+    thing.flip(rotationIndex);
+    this.sendUpdate([thing]);
+    if (i + 1 < things.length) {
+      setTimeout(() => this.flipAnimated(things, i + 1, rotationIndex), 100);
+    } else {
+      this.selected.splice(0);
     }
   }
 

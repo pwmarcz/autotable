@@ -242,8 +242,14 @@ export class Game {
       case 'f':
         this.world.onFlip(1);
         break;
+      case 'F':
+        this.world.onFlip(1, true);
+        break;
       case 'r':
         this.world.onFlip(-1);
+        break;
+      case 'R':
+        this.world.onFlip(-1, true);
         break;
       case ' ':
         this.lookDown.start(1);
