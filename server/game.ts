@@ -26,6 +26,7 @@ export class Game {
   private collections: Map<string, Map<string | number, any>> = new Map();
 
   constructor(gameId: string) {
+    console.log(`new game: ${gameId}`)
     this.gameId = gameId;
     this.expiryTime = new Date().getTime() + EXPIRY_TIME;
   }
@@ -42,6 +43,8 @@ export class Game {
     this.clients.set(playerId, client);
     client.playerId = playerId;
     client.game = this;
+
+    console.log(`${this.gameId}: join: ${playerId}`);
 
     this.send(client, {
       type: 'JOINED',
@@ -143,6 +146,8 @@ export class Game {
   }
 
   leave(client: Client): void {
+    console.log(`${this.gameId}: leave: ${client.playerId}`);
+
     this.clients.delete(client.playerId!);
     const toUpdate: Array<Entry> = [];
     for (const [kind, isPerPlayer] of this.perPlayer.entries()) {
@@ -165,7 +170,7 @@ export class Game {
 
   private send(client: Client, message: Message): void {
     const data = JSON.stringify(message);
-    console.log(`send ${this.gameId}.${client.playerId} ${data}`);
+    console.debug(`send ${this.gameId}.${client.playerId} ${data}`);
     client.send(data);
   }
 

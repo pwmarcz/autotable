@@ -26,9 +26,9 @@ export class Server {
 
       client.on('message', data => {
         if (client.game !== null) {
-          console.log(`recv ${client.game.gameId}.${client.playerId} ${data}`);
+          console.debug(`recv ${client.game.gameId}.${client.playerId} ${data}`);
         } else {
-          console.log(`recv * ${data}`);
+          console.debug(`recv * ${data}`);
         }
 
         const message = JSON.parse(data as string) as Message;
@@ -43,7 +43,7 @@ export class Server {
       });
 
       client.on('close', () => {
-        console.log('> disconnect');
+        console.debug('> disconnect');
         this.onClose(client);
       });
     });
