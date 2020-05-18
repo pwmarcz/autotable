@@ -257,6 +257,7 @@ export class Setup {
       rotations: [Rotation.STANDING, Rotation.FACE_UP, Rotation.FACE_DOWN],
       canFlipMultiple: true,
       drawShadow: false,
+      rotateHeld: true,
     }));
 
     for (let i = 0; i < 4; i++) {
