@@ -41,16 +41,18 @@ build: files
 build-server:
 	cd server && yarn build
 
-.PHONY: deploy
-deploy: build
+.PHONY: staging
+staging: build
 	rsync -rva --checksum --delete build/ $(SERVER):autotable/dist-staging/
 
 .PHONY: release
 release: build
+	git push -f origin @:refs/heads/release/client
 	rsync -rva --checksum --delete build/ $(SERVER):autotable/dist/
 
 .PHONY: deploy-server
-deploy-server: build-server
+release-server: build-server
+	git push -f origin @:refs/heads/release/server
 	rsync -rva --checksum --delete --exclude node_modules/ server/ $(SERVER):autotable/server/
 	ssh $(SERVER) 'cd autotable/server && yarn'
 	ssh $(SERVER) 'sudo systemctl restart autotable-server.service'
