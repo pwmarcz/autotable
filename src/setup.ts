@@ -273,7 +273,9 @@ export class Setup {
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
           drawShadow: false,
           links: {
-            requires: i > 0 ? `meld.${i-1}.0` : undefined,
+            // Hack: This requires the second slot, not first, in case someone
+            // put a pon/chi starting from the second slot.
+            requires: i > 0 ? `meld.${i-1}.1` : undefined,
             shiftLeft: j > 0 ? `meld.${i}.${j-1}` : undefined,
             shiftRight: j < 3 ? `meld.${i}.${j+1}` : undefined,
           }
