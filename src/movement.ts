@@ -67,6 +67,20 @@ export class Movement {
     }
   }
 
+  rotateHeld(held: Array<Thing>): boolean {
+    let result = false;
+    for (const thing of held) {
+      const targetSlot = this.thingMap.get(thing);
+      if (targetSlot && targetSlot.rotateHeld && thing.slot.group !== targetSlot.group) {
+        if (!thing.heldRotation.equals(targetSlot.places[0].rotation)){
+          thing.heldRotation.copy(targetSlot.places[0].rotation);
+          result = true;
+        }
+      }
+    }
+    return result;
+  }
+
   findShift(allThings: Array<Thing>, ops: Array<SlotOp>): boolean {
     let shift: Map<Slot, Thing> | null = new Map();
     for (const thing of allThings) {

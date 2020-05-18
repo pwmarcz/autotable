@@ -47,6 +47,7 @@ export class Slot {
   canFlipMultiple: boolean;
   drawShadow: boolean;
   shadowRotation: number;
+  rotateHeld: boolean;
 
   constructor(params: {
     name: string;
@@ -59,6 +60,7 @@ export class Slot {
     canFlipMultiple?: boolean;
     drawShadow?: boolean;
     shadowRotation?: number;
+    rotateHeld?: boolean;
   }) {
     this.name = params.name;
     this.group = params.group;
@@ -70,6 +72,7 @@ export class Slot {
     this.canFlipMultiple = params.canFlipMultiple ?? false;
     this.drawShadow = params.drawShadow ?? true;
     this.shadowRotation = params.shadowRotation ?? 0;
+    this.rotateHeld = params.rotateHeld ?? false;
 
     this.places = this.rotations.map(this.makePlace.bind(this));
     this.offset = new Vector2(0, 0);
@@ -136,6 +139,7 @@ export class Slot {
     slot.canFlipMultiple = this.canFlipMultiple;
     slot.drawShadow = this.drawShadow;
     slot.shadowRotation = this.shadowRotation;
+    slot.rotateHeld = this.rotateHeld;
     return slot;
   }
 
@@ -222,6 +226,7 @@ export class Thing {
   rotationIndex: number;
 
   heldBy: number | null;
+  heldRotation: Euler;
   // place: Place;
 
   constructor(index: number, type: ThingType, typeIndex: number, slot: Slot) {
@@ -231,6 +236,7 @@ export class Thing {
     this.slot = slot;
     this.rotationIndex = 0;
     this.heldBy = null;
+    this.heldRotation = new Euler();
 
     this.slot.thing = this;
   }

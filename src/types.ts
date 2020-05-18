@@ -2,6 +2,7 @@ export interface ThingInfo {
   slotName: string;
   rotationIndex: number;
   heldBy: number | null;
+  heldRotation: { x: number; y: number; z: number };
 }
 
 export interface MatchInfo {

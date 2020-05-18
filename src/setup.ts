@@ -242,6 +242,7 @@ export class Setup {
           shiftRight: i < 13 ? `hand.${i+1}` : undefined,
         },
         shadowRotation: 1,
+        rotateHeld: true,
       }));
     }
 

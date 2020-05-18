@@ -124,6 +124,12 @@ export class World {
         }
         thing.heldBy = thingInfo.heldBy;
       }
+
+      thing.heldRotation.set(
+        thingInfo.heldRotation.x,
+        thingInfo.heldRotation.y,
+        thingInfo.heldRotation.z,
+      );
     }
     this.checkPushes();
   }
@@ -165,6 +171,12 @@ export class World {
       slotName: thing.slot.name,
       rotationIndex: thing.rotationIndex,
       heldBy: thing.heldBy,
+      heldRotation:
+        {
+          x: thing.heldRotation.x,
+          y: thing.heldRotation.y,
+          z: thing.heldRotation.z,
+      },
     };
   }
 
@@ -265,6 +277,10 @@ export class World {
       slot => slot.links.shiftRight ?? null,
     ])) {
       this.movement = null;
+      return;
+    }
+    if (this.movement.rotateHeld(this.held)) {
+      this.sendUpdate(this.held);
     }
   }
 
@@ -361,6 +377,7 @@ export class World {
 
       for (const thing of this.held) {
         thing.heldBy = this.seat;
+        thing.heldRotation.copy(thing.place().rotation);
       }
       // this.hovered = null;
       this.heldMouse = this.mouse;
@@ -505,7 +522,11 @@ export class World {
         }
 
         if (mouse && heldMouse) {
-          place = {...place, position: place.position.clone()};
+          place = {
+            ...place,
+            position: place.position.clone(),
+            rotation: thing.heldRotation.clone(),
+          };
           place.position.x += mouse.x - heldMouse.x;
           place.position.y += mouse.y - heldMouse.y;
         }
