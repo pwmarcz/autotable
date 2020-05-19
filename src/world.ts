@@ -382,7 +382,7 @@ export class World {
       });
 
       for (const thing of this.held) {
-        thing.hold(this.seat, thing.place().rotation);
+        thing.hold(this.seat);
       }
       this.hovered = null;
       this.heldMouse = this.mouse;

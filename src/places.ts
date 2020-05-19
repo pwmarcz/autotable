@@ -275,10 +275,10 @@ export class Thing {
     this.sent = false;
   }
 
-  hold(seat: number | null, rotation?: Euler): void {
+  hold(seat: number | null): void {
     this.heldBy = seat;
-    if (rotation) {
-      this.heldRotation.copy(rotation);
+    if (seat !== null) {
+      this.heldRotation = this.place().rotation;
     }
     this.sent = false;
   }
