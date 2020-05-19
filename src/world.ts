@@ -62,7 +62,7 @@ export class World {
     this.client.seats.on('update', this.onSeat.bind(this));
     this.client.things.on('update', this.onThings.bind(this));
     this.client.match.on('update', this.onMatch.bind(this));
-    this.sendUpdate(this.things);
+    this.sendUpdate();
   }
 
   toggleDealer(): void {
@@ -103,6 +103,7 @@ export class World {
       const thing = this.things[thingIndex];
       const slot = this.slots[thingInfo.slotName];
       thing.moveTo(slot, thingInfo.rotationIndex);
+      thing.sent = true;
 
       // TODO: remove held?
       // TODO: move targetSlots to thing.targetSlot?
@@ -119,8 +120,8 @@ export class World {
         if (this.seat !== null && thingInfo.heldBy === this.seat) {
           // eslint-disable-next-line no-console
           console.error(`received thing to hold: ${thing.index}, current heldBy: ${thing.heldBy}`);
-          thing.heldBy = null;
-          this.sendUpdate([thing]);
+          thing.hold(null);
+          this.sendUpdate();
         }
         thing.heldBy = thingInfo.heldBy;
       }
@@ -132,6 +133,7 @@ export class World {
       );
     }
     this.checkPushes();
+    this.sendUpdate();
   }
 
   private onMatch(): void {
@@ -152,12 +154,17 @@ export class World {
     this.objectView.replaceThings(this.things);
   }
 
-  private sendUpdate(things: Array<Thing>): void {
+  private sendUpdate(): void {
     const entries: Array<[number, ThingInfo]> = [];
-    for (const thing of things) {
-      entries.push([thing.index, this.describeThing(thing)]);
+    for (const thing of this.things) {
+      if (!thing.sent) {
+        entries.push([thing.index, this.describeThing(thing)]);
+        thing.sent = true;
+      }
     }
-    this.client.things.update(entries);
+    if (entries.length > 0) {
+      this.client.things.update(entries);
+    }
   }
 
   private sendMouse(): void {
@@ -209,7 +216,7 @@ export class World {
     match = {dealer: this.seat, honba, tileSet};
 
     this.client.transaction(() => {
-      this.sendUpdate(this.things);
+      this.sendUpdate();
       this.client.match.set(0, match!);
     });
   }
@@ -246,6 +253,7 @@ export class World {
     this.sendMouse();
 
     this.drag();
+    this.sendUpdate();
   }
 
   private drag(): void {
@@ -279,9 +287,7 @@ export class World {
       this.movement = null;
       return;
     }
-    if (this.movement.rotateHeld(this.held)) {
-      this.sendUpdate(this.held);
-    }
+    this.movement.rotateHeld(this.held);
   }
 
   private canSelect(thing: Thing, otherSelected: Array<Thing>): boolean {
@@ -376,15 +382,14 @@ export class World {
       });
 
       for (const thing of this.held) {
-        thing.heldBy = this.seat;
-        thing.heldRotation.copy(thing.place().rotation);
+        thing.hold(this.seat, thing.place().rotation);
       }
       this.hovered = null;
       this.heldMouse = this.mouse;
 
-      this.sendUpdate(this.held);
-      this.sendMouse();
       this.drag();
+      this.sendMouse();
+      this.sendUpdate();
 
       return true;
     }
@@ -432,15 +437,16 @@ export class World {
         for (const thing of toFlip) {
           thing.flip(rotationIndex + direction);
         }
-        this.sendUpdate(this.selected);
         this.checkPushes();
         this.selected.splice(0);
       }
     } else if (this.hovered !== null) {
       this.hovered.flip(this.hovered.rotationIndex + direction);
-      this.sendUpdate([this.hovered]);
+      this.sendUpdate();
       this.checkPushes();
     }
+    this.sendUpdate();
+
   }
 
   private flipAnimated(things: Array<Thing>, i: number, rotationIndex: number): void {
@@ -450,7 +456,7 @@ export class World {
       return;
     }
     thing.flip(rotationIndex);
-    this.sendUpdate([thing]);
+    this.sendUpdate();
     if (i + 1 < things.length) {
       setTimeout(() => this.flipAnimated(things, i + 1, rotationIndex), 100);
     } else {
@@ -464,7 +470,7 @@ export class World {
     }
 
     for (const thing of this.held) {
-      thing.heldBy = null;
+      thing.hold(null);
     }
 
     let discardSide = null;
@@ -479,7 +485,7 @@ export class World {
     }
 
     this.movement!.apply();
-    this.sendUpdate([...this.movement.things()]);
+    this.sendUpdate();
     this.checkPushes();
     this.finishDrop();
 
@@ -493,19 +499,18 @@ export class World {
 
   private dropInPlace(): void {
     for (const thing of this.held) {
-      thing.heldBy = null;
+      thing.hold(null);
     }
     this.finishDrop();
   }
 
   private finishDrop(): void {
-    const toDrop = this.held.slice();
     this.selected.splice(0);
     this.held.splice(0);
     this.heldMouse = null;
     this.movement = null;
 
-    this.sendUpdate(toDrop);
+    this.sendUpdate();
     this.sendMouse();
   }
 

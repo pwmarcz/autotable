@@ -229,6 +229,8 @@ export class Thing {
   heldRotation: Euler;
   // place: Place;
 
+  sent: boolean;
+
   constructor(index: number, type: ThingType, typeIndex: number, slot: Slot) {
     this.index = index;
     this.type = type;
@@ -237,6 +239,8 @@ export class Thing {
     this.rotationIndex = 0;
     this.heldBy = null;
     this.heldRotation = new Euler();
+
+    this.sent = false;
 
     this.slot.thing = this;
   }
@@ -251,6 +255,7 @@ export class Thing {
     }
     const r = this.slot.rotations.length;
     this.rotationIndex = (rotationIndex + r) % r;
+    this.sent = false;
   }
 
   prepareMove(): void {
@@ -266,5 +271,15 @@ export class Thing {
     this.slot = target;
     this.rotationIndex = rotationIndex ?? 0;
     target.thing = this;
+
+    this.sent = false;
+  }
+
+  hold(seat: number | null, rotation?: Euler): void {
+    this.heldBy = seat;
+    if (rotation) {
+      this.heldRotation.copy(rotation);
+    }
+    this.sent = false;
   }
 }
