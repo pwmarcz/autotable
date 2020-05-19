@@ -379,7 +379,7 @@ export class World {
         thing.heldBy = this.seat;
         thing.heldRotation.copy(thing.place().rotation);
       }
-      // this.hovered = null;
+      this.hovered = null;
       this.heldMouse = this.mouse;
 
       this.sendUpdate(this.held);
