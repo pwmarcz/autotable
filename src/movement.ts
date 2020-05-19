@@ -68,6 +68,11 @@ export class Movement {
   }
 
   rotateHeld(held: Array<Thing>): boolean {
+    // Don't rotate more than 1 tile, they may collide
+    if (held.length > 1) {
+      return false;
+    }
+
     let result = false;
     for (const thing of held) {
       const targetSlot = this.thingMap.get(thing);
