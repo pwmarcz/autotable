@@ -94,6 +94,7 @@ export class ObjectView {
 
     for (const thing of things) {
       const obj = this.makeObject(thing.type, thing.typeIndex);
+      obj.matrixAutoUpdate = false;
       this.thingObjects.push(obj);
       this.mainGroup.add(obj);
     }
@@ -167,6 +168,7 @@ export class ObjectView {
       const obj = this.thingObjects[thing.thingIndex];
       obj.position.copy(thing.place.position);
       obj.rotation.copy(thing.place.rotation);
+      obj.updateMatrix();
 
       const custom = thing.hovered || thing.selected || thing.held || thing.bottom;
       if (!custom) {
@@ -174,9 +176,7 @@ export class ObjectView {
         const instancedMesh = this.instancedObjects.get(thingParams.type);
         if (instancedMesh !== undefined) {
           const idx = instancedMesh.count++;
-          obj.updateMatrix();
           obj.visible = false;
-          obj.matrixAutoUpdate = false;
           instancedMesh.setMatrixAt(idx, obj.matrix);
           instancedMesh.instanceMatrix.needsUpdate = true;
           if (thingParams.type === ThingType.TILE) {
@@ -187,8 +187,9 @@ export class ObjectView {
           continue;
         }
       }
+
+      obj.updateMatrixWorld();
       obj.visible = true;
-      obj.matrixAutoUpdate = true;
 
       const material = obj.material as MeshLambertMaterial;
       material.emissive.setHex(0);
