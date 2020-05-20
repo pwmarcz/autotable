@@ -89,11 +89,12 @@ export class Movement {
     }
 
     for (const [thing, slot] of this.thingMap.entries()) {
-      if (slot.rotateHeld &&
-        !(thing.slot.group === slot.group && thing.slot.seat === slot.seat)) {
-
-        if (!thing.heldRotation.equals(slot.places[0].rotation)){
-          thing.heldRotation.copy(slot.places[0].rotation);
+      if (slot.rotateHeld) {
+        const rotationIndex =
+          thing.slot.group === slot.group ? thing.rotationIndex : 0;
+        const rotation = slot.rotations[rotationIndex];
+        if (!thing.heldRotation.equals(rotation)) {
+          thing.heldRotation.copy(rotation);
           thing.sent = false;
         }
       }
