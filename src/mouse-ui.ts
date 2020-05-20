@@ -18,10 +18,12 @@ export class MouseUi {
   private raycastObjects: Array<Mesh>;
   private raycastTable: Mesh;
 
-  mouse2: Vector2 | null;
-  private mouse3: Vector3 | null;
-  private selectStart3: Vector3 | null;
-  private dragStart3: Vector3 | null;
+  mouse2: Vector2 | null = null;
+  private mouse3: Vector3 | null = null;
+  private selectStart3: Vector3 | null = null;
+  private dragStart3: Vector3 | null = null;
+
+  sticky: boolean = false;
 
   constructor(world: World, mainGroup: Group) {
     this.world = world;
@@ -61,11 +63,6 @@ export class MouseUi {
     this.raycastTable.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
     this.raycastGroup.add(this.raycastTable);
 
-    this.mouse2 = null;
-    this.mouse3 = null;
-    this.selectStart3 = null;
-    this.dragStart3 = null;
-
     this.setupEvents();
   }
 
@@ -99,20 +96,29 @@ export class MouseUi {
     }
 
     if (event.button === 0) {
-      if (this.world.onDragStart()) {
-        this.dragStart3 = this.mouse3.clone();
-      } else {
-        this.selectStart3 = this.mouse3.clone();
+      if (this.dragStart3 === null)  {
+        if (this.world.onDragStart()) {
+          this.dragStart3 = this.mouse3.clone();
+        } else {
+          this.selectStart3 = this.mouse3.clone();
+        }
+      } else if (this.sticky) {
+        this.dragStart3 = null;
+        this.world.onDragEnd();
       }
+
       this.update();
     }
   }
 
   private onMouseUp(event: MouseEvent): void {
     if (event.button === 0) {
-      this.dragStart3 = null;
       this.selectStart3 = null;
-      this.world.onDragEnd();
+
+      if (!this.sticky) {
+        this.dragStart3 = null;
+        this.world.onDragEnd();
+      }
     }
   }
 

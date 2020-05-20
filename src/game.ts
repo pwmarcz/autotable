@@ -35,6 +35,7 @@ export class Game {
     perspective: HTMLInputElement;
     benchmark: HTMLInputElement;
     muted: HTMLInputElement;
+    sticky: HTMLInputElement;
   };
 
   buttons: {
@@ -60,6 +61,7 @@ export class Game {
       perspective: document.getElementById('perspective') as HTMLInputElement,
       benchmark: document.getElementById('benchmark') as HTMLInputElement,
       muted: document.getElementById('muted') as HTMLInputElement,
+      sticky: document.getElementById('sticky') as HTMLInputElement,
     };
 
     this.buttons = {
@@ -83,9 +85,10 @@ export class Game {
     window.addEventListener('keypress', this.onKeyPress.bind(this));
     window.addEventListener('keydown', this.onKeyDown.bind(this));
     window.addEventListener('keyup', this.onKeyUp.bind(this));
-    this.settings.perspective.addEventListener('change', this.updateSettings.bind(this));
-    this.settings.benchmark.addEventListener('change', this.updateSettings.bind(this));
-    this.settings.muted.addEventListener('change', this.updateSettings.bind(this));
+    for (const key in this.settings) {
+      const element = (this.settings as any)[key] as HTMLInputElement;
+      element.addEventListener('change', this.updateSettings.bind(this));
+    }
 
     this.buttons.toggleDealer.onclick = () => this.world.toggleDealer();
     this.buttons.toggleHonba.onclick = () => this.world.toggleHonba();
@@ -188,6 +191,7 @@ export class Game {
     this.mainView.setPerspective(this.settings.perspective.checked);
     this.benchmark = this.settings.benchmark.checked;
     this.soundPlayer.muted = this.settings.muted.checked;
+    this.mouseUi.sticky = this.settings.sticky.checked;
   }
 
   start(): void {
