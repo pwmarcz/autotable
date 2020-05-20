@@ -149,7 +149,7 @@ export class Movement {
   private tryShift(initialSlot: Slot, op: SlotOp, shift: Map<Slot, Thing>): boolean {
     let slot = initialSlot;
     const thing = shift.get(initialSlot)!;
-    if (thing.heldBy !== null) {
+    if (thing.claimedBy !== null) {
       return false;
     }
     // console.log('tryShift start', thing.index, slot.name);

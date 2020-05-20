@@ -1,7 +1,7 @@
 export interface ThingInfo {
   slotName: string;
   rotationIndex: number;
-  heldBy: number | null;
+  claimedBy: number | null;
   heldRotation: { x: number; y: number; z: number };
   shiftSlotName: string | null;
 }

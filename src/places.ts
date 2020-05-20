@@ -167,7 +167,7 @@ export class Slot {
   }
 
   canBeUsed(playerNum: number): boolean {
-    return this.thing === null || this.thing.heldBy === playerNum;
+    return this.thing === null || this.thing.claimedBy === playerNum;
   }
 
   placeWithOffset(rotationIndex: number): Place {
@@ -225,8 +225,8 @@ export class Thing {
   slot: Slot;
   rotationIndex: number;
 
-  heldBy: number | null;
-  // used when heldBy !== null:
+  claimedBy: number | null;
+  // used when claimedBy !== null:
   readonly heldRotation: Euler;
   shiftSlot: Slot | null;
 
@@ -238,7 +238,7 @@ export class Thing {
     this.typeIndex = typeIndex;
     this.slot = slot;
     this.rotationIndex = 0;
-    this.heldBy = null;
+    this.claimedBy = null;
     this.heldRotation = new Euler();
     this.shiftSlot = null;
 
@@ -278,7 +278,7 @@ export class Thing {
   }
 
   hold(seat: number | null): void {
-    this.heldBy = seat;
+    this.claimedBy = seat;
     if (seat === null) {
       this.shiftSlot = null;
     } else {
@@ -288,7 +288,7 @@ export class Thing {
   }
 
   shiftTo(seat: number, slot: Slot): void {
-    this.heldBy = seat;
+    this.claimedBy = seat;
     this.shiftSlot = slot;
     this.sent = false;
   }

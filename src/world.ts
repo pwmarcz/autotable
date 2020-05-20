@@ -104,7 +104,7 @@ export class World {
       thing.moveTo(slot, thingInfo.rotationIndex);
       thing.sent = true;
 
-      thing.heldBy = thingInfo.heldBy;
+      thing.claimedBy = thingInfo.claimedBy;
       thing.heldRotation.set(
         thingInfo.heldRotation.x,
         thingInfo.heldRotation.y,
@@ -164,7 +164,7 @@ export class World {
     return {
       slotName: thing.slot.name,
       rotationIndex: thing.rotationIndex,
-      heldBy: thing.heldBy,
+      claimedBy: thing.claimedBy,
       heldRotation:
         {
           x: thing.heldRotation.x,
@@ -213,7 +213,7 @@ export class World {
     }
 
     for (const thing of this.things) {
-      if (thing.heldBy === this.seat) {
+      if (thing.claimedBy === this.seat) {
         return true;
       }
     }
@@ -265,7 +265,7 @@ export class World {
     const held: Array<Thing> = [];
 
     for (const thing of this.things) {
-      if (thing.heldBy === this.seat) {
+      if (thing.claimedBy === this.seat) {
         if (thing.shiftSlot !== null) {
           thing.hold(null);
         } else {
@@ -273,7 +273,7 @@ export class World {
         }
       }
     }
-    this.things.filter(thing => thing.heldBy === this.seat);
+    this.things.filter(thing => thing.claimedBy === this.seat);
     held.sort((a, b) => compareZYX(a.slot.origin, b.slot.origin));
 
     for (let i = 0; i < held.length; i++) {
@@ -328,7 +328,7 @@ export class World {
         continue;
       }
 
-      if (slot.thing !== null && slot.thing.heldBy !== this.seat) {
+      if (slot.thing !== null && slot.thing.claimedBy !== this.seat) {
         // Occupied. But can it be potentially shifted?
         if (!slot.links.shiftLeft && !slot.links.shiftRight) {
           continue;
@@ -377,7 +377,7 @@ export class World {
         this.selected.splice(0);
       }
 
-      toHold = toHold.filter(thing => thing.heldBy === null);
+      toHold = toHold.filter(thing => thing.claimedBy === null);
 
       for (const thing of toHold) {
         thing.hold(this.seat);
@@ -496,7 +496,7 @@ export class World {
 
   private finishDrop(): void {
     for (const thing of this.things) {
-      if (thing.heldBy === this.seat) {
+      if (thing.claimedBy === this.seat) {
         thing.hold(null);
       }
     }
@@ -533,14 +533,14 @@ export class World {
     for (const thing of this.things) {
       let place = thing.place();
 
-      if (thing.heldBy !== null && thing.shiftSlot === null) {
+      if (thing.claimedBy !== null && thing.shiftSlot === null) {
         let mouse = null, heldMouse = null;
-        if (thing.heldBy === this.seat) {
+        if (thing.claimedBy === this.seat) {
           mouse = this.mouse;
           heldMouse = this.heldMouse;
         } else {
-          mouse = this.mouseTracker.getMouse(thing.heldBy, now);
-          heldMouse = this.mouseTracker.getHeld(thing.heldBy);
+          mouse = this.mouseTracker.getMouse(thing.claimedBy, now);
+          heldMouse = this.mouseTracker.getHeld(thing.claimedBy);
         }
 
         if (mouse && heldMouse) {
@@ -552,15 +552,15 @@ export class World {
           place.position.x += mouse.x - heldMouse.x;
           place.position.y += mouse.y - heldMouse.y;
         }
-      } else if (thing.heldBy !== null && thing.shiftSlot !== null) {
+      } else if (thing.claimedBy !== null && thing.shiftSlot !== null) {
         place = thing.shiftSlot.places[thing.rotationIndex];
       }
 
-      const held = thing.heldBy !== null && thing.shiftSlot === null;
+      const held = thing.claimedBy !== null && thing.shiftSlot === null;
       const selected = this.selected.indexOf(thing) !== -1;
       const hovered = thing === this.hovered ||
         (selected && this.selected.indexOf(this.hovered!) !== -1);
-      const temporary = held && thing.heldBy === this.seat && !canDrop;
+      const temporary = held && thing.claimedBy === this.seat && !canDrop;
 
       const slot = thing.slot;
 
@@ -568,7 +568,7 @@ export class World {
         !held &&
         slot.links.up !== undefined &&
         (slot.links.up.thing === null ||
-         slot.links.up.thing.heldBy !== null);
+         slot.links.up.thing.claimedBy !== null);
 
       toRender.push({
         place,
@@ -597,7 +597,7 @@ export class World {
     const result = [];
     if (this.seat !== null && !this.isHolding()) {
       for (const thing of this.things) {
-        if (thing.heldBy === null) {
+        if (thing.claimedBy === null) {
           const place = thing.place();
           result.push({...place, id: thing.index});
         }
