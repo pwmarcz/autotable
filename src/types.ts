@@ -3,6 +3,7 @@ export interface ThingInfo {
   rotationIndex: number;
   heldBy: number | null;
   heldRotation: { x: number; y: number; z: number };
+  shiftSlotName: string | null;
 }
 
 export interface MatchInfo {

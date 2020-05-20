@@ -226,8 +226,9 @@ export class Thing {
   rotationIndex: number;
 
   heldBy: number | null;
+  // used when heldBy !== null:
   readonly heldRotation: Euler;
-  // place: Place;
+  shiftSlot: Slot | null;
 
   sent: boolean;
 
@@ -239,6 +240,7 @@ export class Thing {
     this.rotationIndex = 0;
     this.heldBy = null;
     this.heldRotation = new Euler();
+    this.shiftSlot = null;
 
     this.sent = false;
 
@@ -277,9 +279,17 @@ export class Thing {
 
   hold(seat: number | null): void {
     this.heldBy = seat;
-    if (seat !== null) {
+    if (seat === null) {
+      this.shiftSlot = null;
+    } else {
       this.heldRotation.copy(this.place().rotation);
     }
+    this.sent = false;
+  }
+
+  shiftTo(seat: number, slot: Slot): void {
+    this.heldBy = seat;
+    this.shiftSlot = slot;
     this.sent = false;
   }
 }

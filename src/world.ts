@@ -110,6 +110,8 @@ export class World {
         thingInfo.heldRotation.y,
         thingInfo.heldRotation.z,
       );
+
+      thing.shiftSlot = thingInfo.shiftSlotName ? this.slots[thingInfo.shiftSlotName] : null;
     }
     this.checkPushes();
     this.sendUpdate();
@@ -163,6 +165,7 @@ export class World {
           y: thing.heldRotation.y,
           z: thing.heldRotation.z,
       },
+      shiftSlotName: thing.shiftSlot?.name ?? null,
     };
   }
 
@@ -253,7 +256,18 @@ export class World {
 
     this.movement = new Movement();
 
-    const held = this.things.filter(thing => thing.heldBy === this.seat);
+    const held: Array<Thing> = [];
+
+    for (const thing of this.things) {
+      if (thing.heldBy === this.seat) {
+        if (thing.shiftSlot !== null) {
+          thing.hold(null);
+        } else {
+          held.push(thing);
+        }
+      }
+    }
+    this.things.filter(thing => thing.heldBy === this.seat);
     held.sort((a, b) => compareZYX(a.slot.origin, b.slot.origin));
 
     for (let i = 0; i < held.length; i++) {
@@ -280,7 +294,8 @@ export class World {
       this.movement = null;
       return;
     }
-    this.movement.rotateHeld(held);
+    this.movement.rotateHeld();
+    this.movement.applyShift(this.seat!);
   }
 
   private canSelect(thing: Thing, otherSelected: Array<Thing>): boolean {
@@ -457,7 +472,7 @@ export class World {
       }
     }
 
-    this.movement!.apply();
+    this.movement.apply();
     this.checkPushes();
     this.finishDrop();
 
@@ -511,9 +526,8 @@ export class World {
 
     for (const thing of this.things) {
       let place = thing.place();
-      const held = thing.heldBy !== null;
 
-      if (thing.heldBy !== null) {
+      if (thing.heldBy !== null && thing.shiftSlot === null) {
         let mouse = null, heldMouse = null;
         if (thing.heldBy === this.seat) {
           mouse = this.mouse;
@@ -532,15 +546,15 @@ export class World {
           place.position.x += mouse.x - heldMouse.x;
           place.position.y += mouse.y - heldMouse.y;
         }
-      } else if (this.movement && this.movement.has(thing)) {
-        const targetSlot = this.movement.get(thing)!;
-        place = targetSlot.places[this.movement.rotationIndex(thing)!];
+      } else if (thing.heldBy !== null && thing.shiftSlot !== null) {
+        place = thing.shiftSlot.places[thing.rotationIndex];
       }
 
+      const held = thing.heldBy !== null && thing.shiftSlot === null;
       const selected = this.selected.indexOf(thing) !== -1;
       const hovered = thing === this.hovered ||
         (selected && this.selected.indexOf(this.hovered!) !== -1);
-      const temporary = this.seat !== null && thing.heldBy === this.seat && !canDrop;
+      const temporary = held && thing.heldBy === this.seat && !canDrop;
 
       const slot = thing.slot;
 

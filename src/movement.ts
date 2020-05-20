@@ -6,6 +6,7 @@ type SlotOp = (slot: Slot) => Slot | null;
 export class Movement {
   private thingMap: Map<Thing, Slot> = new Map();
   private reverseMap: Map<Slot, Thing> = new Map();
+  private shiftMap: Map<Thing, Slot> = new Map();
 
   move(thing: Thing, slot: Slot): void {
     if (this.reverseMap.has(slot)) {
@@ -16,6 +17,11 @@ export class Movement {
       this.reverseMap.delete(oldSlot);
     }
     this.thingMap.set(thing, slot);
+    this.reverseMap.set(slot, thing);
+  }
+
+  private shift(thing: Thing, slot: Slot): void {
+    this.shiftMap.set(thing, slot);
     this.reverseMap.set(slot, thing);
   }
 
@@ -49,7 +55,7 @@ export class Movement {
 
   valid(): boolean {
     for (const slot of this.reverseMap.keys()) {
-      if (slot.thing !== null && !this.thingMap.has(slot.thing)) {
+      if (slot.thing !== null && !this.thingMap.has(slot.thing) && !this.shiftMap.has(slot.thing)) {
         return false;
       }
     }
@@ -60,24 +66,32 @@ export class Movement {
     for (const thing of this.thingMap.keys()) {
       thing.prepareMove();
     }
+    for (const thing of this.shiftMap.keys()) {
+      thing.prepareMove();
+    }
     for (const [thing, slot] of this.thingMap.entries()) {
       // TODO instead of group, check if rotations are the same?
       const rotationIndex = thing.slot.group === slot.group ? thing.rotationIndex : 0;
       thing.moveTo(slot, rotationIndex);
+      thing.hold(null);
+    }
+    for (const [thing, slot] of this.shiftMap.entries()) {
+      const rotationIndex = thing.rotationIndex;
+      thing.moveTo(slot, rotationIndex);
+      thing.hold(null);
     }
   }
 
-  rotateHeld(held: Array<Thing>): void {
+  rotateHeld(): void {
     // Don't rotate more than 1 tile, they may collide
-    if (held.length > 1) {
+    if (this.thingMap.size > 1) {
       return;
     }
 
-    for (const thing of held) {
-      const targetSlot = this.thingMap.get(thing);
-      if (targetSlot && targetSlot.rotateHeld && thing.slot.group !== targetSlot.group) {
-        if (!thing.heldRotation.equals(targetSlot.places[0].rotation)){
-          thing.heldRotation.copy(targetSlot.places[0].rotation);
+    for (const [thing, slot] of this.thingMap.entries()) {
+      if (slot.rotateHeld && thing.slot.group !== slot.group) {
+        if (!thing.heldRotation.equals(slot.places[0].rotation)){
+          thing.heldRotation.copy(slot.places[0].rotation);
           thing.sent = false;
         }
       }
@@ -102,10 +116,16 @@ export class Movement {
     }
     for (const [slot, thing] of shift.entries()) {
       if (slot.thing !== thing) {
-        this.move(thing, slot);
+        this.shift(thing, slot);
       }
     }
     return true;
+  }
+
+  applyShift(seat: number): void {
+    for (const [thing, slot] of this.shiftMap.entries()) {
+      thing.shiftTo(seat, slot);
+    }
   }
 
   private findShiftFor(
@@ -129,6 +149,9 @@ export class Movement {
   private tryShift(initialSlot: Slot, op: SlotOp, shift: Map<Slot, Thing>): boolean {
     let slot = initialSlot;
     const thing = shift.get(initialSlot)!;
+    if (thing.heldBy !== null) {
+      return false;
+    }
     // console.log('tryShift start', thing.index, slot.name);
     while (slot === initialSlot || this.reverseMap.has(slot)) {
       const nextSlot = op(slot);
