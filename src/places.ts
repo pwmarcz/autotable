@@ -37,6 +37,8 @@ export class Slot {
   direction: Vector2;
   rotations: Array<Euler>;
 
+  seat: number | null = null;
+
   places: Array<Place>;
   offset: Vector2;
 
@@ -79,11 +81,6 @@ export class Slot {
     this.links = {};
   }
 
-  side(): number {
-    const m = this.name.match(/@(\d+)$/);
-    return m !== null ? parseInt(m[1], 10) : 0;
-  }
-
   setLinks(slots: Record<string, Slot>): void {
     for (const key in this.linkDesc) {
       const linkName = key as keyof SlotLinks;
@@ -94,7 +91,10 @@ export class Slot {
     }
   }
 
-  rotated(suffix: string, rotation: number, worldWidth: number): Slot {
+  rotated(seat: number, worldWidth: number): Slot {
+    const suffix = '@' + seat;
+    const rotation = seat * Math.PI / 2;
+
     const quat = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), rotation);
 
     const name = this.name + suffix;
@@ -135,6 +135,7 @@ export class Slot {
     }
 
     const slot = new Slot({name, group, type: this.type, origin, direction, rotations});
+    slot.seat = seat;
     slot.linkDesc = linkDesc;
     slot.canFlipMultiple = this.canFlipMultiple;
     slot.drawShadow = this.drawShadow;

@@ -481,7 +481,7 @@ export class World {
     for (const thing of this.movement.things()) {
       const target = this.movement.get(thing)!;
       if (target.group.match(/^discard/)) {
-        discardSide = target.side();
+        discardSide = target.seat;
       } else if (target.group.match(/^riichi/)) {
         hasStick = true;
       }

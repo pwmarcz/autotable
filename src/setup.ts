@@ -398,7 +398,7 @@ export class Setup {
 
   private addSlot(slot: Slot): void {
     for (let i = 0; i < 4; i++) {
-      const rotated = slot.rotated('@' + i, i * Math.PI / 2, World.WIDTH);
+      const rotated = slot.rotated(i, World.WIDTH);
       this.slots[rotated.name] = rotated;
     }
   }
