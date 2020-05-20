@@ -93,10 +93,6 @@ export class World {
 
       const thing = this.things[thingIndex];
       thing.prepareMove();
-      const selectedIndex = this.selected.indexOf(thing);
-      if (selectedIndex !== -1) {
-        this.selected.splice(selectedIndex, 1);
-      }
     }
     for (const [thingIndex, thingInfo] of entries) {
       if (thingInfo === null) {
@@ -135,6 +131,9 @@ export class World {
     const tileSet = match.tileSet;
     if (!TileSet.equals(tileSet, this.tileSet)) {
       this.updateTileSet(tileSet);
+
+      // Prevent selection persisting after deal
+      this.selected.splice(0);
     }
   }
 
@@ -192,6 +191,7 @@ export class World {
     for (const thing of this.things) {
       thing.release();
     }
+    this.selected.splice(0);
     this.setup.deal(this.seat, setupType);
     this.checkPushes();
 
