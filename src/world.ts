@@ -28,7 +28,6 @@ export class World {
   private selected: Array<Thing> = [];
   private mouse: Vector3 | null = null;
 
-  private held: Array<Thing> = [];
   private movement: Movement | null = null;
   private heldMouse: Vector3 | null = null;
   mouseTracker: MouseTracker;
@@ -105,27 +104,7 @@ export class World {
       thing.moveTo(slot, thingInfo.rotationIndex);
       thing.sent = true;
 
-      // TODO: remove held?
-      // TODO: move targetSlots to thing.targetSlot?
-      if (thing.heldBy !== thingInfo.heldBy) {
-        // Someone else grabbed the thing
-        if (thing.heldBy !== this.seat) {
-          const heldIndex = this.held.indexOf(thing);
-          if (heldIndex !== -1) {
-            this.held.splice(heldIndex, 1);
-            this.movement = null;
-          }
-        }
-        // Someone gave us the thing back - might be a conflict.
-        if (this.seat !== null && thingInfo.heldBy === this.seat) {
-          // eslint-disable-next-line no-console
-          console.error(`received thing to hold: ${thing.index}, current heldBy: ${thing.heldBy}`);
-          thing.hold(null);
-          this.sendUpdate();
-        }
-        thing.heldBy = thingInfo.heldBy;
-      }
-
+      thing.heldBy = thingInfo.heldBy;
       thing.heldRotation.set(
         thingInfo.heldRotation.x,
         thingInfo.heldRotation.y,
@@ -192,10 +171,8 @@ export class World {
       return;
     }
 
-    this.held.splice(0);
-
     for (const thing of this.things) {
-      thing.heldBy = null;
+      thing.hold(null);
     }
     this.setup.deal(this.seat, setupType);
     this.checkPushes();
@@ -221,8 +198,21 @@ export class World {
     });
   }
 
+  private isHolding(): boolean {
+    if (this.seat === null) {
+      return false;
+    }
+
+    for (const thing of this.things) {
+      if (thing.heldBy === this.seat) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   onHover(id: any): void {
-    if (this.held.length === 0) {
+    if (!this.isHolding()) {
       this.hovered = id === null ? null : this.things[id as number];
 
       if (this.hovered !== null && !this.canSelect(this.hovered, [])) {
@@ -263,8 +253,11 @@ export class World {
 
     this.movement = new Movement();
 
-    for (let i = 0; i < this.held.length; i++) {
-      const thing = this.held[i];
+    const held = this.things.filter(thing => thing.heldBy === this.seat);
+    held.sort((a, b) => compareZYX(a.slot.origin, b.slot.origin));
+
+    for (let i = 0; i < held.length; i++) {
+      const thing = held[i];
       const place = thing.place();
       const x = place.position.x + this.mouse.x - this.heldMouse.x;
       const y = place.position.y + this.mouse.y - this.heldMouse.y;
@@ -278,7 +271,7 @@ export class World {
     }
 
     const relevantThings = this.things.filter(thing =>
-      thing.type === this.held[0].type
+      thing.type === held[0].type
     );
     if (!this.movement.findShift(relevantThings, [
       slot => slot.links.shiftLeft ?? null,
@@ -287,7 +280,7 @@ export class World {
       this.movement = null;
       return;
     }
-    this.movement.rotateHeld(this.held);
+    this.movement.rotateHeld(held);
   }
 
   private canSelect(thing: Thing, otherSelected: Array<Thing>): boolean {
@@ -354,21 +347,18 @@ export class World {
       return false;
     }
 
-    if (this.hovered !== null) {
-      this.held.splice(0);
-
+    if (this.hovered !== null && !this.isHolding()) {
+      let toHold;
       if (this.selected.indexOf(this.hovered) !== -1) {
-        this.held.push(...this.selected);
+        toHold = [...this.selected];
       } else {
-        this.held.push(this.hovered);
+        toHold = [this.hovered];
         this.selected.splice(0);
       }
 
-      this.held = this.held.filter(thing => thing.heldBy === null);
+      toHold = toHold.filter(thing => thing.heldBy === null);
 
-      this.held.sort((a, b) => compareZYX(a.slot.origin, b.slot.origin));
-
-      for (const thing of this.held) {
+      for (const thing of toHold) {
         thing.hold(this.seat);
       }
       this.hovered = null;
@@ -384,7 +374,7 @@ export class World {
   }
 
   onDragEnd(): void {
-    if (this.held.length > 0) {
+    if (this.isHolding()) {
       if (this.heldMouse !== null && this.mouse !== null &&
           this.heldMouse.equals(this.mouse)) {
 
@@ -405,7 +395,7 @@ export class World {
   }
 
   onFlip(direction: number, animated?: boolean): void {
-    if (this.held.length > 0) {
+    if (this.isHolding()) {
       return;
     }
 
@@ -456,10 +446,6 @@ export class World {
       return;
     }
 
-    for (const thing of this.held) {
-      thing.hold(null);
-    }
-
     let discardSide = null;
     let hasStick = false;
     for (const thing of this.movement.things()) {
@@ -472,7 +458,6 @@ export class World {
     }
 
     this.movement!.apply();
-    this.sendUpdate();
     this.checkPushes();
     this.finishDrop();
 
@@ -485,15 +470,17 @@ export class World {
   }
 
   private dropInPlace(): void {
-    for (const thing of this.held) {
-      thing.hold(null);
-    }
     this.finishDrop();
   }
 
   private finishDrop(): void {
+    for (const thing of this.things) {
+      if (thing.heldBy === this.seat) {
+        thing.hold(null);
+      }
+    }
+
     this.selected.splice(0);
-    this.held.splice(0);
     this.heldMouse = null;
     this.movement = null;
 
@@ -588,8 +575,7 @@ export class World {
 
   toSelect(): Array<Select> {
     const result = [];
-    if (this.held.length === 0 && this.seat !== null) {
-      // Things
+    if (this.seat !== null && !this.isHolding()) {
       for (const thing of this.things) {
         if (thing.heldBy === null) {
           const place = thing.place();

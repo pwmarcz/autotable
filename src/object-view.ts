@@ -163,22 +163,22 @@ export class ObjectView {
     for (const instancedMesh of this.instancedObjects.values()) {
       instancedMesh.count = 0;
     }
-    const dummy = new Object3D();
     for (const thing of things) {
-      const custom = thing.hovered || thing.selected || thing.held || thing.bottom;
+      const obj = this.thingObjects[thing.thingIndex];
+      obj.position.copy(thing.place.position);
+      obj.rotation.copy(thing.place.rotation);
 
+      const custom = thing.hovered || thing.selected || thing.held || thing.bottom;
       if (!custom) {
         const thingParams = this.thingParams[thing.thingIndex];
         const instancedMesh = this.instancedObjects.get(thingParams.type);
         if (instancedMesh !== undefined) {
           const idx = instancedMesh.count++;
-          dummy.position.copy(thing.place.position);
-          dummy.rotation.copy(thing.place.rotation);
-          dummy.updateMatrix();
-          instancedMesh.setMatrixAt(idx, dummy.matrix);
+          obj.updateMatrix();
+          obj.visible = false;
+          obj.matrixAutoUpdate = false;
+          instancedMesh.setMatrixAt(idx, obj.matrix);
           instancedMesh.instanceMatrix.needsUpdate = true;
-          this.thingObjects[thing.thingIndex].visible = false;
-          this.thingObjects[thing.thingIndex].matrixAutoUpdate = false;
           if (thingParams.type === ThingType.TILE) {
             this.assetLoader.setTileInstanceParams(instancedMesh, idx, thingParams.typeIndex);
           } else if (thingParams.type === ThingType.STICK) {
@@ -187,11 +187,8 @@ export class ObjectView {
           continue;
         }
       }
-      const obj = this.thingObjects[thing.thingIndex];
       obj.visible = true;
       obj.matrixAutoUpdate = true;
-      obj.position.copy(thing.place.position);
-      obj.rotation.copy(thing.place.rotation);
 
       const material = obj.material as MeshLambertMaterial;
       material.emissive.setHex(0);
