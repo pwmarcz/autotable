@@ -135,11 +135,17 @@ export class World {
     this.objectView.replaceThings(this.things);
   }
 
-  private sendUpdate(): void {
+  private sendUpdate(full?: boolean): void {
     const entries: Array<[number, ThingInfo]> = [];
     for (const thing of this.things) {
-      if (!thing.sent) {
+      if (full) {
         entries.push([thing.index, this.describeThing(thing)]);
+        thing.sent = true;
+      } else if (!thing.sent) {
+        const desc = this.describeThing(thing);
+        if (JSON.stringify(desc) !== JSON.stringify(this.client.things.get(thing.index))) {
+          entries.push([thing.index, desc]);
+        }
         thing.sent = true;
       }
     }
@@ -196,7 +202,7 @@ export class World {
     match = {dealer: this.seat, honba, tileSet};
 
     this.client.transaction(() => {
-      this.sendUpdate();
+      this.sendUpdate(true);
       this.client.match.set(0, match!);
     });
   }
