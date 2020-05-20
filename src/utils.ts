@@ -91,3 +91,16 @@ export function round3(vec: Vector3, factor: number): void {
 export function clamp(val: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, val));
 }
+
+export function compareZYX(a: Vector3, b: Vector3): number {
+  if (a.z !== b.z) {
+    return a.z - b.z;
+  }
+  if (a.y !== b.y) {
+    return a.y - b.z;
+  }
+  if (a.x !== b.x) {
+    return a.x - b.x;
+  }
+  return 0;
+}

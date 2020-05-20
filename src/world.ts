@@ -3,7 +3,7 @@ import { Vector3 } from "three";
 import { Place, Slot, Thing, Size, ThingType } from "./places";
 import { Movement } from "./movement";
 import { Client } from "./client";
-import { mostCommon, rectangleOverlap, filterMostCommon } from "./utils";
+import { mostCommon, rectangleOverlap, filterMostCommon, compareZYX } from "./utils";
 import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
@@ -366,22 +366,7 @@ export class World {
 
       this.held = this.held.filter(thing => thing.heldBy === null);
 
-      // Sort by (z, y, x)
-      this.held.sort((a, b) => {
-        const ap = a.place().position;
-        const bp = b.place().position;
-
-        if (ap.z !== bp.z) {
-          return ap.z - bp.z;
-        }
-        if (ap.y !== bp.y) {
-          return ap.y - bp.z;
-        }
-        if (ap.x !== bp.x) {
-          return ap.x - bp.x;
-        }
-        return 0;
-      });
+      this.held.sort((a, b) => compareZYX(a.slot.origin, b.slot.origin));
 
       for (const thing of this.held) {
         thing.hold(this.seat);
