@@ -168,7 +168,6 @@ export class ObjectView {
       const obj = this.thingObjects[thing.thingIndex];
       obj.position.copy(thing.place.position);
       obj.rotation.copy(thing.place.rotation);
-      obj.updateMatrix();
 
       const custom = thing.hovered || thing.selected || thing.held || thing.bottom;
       if (!custom) {
@@ -176,6 +175,7 @@ export class ObjectView {
         const instancedMesh = this.instancedObjects.get(thingParams.type);
         if (instancedMesh !== undefined) {
           const idx = instancedMesh.count++;
+          obj.updateMatrix();
           obj.visible = false;
           instancedMesh.setMatrixAt(idx, obj.matrix);
           instancedMesh.instanceMatrix.needsUpdate = true;
@@ -188,7 +188,6 @@ export class ObjectView {
         }
       }
 
-      obj.updateMatrixWorld();
       obj.visible = true;
 
       const material = obj.material as MeshLambertMaterial;
@@ -217,6 +216,9 @@ export class ObjectView {
         obj.position.z += 1;
         obj.renderOrder = 1;
       }
+
+      obj.updateMatrix();
+      obj.updateMatrixWorld();
     }
   }
 
