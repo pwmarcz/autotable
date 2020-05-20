@@ -18,6 +18,8 @@ export class MouseUi {
   private raycastObjects: Array<Mesh>;
   private raycastTable: Mesh;
 
+  private currentObjects: Array<Mesh> = [];
+
   mouse2: Vector2 | null = null;
   private mouse3: Vector3 | null = null;
   private selectStart3: Vector3 | null = null;
@@ -129,6 +131,10 @@ export class MouseUi {
     }
   }
 
+  updateObjects(): void {
+    this.currentObjects = this.prepareObjects();
+  }
+
   update(): void {
     if (!this.camera || !this.selectionBox || this.mouse2 === null) {
       this.world.onHover(null);
@@ -136,11 +142,9 @@ export class MouseUi {
       this.selection.style.visibility = 'hidden';
       return;
     }
-
     this.raycaster.setFromCamera(this.mouse2, this.camera);
-    const objs = this.prepareObjects();
 
-    const intersects = this.raycaster.intersectObjects(objs);
+    const intersects = this.raycaster.intersectObjects(this.currentObjects);
     let hovered = null;
     let hoverPos = null;
     if (intersects.length > 0) {
@@ -161,7 +165,7 @@ export class MouseUi {
 
     if (this.prepareSelection()) {
       const selected = [];
-      for (const obj of this.selectionBox.select(objs)) {
+      for (const obj of this.selectionBox!.select(this.currentObjects)) {
         const id = obj.userData.id;
         selected.push(id);
       }
