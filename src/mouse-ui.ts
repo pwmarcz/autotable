@@ -48,6 +48,7 @@ export class MouseUi {
     this.raycastGroup = new Group();
     this.mainGroup.add(this.raycastGroup);
     this.raycastGroup.visible = false;
+    this.raycastGroup.matrixAutoUpdate = false;
     for (let i = 0; i < Object.keys(this.world.slots).length; i++) {
       const obj = new Mesh(new BoxGeometry(1, 1, 1));
       obj.name = 'raycastBox';
@@ -72,6 +73,7 @@ export class MouseUi {
     this.main.addEventListener('mousemove', this.onMouseMove.bind(this));
     this.main.addEventListener('mouseleave', this.onMouseLeave.bind(this));
     this.main.addEventListener('mousedown', this.onMouseDown.bind(this));
+    this.main.addEventListener('contextmenu', e => e.preventDefault());
     window.addEventListener('mouseup', this.onMouseUp.bind(this));
   }
 
@@ -110,6 +112,8 @@ export class MouseUi {
       }
 
       this.update();
+    } else if (event.button === 2) {
+      this.world.onFlip(1);
     }
   }
 
