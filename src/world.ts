@@ -248,7 +248,7 @@ export class World {
       return;
     }
 
-    this.selected = filterMostCommon(this.selected, thing => thing.slot.group);
+    this.selected = filterMostCommon(this.selected, thing => thing.slot.group + '@' + thing.slot.seat);
   }
 
   onMove(mouse: Vector3 | null): void {

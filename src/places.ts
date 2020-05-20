@@ -98,7 +98,6 @@ export class Slot {
     const quat = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), rotation);
 
     const name = this.name + suffix;
-    const group = /@/.exec(this.group) ? this.group : this.group + suffix;
 
     const pos = new Vector3(
       this.origin.x - worldWidth / 2,
@@ -134,7 +133,7 @@ export class Slot {
       }
     }
 
-    const slot = new Slot({name, group, type: this.type, origin, direction, rotations});
+    const slot = new Slot({name, group: this.group, type: this.type, origin, direction, rotations});
     slot.seat = seat;
     slot.linkDesc = linkDesc;
     slot.canFlipMultiple = this.canFlipMultiple;
