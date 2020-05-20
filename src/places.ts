@@ -230,6 +230,10 @@ export class Thing {
   readonly heldRotation: Euler;
   shiftSlot: Slot | null;
 
+  // For animation
+  lastShiftSlot: Slot | null;
+  lastShiftSlotTime: number;
+
   sent: boolean;
 
   constructor(index: number, type: ThingType, typeIndex: number, slot: Slot) {
@@ -241,6 +245,9 @@ export class Thing {
     this.claimedBy = null;
     this.heldRotation = new Euler();
     this.shiftSlot = null;
+
+    this.lastShiftSlot = null;
+    this.lastShiftSlotTime = 0;
 
     this.sent = false;
 

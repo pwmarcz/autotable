@@ -15,6 +15,8 @@ interface Select extends Place {
   id: any;
 }
 
+const SHIFT_TIME = 100;
+
 export class World {
   private setup: Setup;
 
@@ -81,6 +83,8 @@ export class World {
   }
 
   private onThings(entries: Array<[number, ThingInfo | null]>): void {
+    const now = new Date().getTime();
+
     for (const [thingIndex, thingInfo] of entries) {
       // TODO handle deletion
       if (thingInfo === null) {
@@ -111,7 +115,12 @@ export class World {
         thingInfo.heldRotation.z,
       );
 
-      thing.shiftSlot = thingInfo.shiftSlotName ? this.slots[thingInfo.shiftSlotName] : null;
+      const shiftSlot = thingInfo.shiftSlotName ? this.slots[thingInfo.shiftSlotName] : null;
+      if (thing.shiftSlot !== shiftSlot) {
+        thing.lastShiftSlot = thing.shiftSlot;
+        thing.lastShiftSlotTime = now;
+        thing.shiftSlot = shiftSlot;
+      }
     }
     this.checkPushes();
     this.sendUpdate();
@@ -551,6 +560,10 @@ export class World {
           };
           place.position.x += mouse.x - heldMouse.x;
           place.position.y += mouse.y - heldMouse.y;
+        }
+      } else if (thing.lastShiftSlotTime >= now - SHIFT_TIME) {
+        if (thing.lastShiftSlot !== null) {
+          place = thing.lastShiftSlot.places[thing.rotationIndex];
         }
       } else if (thing.claimedBy !== null && thing.shiftSlot !== null) {
         place = thing.shiftSlot.places[thing.rotationIndex];
