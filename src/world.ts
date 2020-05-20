@@ -181,7 +181,7 @@ export class World {
     }
 
     for (const thing of this.things) {
-      thing.hold(null);
+      thing.release();
     }
     this.setup.deal(this.seat, setupType);
     this.checkPushes();
@@ -267,7 +267,7 @@ export class World {
     for (const thing of this.things) {
       if (thing.claimedBy === this.seat) {
         if (thing.shiftSlot !== null) {
-          thing.hold(null);
+          thing.release();
         } else {
           held.push(thing);
         }
@@ -497,7 +497,7 @@ export class World {
   private finishDrop(): void {
     for (const thing of this.things) {
       if (thing.claimedBy === this.seat) {
-        thing.hold(null);
+        thing.release();
       }
     }
 

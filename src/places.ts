@@ -277,19 +277,21 @@ export class Thing {
     this.sent = false;
   }
 
-  hold(seat: number | null): void {
+  hold(seat: number): void {
     this.claimedBy = seat;
-    if (seat === null) {
-      this.shiftSlot = null;
-    } else {
-      this.heldRotation.copy(this.place().rotation);
-    }
+    this.heldRotation.copy(this.place().rotation);
     this.sent = false;
   }
 
   shiftTo(seat: number, slot: Slot): void {
     this.claimedBy = seat;
     this.shiftSlot = slot;
+    this.sent = false;
+  }
+
+  release(): void {
+    this.claimedBy = null;
+    this.shiftSlot = null;
     this.sent = false;
   }
 }

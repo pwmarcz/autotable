@@ -73,12 +73,12 @@ export class Movement {
       // TODO instead of group, check if rotations are the same?
       const rotationIndex = thing.slot.group === slot.group ? thing.rotationIndex : 0;
       thing.moveTo(slot, rotationIndex);
-      thing.hold(null);
+      thing.release();
     }
     for (const [thing, slot] of this.shiftMap.entries()) {
       const rotationIndex = thing.rotationIndex;
       thing.moveTo(slot, rotationIndex);
-      thing.hold(null);
+      thing.release();
     }
   }
 
