@@ -241,6 +241,7 @@ export class Setup {
           shiftLeft: i > 0 ? `hand.${i-1}` : undefined,
           shiftRight: i < 13 ? `hand.${i+1}` : undefined,
         },
+        drawShadow: true,
         shadowRotation: 1,
         rotateHeld: true,
       }));
@@ -256,7 +257,6 @@ export class Setup {
       ),
       rotations: [Rotation.STANDING, Rotation.FACE_UP, Rotation.FACE_DOWN],
       canFlipMultiple: true,
-      drawShadow: false,
       rotateHeld: true,
     }));
 
@@ -272,7 +272,6 @@ export class Setup {
           ),
           direction: new Vector2(-1, 1),
           rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
-          drawShadow: false,
           links: {
             // Hack: This requires the second slot, not first, in case someone
             // put a pon/chi starting from the second slot.
@@ -343,7 +342,6 @@ export class Setup {
             0,
           ),
           rotations: [Rotation.FACE_UP],
-          drawShadow: false,
           links: {
             shiftLeft: j > 0 ? `tray.${i}.${j-1}` : undefined,
             shiftRight: j < 9 ? `tray.${i}.${j+1}` : undefined,
@@ -371,7 +369,6 @@ export class Setup {
             shiftLeft: i > 0 ? `payment.${i}.${j-1}` : undefined,
             shiftRight: i < 0 ? `payment.${i}.${j+1}` : undefined,
           },
-          drawShadow: false,
         }));
       }
     }
@@ -386,7 +383,6 @@ export class Setup {
         1.5,
       ),
       rotations: [Rotation.FACE_UP],
-      drawShadow: false,
     }));
 
     this.addSlot(new Slot({
@@ -397,7 +393,6 @@ export class Setup {
         166, -8, 0,
       ),
       rotations: [Rotation.FACE_DOWN_REVERSE, Rotation.FACE_UP],
-      drawShadow: false,
     }));
   }
 

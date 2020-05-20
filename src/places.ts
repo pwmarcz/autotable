@@ -70,7 +70,7 @@ export class Slot {
     this.rotations = params.rotations;
     this.linkDesc = params.links ?? {};
     this.canFlipMultiple = params.canFlipMultiple ?? false;
-    this.drawShadow = params.drawShadow ?? true;
+    this.drawShadow = params.drawShadow ?? false;
     this.shadowRotation = params.shadowRotation ?? 0;
     this.rotateHeld = params.rotateHeld ?? false;
 
