@@ -52,7 +52,7 @@ export enum SoundType {
 export interface SoundInfo {
   type: SoundType;
   seat: number;
-  side: number;
+  side: number | null;
 }
 
 export interface SeatInfo {

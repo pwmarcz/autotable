@@ -56,7 +56,7 @@ export class SoundPlayer {
     };
   }
 
-  play(type: SoundType, side: number): void {
+  play(type: SoundType, side: number | null): void {
     this.doPlay(type, side);
     this.client.sound.set(0, {type, side, seat: this.client.seat!});
   }
@@ -73,7 +73,7 @@ export class SoundPlayer {
     return (document.getElementById(id) as HTMLAudioElement).src;
   }
 
-  private doPlay(type: SoundType, side: number): void {
+  private doPlay(type: SoundType, side: number | null): void {
     if (this.muted) {
       return;
     }
@@ -82,7 +82,9 @@ export class SoundPlayer {
     for (const channel of this.channels) {
       const rotation = this.client.seat ?? 0;
       if (!channel.playing) {
-        side = (side + 4 - rotation) % 4;
+        if (side !== null) {
+          side = (side + 4 - rotation) % 4;
+        }
         let pan = 0;
         switch(side) {
           case 1: pan = 0.5; break;

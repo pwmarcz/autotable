@@ -479,10 +479,12 @@ export class World {
     let discardSide = null;
     let hasStick = false;
     for (const thing of this.movement.things()) {
+      const source = thing.slot;
       const target = this.movement.get(thing)!;
-      if (target.group.match(/^discard/)) {
+      if (target.group === 'discard' &&
+        !(source.group === 'discard' && source.seat === target.seat)) {
         discardSide = target.seat;
-      } else if (target.group.match(/^riichi/)) {
+      } else if (target.group === 'riichi') {
         hasStick = true;
       }
     }
@@ -495,7 +497,7 @@ export class World {
       this.soundPlayer.play(SoundType.DISCARD, discardSide);
     }
     if (hasStick) {
-      this.soundPlayer.play(SoundType.STICK, 0);
+      this.soundPlayer.play(SoundType.STICK, null);
     }
   }
 
