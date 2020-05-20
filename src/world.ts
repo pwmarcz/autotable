@@ -364,6 +364,8 @@ export class World {
         this.selected.splice(0);
       }
 
+      this.held = this.held.filter(thing => thing.heldBy === null);
+
       // Sort by (z, y, x)
       this.held.sort((a, b) => {
         const ap = a.place().position;
@@ -604,8 +606,10 @@ export class World {
     if (this.held.length === 0 && this.seat !== null) {
       // Things
       for (const thing of this.things) {
-        const place = thing.place();
-        result.push({...place, id: thing.index});
+        if (thing.heldBy === null) {
+          const place = thing.place();
+          result.push({...place, id: thing.index});
+        }
       }
     }
     return result;
