@@ -48,17 +48,31 @@
         </div>
 
         <div id="sidebar" class="collapsed container text-light">
-            <button class="btn btn-warning btn-sm btn-block" id="deal">
-                <div class="btn-progress"></div>
-                <span class="btn-progress-text">Deal</span>
-            </button>
+            <div class="d-flex" id="server">
+                <button class="btn btn-warning btn-sm mr-2 w-100" id="deal">
+                    <div class="btn-progress"></div>
+                    <span class="btn-progress-text">Deal</span>
+                </button>
 
+                <div class="dropdown">
+                    <button class="btn btn-dark btn-sm dropdown-toggle" data-toggle="dropdown">Setup</button>
+                    <div class="dropdown-menu dropdown-menu-right p-3" style="width: 250px;">
+                        <select class="form-control form-control-sm mt-2" id="setup">
+                            <option disabled value="">Deal:</option>
+                            <option value="INITIAL">Only walls</option>
+                            <option value="WINDS">Wind tiles (for seats)</option>
+                            <option value="HANDS" selected>Hands</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+<!--
             <select class="form-control form-control-sm mt-2" id="setup">
                 <option disabled value="">Deal:</option>
                 <option value="INITIAL">Only walls</option>
                 <option value="WINDS">Wind tiles (for seats)</option>
                 <option value="HANDS" selected>Hands</option>
-            </select>
+            </select> -->
 
             <div class="mt-2 d-flex">
                 <button class="btn btn-secondary btn-sm mr-2 w-100" id="toggle-dealer">Dealer</button>

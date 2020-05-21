@@ -104,11 +104,12 @@ export class Game {
     };
 
     // Hack for settings menu
+    const doNotClose = ['LABEL', 'SELECT', 'OPTION'];
     for (const menu of Array.from(document.querySelectorAll('.dropdown-menu'))) {
       $(menu.parentElement!).on('hide.bs.dropdown', (e: Event) => {
         // @ts-ignore
         const target: HTMLElement | undefined = e.clickEvent?.target;
-        if (target && target.tagName === 'LABEL') {
+        if (target && doNotClose.indexOf(target.tagName) !== -1) {
           e.preventDefault();
         }
       });
