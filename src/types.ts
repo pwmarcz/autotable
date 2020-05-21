@@ -24,9 +24,11 @@ export enum SetupType {
   HANDS = 'HANDS',
 }
 
+export type Fives = '000' | '111' | '121';
+
 export interface TileSet {
   back: number; // 0 or 1
-  fives: '000' | '111' | '121';
+  fives: Fives;
 }
 
 export namespace TileSet {

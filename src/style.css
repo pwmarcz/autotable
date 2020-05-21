@@ -141,11 +141,16 @@
     font-style: italic;
 }
 
-#setup {
-    background-color: #343a40;
-    border-color: #343a40;
-    color: #fff;
+.dark-select {
+    background-color: #343a40 !important;
+    border-color: #343a40 !important;
+    color: #fff !important;
 }
-#setup:focus {
-    box-shadow: 0 0 0 0.2rem rgba(130, 138, 145, 0.5);
+.dark-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(130, 138, 145, 0.5) !important;
+}
+
+/* Override system setting */
+.collapsing {
+	transition:height 0.2s ease !important;
 }

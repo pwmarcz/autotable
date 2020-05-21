@@ -8,7 +8,7 @@ import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
 import { SoundPlayer } from "./sound-player";
-import { TileSet, ThingInfo, SoundType, SetupType } from "./types";
+import { TileSet, ThingInfo, SoundType, SetupType, Fives } from "./types";
 
 
 interface Select extends Place {
@@ -183,7 +183,7 @@ export class World {
     };
   }
 
-  deal(setupType: SetupType): void {
+  deal(setupType: SetupType, fives: Fives): void {
     if (this.seat === null) {
       return;
     }
@@ -196,7 +196,7 @@ export class World {
     this.checkPushes();
 
     const back = 1 - this.tileSet.back;
-    const tileSet = { ...this.tileSet, back };
+    const tileSet = { ...this.tileSet, back, fives };
 
     let match = this.client.match.get(0);
     let honba;

@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import 'bootstrap/js/dist/collapse';
 
 import { ObjectView } from "./object-view";
 import { World } from "./world";
@@ -10,7 +11,7 @@ import { MainView } from "./main-view";
 import { Group } from "three";
 import { ClientUi } from "./client-ui";
 import { SoundPlayer } from "./sound-player";
-import { SetupType } from './types';
+import { SetupType, Fives } from './types';
 
 export class Game {
   private assetLoader: AssetLoader;
@@ -44,6 +45,7 @@ export class Game {
     toggleHonba: HTMLButtonElement;
     takeSeat: Array<HTMLButtonElement>;
     leaveSeat: HTMLButtonElement;
+    toggleSetup: HTMLButtonElement;
   }
 
   constructor(assetLoader: AssetLoader) {
@@ -70,6 +72,7 @@ export class Game {
       toggleHonba: document.getElementById('toggle-honba') as HTMLButtonElement,
       takeSeat: [],
       leaveSeat: document.getElementById('leave-seat') as HTMLButtonElement,
+      toggleSetup: document.getElementById('toggle-setup') as HTMLButtonElement,
     };
     for (let i = 0; i < 4; i++) {
       this.buttons.takeSeat[i] = document.querySelector(
@@ -103,6 +106,14 @@ export class Game {
       this.client.seats.set(this.client.playerId(), { seat: null });
     };
 
+    this.client.match.on('update', () => {
+      const match = this.client.match.get(0);
+      if (match) {
+        const fivesElement = document.getElementById('fives') as HTMLSelectElement;
+        fivesElement.value = match.tileSet.fives;
+      }
+    });
+
     // Hack for settings menu
     const doNotClose = ['LABEL', 'SELECT', 'OPTION'];
     for (const menu of Array.from(document.querySelectorAll('.dropdown-menu'))) {
@@ -122,6 +133,7 @@ export class Game {
       this.buttons.toggleDealer,
       this.buttons.toggleHonba,
       this.buttons.leaveSeat,
+      this.buttons.toggleSetup,
     ];
     if (this.client.seat === null) {
       (document.querySelector('.seat-buttons')! as HTMLElement).style.display = 'block';
@@ -154,6 +166,7 @@ export class Game {
     const buttonElement = document.getElementById('deal')!;
     const progressElement = document.querySelector('#deal .btn-progress')! as HTMLElement;
     const setupElement = document.getElementById('setup') as HTMLInputElement;
+    const fivesElement = document.getElementById('fives') as HTMLInputElement;
 
     let startPressed: number | null = null;
     const transitionTime = 600;
@@ -178,8 +191,12 @@ export class Game {
 
       if (deal) {
         const setupType = setupElement.value as SetupType;
-        this.world.deal(setupType);
+        const fives = fivesElement.value as Fives;
+
+        this.world.deal(setupType, fives);
         setupElement.value = SetupType.HANDS;
+        // @ts-ignore
+        $('#setup-group').collapse('hide');
       }
     };
 
