@@ -108,9 +108,19 @@ export class Game {
 
     this.client.match.on('update', () => {
       const match = this.client.match.get(0);
+      let changed = false;
       if (match) {
         const fivesElement = document.getElementById('fives') as HTMLSelectElement;
-        fivesElement.value = match.tileSet.fives;
+        if (fivesElement.value !== match.tileSet.fives) {
+          fivesElement.value = match.tileSet.fives;
+          changed = true;
+        }
+      }
+      if (changed) {
+        // @ts-ignore
+        $('#setup-group').collapse('show');
+        // @ts-ignore
+        setTimeout(() => $('#setup-group').collapse('hide'), 2500);
       }
     });
 
