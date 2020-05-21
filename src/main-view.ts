@@ -15,6 +15,7 @@ export class MainView {
 
   private scene: Scene;
   private mainGroup: Group;
+  private viewGroup: Group;
   private renderer: WebGLRenderer;
 
   camera: Camera = null!;
@@ -26,13 +27,16 @@ export class MainView {
 
   constructor(mainGroup: Group) {
     this.mainGroup = mainGroup;
-
     this.main = document.getElementById('main')!;
 
     this.scene = new Scene();
+    this.scene.autoUpdate = false;
+    this.viewGroup = new Group();
+    this.viewGroup.position.set(World.WIDTH/2, World.WIDTH/2, 0);
     this.scene.add(this.mainGroup);
+    this.scene.add(this.viewGroup);
 
-    this.renderer = new WebGLRenderer({ antialias: true });
+    this.renderer = new WebGLRenderer({ antialias: false });
     this.main.appendChild(this.renderer.domElement);
 
     this.setupLights();
@@ -46,31 +50,35 @@ export class MainView {
   }
 
   private setupLights(): void {
-    this.scene.add(new AmbientLight(0x888888));
+    this.viewGroup.add(new AmbientLight(0x888888));
     const topLight = new DirectionalLight(0x777777);
-    topLight.position.set(0, 0, 1);
-    this.scene.add(topLight);
+    topLight.position.set(0, 0, 10000);
+    this.viewGroup.add(topLight);
 
     const frontLight = new DirectionalLight(0x222222);
-    frontLight.position.set(0, -1, 0);
-    this.scene.add(frontLight);
+    frontLight.position.set(0, -10000, 0);
+    this.viewGroup.add(frontLight);
 
     const sideLight = new DirectionalLight(0x222222);
-    sideLight.position.set(-1, -1, 0);
-    this.scene.add(sideLight);
+    sideLight.position.set(-10000, -10000, 0);
+    this.viewGroup.add(sideLight);
   }
 
   private setupRendering(): void {
     const w = this.renderer.domElement.clientWidth;
     const h = this.renderer.domElement.clientHeight;
 
+    if (this.camera !== null) {
+      this.scene.remove(this.camera);
+    }
+
     this.camera = this.makeCamera(this.perspective);
+    this.viewGroup.add(this.camera);
     this.composer = new EffectComposer(this.renderer);
     const renderPass = new RenderPass(this.scene, this.camera);
     this.outlinePass = new OutlinePass(new Vector2(w, h), this.scene, this.camera);
     this.outlinePass.visibleEdgeColor.setHex(0xffff99);
     this.outlinePass.hiddenEdgeColor.setHex(0x333333);
-
     this.composer.addPass(renderPass);
     this.composer.addPass(this.outlinePass);
   }
@@ -91,13 +99,15 @@ export class MainView {
   }
 
   updateCamera(seat: number | null, lookDown: number, zoom: number, mouse2: Vector2 | null): void {
-    this.updateRotation((seat ?? 0) * Math.PI/2);
-
     if (this.perspective) {
       this.updatePespectiveCamera(seat === null, lookDown, zoom, mouse2);
     } else {
       this.updateOrthographicCamera(seat === null, lookDown, zoom, mouse2);
     }
+
+    const angle = (seat ?? 0) * Math.PI * 0.5;
+    this.viewGroup.rotation.set(0, 0, angle);
+    this.viewGroup.updateMatrixWorld();
   }
 
   private updatePespectiveCamera(
@@ -107,10 +117,10 @@ export class MainView {
     mouse2: Vector2 | null): void
   {
     if (fromTop) {
-      this.camera.position.set(World.WIDTH/2, World.WIDTH / 2, 400);
+      this.camera.position.set(0, 0, 400);
       this.camera.rotation.set(0, 0, 0);
     } else {
-      this.camera.position.set(World.WIDTH/2, -World.WIDTH*0.94, World.WIDTH * 1.05);
+      this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 1.05);
       this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2, 0, 0);
       if (zoom !== 0) {
         const dist = new Vector3(0, 1.37, -1).multiplyScalar(zoom * 55);
@@ -130,13 +140,13 @@ export class MainView {
     mouse2: Vector2 | null): void
   {
     if (fromTop) {
-      this.camera.position.set(World.WIDTH/2, World.WIDTH / 2, 100);
+      this.camera.position.set(0, 0, 100);
       this.camera.rotation.set(0, 0, 0);
       this.camera.scale.setScalar(1.55);
     } else {
       this.camera.position.set(
-        World.WIDTH / 2,
-        -53 * lookDown - World.WIDTH / 2,
+        0,
+        -53 * lookDown - World.WIDTH,
         174);
       this.camera.rotation.set(Math.PI * 0.25, 0, 0);
       this.camera.scale.setScalar(1 - 0.45 * zoom);
@@ -146,14 +156,6 @@ export class MainView {
         this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
       }
     }
-  }
-
-  private updateRotation(angle: number): void {
-    const adjust = new Vector3(World.WIDTH/2, World.WIDTH/2, 0);
-    adjust.applyAxisAngle(new Vector3(0, 0, 1), -angle);
-
-    this.mainGroup.position.set(World.WIDTH/2, World.WIDTH/2, 0).sub(adjust);
-    this.mainGroup.rotation.set(0, 0, -angle);
   }
 
   updateOutline(selectedObjects: Array<Mesh>): void {

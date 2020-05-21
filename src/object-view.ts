@@ -123,6 +123,9 @@ export class ObjectView {
     this.mainGroup.add(tableMesh);
     this.mainGroup.add(this.center.mesh);
 
+    tableMesh.updateMatrixWorld();
+    this.center.mesh.updateMatrixWorld();
+
     for (let i = 0; i < 4; i++) {
       for (let j = 0; j < 6; j++) {
         const trayPos = new Vector3(
@@ -139,6 +142,7 @@ export class ObjectView {
           trayPos.y + World.WIDTH / 2,
           0);
         this.mainGroup.add(tray);
+        tray.updateMatrixWorld();
       }
     }
   }
@@ -237,6 +241,7 @@ export class ObjectView {
       obj.scale.set(place.size.x, place.size.y, 1);
       this.dropShadowObjects.push(obj);
       this.mainGroup.add(obj);
+      obj.updateMatrixWorld();
     }
   }
 }
