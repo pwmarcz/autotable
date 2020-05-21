@@ -1,4 +1,3 @@
-import $ from 'jquery';
 import 'bootstrap/js/dist/collapse';
 
 import { ObjectView } from "./object-view";
@@ -11,7 +10,7 @@ import { MainView } from "./main-view";
 import { Group } from "three";
 import { ClientUi } from "./client-ui";
 import { SoundPlayer } from "./sound-player";
-import { SetupType, Fives } from './types';
+import { GameUi } from './game-ui';
 
 export class Game {
   private assetLoader: AssetLoader;
@@ -23,14 +22,9 @@ export class Game {
   private mouseUi: MouseUi;
   private clientUi: ClientUi;
   private soundPlayer: SoundPlayer;
+  private gameUi: GameUi;
 
   benchmark: boolean = false;
-
-  private lookDown = new Animation(150);
-  private zoom = new Animation(150);
-  private lookDownState: number = 0;
-
-  keys: Set<string> = new Set();
 
   settings: {
     perspective: HTMLInputElement;
@@ -39,14 +33,11 @@ export class Game {
     sticky: HTMLInputElement;
   };
 
-  buttons: {
-    deal: HTMLButtonElement;
-    toggleDealer: HTMLButtonElement;
-    toggleHonba: HTMLButtonElement;
-    takeSeat: Array<HTMLButtonElement>;
-    leaveSeat: HTMLButtonElement;
-    toggleSetup: HTMLButtonElement;
-  }
+  private lookDown = new Animation(150);
+  private zoom = new Animation(150);
+  private lookDownState: number = 0;
+
+  keys: Set<string> = new Set();
 
   constructor(assetLoader: AssetLoader) {
     this.assetLoader = assetLoader;
@@ -58,6 +49,7 @@ export class Game {
     this.mainView = new MainView(this.mainGroup);
     this.mouseUi = new MouseUi(this.world, this.mainGroup);
     this.clientUi = new ClientUi(this.client);
+    this.gameUi = new GameUi(this.client, this.world);
 
     this.settings = {
       perspective: document.getElementById('perspective') as HTMLInputElement,
@@ -66,22 +58,8 @@ export class Game {
       sticky: document.getElementById('sticky') as HTMLInputElement,
     };
 
-    this.buttons = {
-      deal: document.getElementById('deal') as HTMLButtonElement,
-      toggleDealer: document.getElementById('toggle-dealer') as HTMLButtonElement,
-      toggleHonba: document.getElementById('toggle-honba') as HTMLButtonElement,
-      takeSeat: [],
-      leaveSeat: document.getElementById('leave-seat') as HTMLButtonElement,
-      toggleSetup: document.getElementById('toggle-setup') as HTMLButtonElement,
-    };
-    for (let i = 0; i < 4; i++) {
-      this.buttons.takeSeat[i] = document.querySelector(
-        `.seat-button-${i} button`) as HTMLButtonElement;
-    }
 
     this.setupEvents();
-    this.setupDealButton();
-    this.updateSettings();
   }
 
   private setupEvents(): void {
@@ -92,127 +70,6 @@ export class Game {
       const element = (this.settings as any)[key] as HTMLInputElement;
       element.addEventListener('change', this.updateSettings.bind(this));
     }
-
-    this.buttons.toggleDealer.onclick = () => this.world.toggleDealer();
-    this.buttons.toggleHonba.onclick = () => this.world.toggleHonba();
-
-    this.client.seats.on('update', this.updateSeats.bind(this));
-    for (let i = 0; i < 4; i++) {
-      this.buttons.takeSeat[i].onclick = () => {
-        this.client.seats.set(this.client.playerId(), { seat: i });
-      };
-    }
-    this.buttons.leaveSeat.onclick = () => {
-      this.client.seats.set(this.client.playerId(), { seat: null });
-    };
-
-    this.client.match.on('update', () => {
-      const match = this.client.match.get(0);
-      let changed = false;
-      if (match) {
-        const fivesElement = document.getElementById('fives') as HTMLSelectElement;
-        if (fivesElement.value !== match.tileSet.fives) {
-          fivesElement.value = match.tileSet.fives;
-          changed = true;
-        }
-      }
-      if (changed) {
-        // @ts-ignore
-        $('#setup-group').collapse('show');
-        // @ts-ignore
-        setTimeout(() => $('#setup-group').collapse('hide'), 2500);
-      }
-    });
-
-    // Hack for settings menu
-    const doNotClose = ['LABEL', 'SELECT', 'OPTION'];
-    for (const menu of Array.from(document.querySelectorAll('.dropdown-menu'))) {
-      $(menu.parentElement!).on('hide.bs.dropdown', (e: Event) => {
-        // @ts-ignore
-        const target: HTMLElement | undefined = e.clickEvent?.target;
-        if (target && doNotClose.indexOf(target.tagName) !== -1) {
-          e.preventDefault();
-        }
-      });
-    }
-  }
-
-  private updateSeats(): void {
-    const toDisable = [
-      this.buttons.deal,
-      this.buttons.toggleDealer,
-      this.buttons.toggleHonba,
-      this.buttons.leaveSeat,
-      this.buttons.toggleSetup,
-    ];
-    if (this.client.seat === null) {
-      (document.querySelector('.seat-buttons')! as HTMLElement).style.display = 'block';
-      for (let i = 0; i < 4; i++) {
-        const playerId = this.client.seatPlayers[i];
-        const button = document.querySelector(`.seat-button-${i} button`) as HTMLButtonElement;
-        if (playerId !== null) {
-          const nick = this.client.nicks.get(playerId) || 'Player';
-          button.disabled = true;
-          button.className = 'btn btn-secondary';
-          button.textContent = nick;
-        } else {
-          button.className = 'btn btn-primary';
-          button.disabled = false;
-          button.textContent = 'Take seat';
-        }
-      }
-      for (const button of toDisable) {
-        button.disabled = true;
-      }
-    } else {
-      (document.querySelector('.seat-buttons')! as HTMLElement).style.display = 'none';
-      for (const button of toDisable) {
-        button.disabled = false;
-      }
-    }
-  }
-
-  private setupDealButton(): void {
-    const buttonElement = document.getElementById('deal')!;
-    const progressElement = document.querySelector('#deal .btn-progress')! as HTMLElement;
-    const setupElement = document.getElementById('setup') as HTMLInputElement;
-    const fivesElement = document.getElementById('fives') as HTMLInputElement;
-
-    let startPressed: number | null = null;
-    const transitionTime = 600;
-    const waitTime = transitionTime + 0;
-
-    const start = (): void => {
-      if (startPressed === null) {
-        progressElement.style.width = '100%';
-        startPressed = new Date().getTime();
-      }
-    };
-    const cancel = (): void => {
-      progressElement.style.width = '0%';
-      startPressed = null;
-      buttonElement.blur();
-    };
-    const commit = (): void => {
-      const deal = startPressed !== null && new Date().getTime() - startPressed > waitTime;
-      progressElement.style.width = '0%';
-      startPressed = null;
-      buttonElement.blur();
-
-      if (deal) {
-        const setupType = setupElement.value as SetupType;
-        const fives = fivesElement.value as Fives;
-
-        this.world.deal(setupType, fives);
-        setupElement.value = SetupType.HANDS;
-        // @ts-ignore
-        $('#setup-group').collapse('hide');
-      }
-    };
-
-    buttonElement.onmousedown = start;
-    buttonElement.onmouseup = commit;
-    buttonElement.onmouseleave = cancel;
   }
 
   private updateSettings(): void {
