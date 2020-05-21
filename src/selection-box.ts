@@ -53,7 +53,7 @@ export class SelectionBox {
     }
 
     if ((this.camera as PerspectiveCamera).isPerspectiveCamera) {
-      this.camera.getWorldPosition(this.vecNear);
+      this.vecNear.setFromMatrixPosition(this.camera.matrixWorld);
       this.vecTopLeft.set( left, top, 0 );
       this.vecTopRight.set( right, top, 0 );
       this.vecDownRight.set( right, down, 0 );
