@@ -1,5 +1,3 @@
-import 'bootstrap/js/dist/collapse';
-
 import { ObjectView } from "./object-view";
 import { World } from "./world";
 import { Client } from "./client";
