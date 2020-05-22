@@ -48,6 +48,7 @@ export class GameUi {
     this.elements.toggleHonba.onclick = () => this.world.toggleHonba();
 
     this.client.seats.on('update', this.updateSeats.bind(this));
+    this.client.nicks.on('update', this.updateSeats.bind(this));
     for (let i = 0; i < 4; i++) {
       this.elements.takeSeat[i].onclick = () => {
         this.client.seats.set(this.client.playerId(), { seat: i });
