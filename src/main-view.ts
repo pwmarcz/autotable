@@ -1,4 +1,4 @@
-import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh } from 'three';
+import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneBufferGeometry } from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
@@ -25,6 +25,8 @@ export class MainView {
   private width = 0;
   private height = 0;
 
+  private dummyObject: Object3D;
+
   constructor(mainGroup: Group) {
     this.mainGroup = mainGroup;
     this.main = document.getElementById('main')!;
@@ -35,6 +37,8 @@ export class MainView {
     this.viewGroup.position.set(World.WIDTH/2, World.WIDTH/2, 0);
     this.scene.add(this.mainGroup);
     this.scene.add(this.viewGroup);
+
+    this.dummyObject = new Mesh(new PlaneBufferGeometry(0, 0, 0));
 
     this.renderer = new WebGLRenderer({ antialias: false });
     this.main.appendChild(this.renderer.domElement);
@@ -81,6 +85,12 @@ export class MainView {
     this.outlinePass.hiddenEdgeColor.setHex(0x333333);
     this.composer.addPass(renderPass);
     this.composer.addPass(this.outlinePass);
+
+    // Force OutlinePass to precompile shadows, otherwise there is a pause when
+    // you first select something.
+    this.outlinePass.selectedObjects.push(this.dummyObject);
+    this.composer.render();
+    this.outlinePass.selectedObjects.pop();
   }
 
   private makeCamera(perspective: boolean): Camera {
