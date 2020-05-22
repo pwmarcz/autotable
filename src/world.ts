@@ -586,8 +586,9 @@ export class World {
          slot.links.up.thing.claimedBy !== null);
 
       toRender.push({
-        place,
+        type: thing.type,
         thingIndex: thing.index,
+        place,
         selected,
         hovered,
         held,

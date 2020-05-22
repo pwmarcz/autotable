@@ -1,12 +1,14 @@
-import { Group, Mesh, Vector3, MeshBasicMaterial, MeshLambertMaterial, Material, Object3D, PlaneBufferGeometry, InstancedMesh } from "three";
+import { Group, Mesh, Vector3, MeshBasicMaterial, MeshLambertMaterial, Object3D, PlaneBufferGeometry, InstancedMesh } from "three";
 
 import { World } from "./world";
 import { Client } from "./client";
 import { AssetLoader } from "./asset-loader";
 import { Center } from "./center";
 import { ThingType, Place } from "./places";
+import { ThingParams, ThingGroup, TileThingGroup, StickThingGroup, MarkerThingGroup } from "./thing-group";
 
 export interface Render {
+  type: ThingType;
   thingIndex: number;
   place: Place;
   selected: boolean;
@@ -16,24 +18,15 @@ export interface Render {
   bottom: boolean;
 }
 
-interface ThingParams {
-  type: ThingType;
-  typeIndex: number;
-}
-
 const MAX_SHADOWS = 300;
-const MAX_TILES = 136;
-const MAX_STICKS = 60;
 
 export class ObjectView {
   mainGroup: Group;
   private assetLoader: AssetLoader;
 
   private center: Center;
-  private thingObjects: Array<Mesh>;
-  private thingParams: Array<ThingParams>;
 
-  private instancedObjects: Map<ThingType, InstancedMesh>;
+  private thingGroups: Map<ThingType, ThingGroup>;
 
   private shadowObject: InstancedMesh;
   private dropShadowProto: Mesh;
@@ -47,22 +40,13 @@ export class ObjectView {
 
     this.center = new Center(this.assetLoader, client);
     this.center.mesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0.75);
-    this.thingObjects = [];
     this.dropShadowObjects = [];
     this.selectedObjects = [];
 
-    this.thingParams = [];
-
-    this.instancedObjects = new Map();
-    this.instancedObjects.set(
-      ThingType.TILE, assetLoader.makeTileInstancedMesh(MAX_TILES),
-    );
-    this.instancedObjects.set(
-      ThingType.STICK, assetLoader.makeStickInstancedMesh(MAX_STICKS),
-    );
-    for (const instancedMesh of this.instancedObjects.values()) {
-      this.mainGroup.add(instancedMesh);
-    }
+    this.thingGroups = new Map();
+    this.thingGroups.set(ThingType.TILE, new TileThingGroup(this.assetLoader, this.mainGroup));
+    this.thingGroups.set(ThingType.STICK, new StickThingGroup(this.assetLoader, this.mainGroup));
+    this.thingGroups.set(ThingType.MARKER, new MarkerThingGroup(this.assetLoader, this.mainGroup));
 
     const plane = new PlaneBufferGeometry(1, 1, 1);
     let material = new MeshBasicMaterial({
@@ -84,22 +68,16 @@ export class ObjectView {
     this.addStatic();
   }
 
-  replaceThings(things: Array<ThingParams>): void {
-    for (const obj of this.thingObjects) {
-      (obj.material as Material).dispose();
-      obj.geometry.dispose();
-      this.mainGroup.remove(obj);
+  replaceThings(params: Array<ThingParams>): void {
+    for (const type of [ThingType.TILE, ThingType.STICK, ThingType.MARKER]) {
+      const typeParams = params.filter(p => p.type === type);
+      if (typeParams.length === 0) {
+        continue;
+      }
+      const startIndex = params.indexOf(typeParams[0]);
+      const thingGroup = this.thingGroups.get(type)!;
+      thingGroup.replace(startIndex, typeParams);
     }
-    this.thingObjects.splice(0);
-
-    for (const thing of things) {
-      const obj = this.makeObject(thing.type, thing.typeIndex);
-      obj.matrixAutoUpdate = false;
-      this.thingObjects.push(obj);
-      this.mainGroup.add(obj);
-    }
-
-    this.thingParams = things;
   }
 
   addShadows(places: Array<Place>): void {
@@ -147,17 +125,6 @@ export class ObjectView {
     }
   }
 
-  private makeObject(type: ThingType, index: number): Mesh {
-    switch (type) {
-      case ThingType.TILE:
-        return this.assetLoader.makeTile(index);
-      case ThingType.STICK:
-        return this.assetLoader.makeStick(index);
-      case ThingType.MARKER:
-        return this.assetLoader.makeMarker();
-    }
-  }
-
   updateScores(scores: Array<number>): void {
     this.center.setScores(scores);
     this.center.draw();
@@ -165,34 +132,16 @@ export class ObjectView {
 
   updateThings(things: Array<Render>): void {
     this.selectedObjects.splice(0);
-    for (const instancedMesh of this.instancedObjects.values()) {
-      instancedMesh.count = 0;
-    }
     for (const thing of things) {
-      const obj = this.thingObjects[thing.thingIndex];
-      obj.position.copy(thing.place.position);
-      obj.rotation.copy(thing.place.rotation);
-
+      const thingGroup = this.thingGroups.get(thing.type)!;
       const custom = thing.hovered || thing.selected || thing.held || thing.bottom;
-      if (!custom) {
-        const thingParams = this.thingParams[thing.thingIndex];
-        const instancedMesh = this.instancedObjects.get(thingParams.type);
-        if (instancedMesh !== undefined) {
-          const idx = instancedMesh.count++;
-          obj.updateMatrix();
-          obj.visible = false;
-          instancedMesh.setMatrixAt(idx, obj.matrix);
-          instancedMesh.instanceMatrix.needsUpdate = true;
-          if (thingParams.type === ThingType.TILE) {
-            this.assetLoader.setTileInstanceParams(instancedMesh, idx, thingParams.typeIndex);
-          } else if (thingParams.type === ThingType.STICK) {
-            this.assetLoader.setStickInstanceParams(instancedMesh, idx, thingParams.typeIndex);
-          }
-          continue;
-        }
+      if (!custom && thingGroup.canSetSimple()) {
+        thingGroup.setSimple(thing.thingIndex, thing.place.position, thing.place.rotation);
+        continue;
       }
 
-      obj.visible = true;
+      const obj = thingGroup.setCustom(
+        thing.thingIndex, thing.place.position, thing.place.rotation);
 
       const material = obj.material as MeshLambertMaterial;
       material.emissive.setHex(0);
