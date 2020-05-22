@@ -201,7 +201,7 @@ export class MainView {
       this.main.style.width = `${renderWidth}px`;
       this.main.style.height = `${renderHeight}px`;
       this.renderer.setSize(renderWidth, renderHeight);
-      this.renderer.setPixelRatio(window.devicePixelRatio);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
 
       this.setupRendering();
     }
