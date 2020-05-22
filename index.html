@@ -49,11 +49,18 @@
 
         <div id="sidebar" class="collapsed container text-light">
             <div class="d-flex">
-                <button class="btn btn-warning btn-sm mr-2 w-100" id="deal">
+                <button class="btn btn-warning btn-sm w-100" id="deal">
                     <div class="btn-progress"></div>
                     <span class="btn-progress-text">Deal</span>
                 </button>
+            </div>
 
+            <div class="mt-2 d-flex">
+                <div class="w-100 text-center" style="line-height: 31px;">
+                    <small class="text-white-50" id="setup-desc">
+                        1-1-1
+                    </small>
+                </div>
                 <button class="btn btn-dark btn-sm dropdown-toggle collapsed" id="toggle-setup"
                     data-toggle="collapse" data-target="#setup-group">Setup</button>
             </div>
@@ -96,41 +103,42 @@
                 </div>
             </div>
 
-            <button class="btn btn-dark btn-sm btn-block mt-2" id="leave-seat">Leave seat</button>
-
-            <div class="dropdown mt-2">
-                <button class="btn btn-dark btn-sm btn-block dropdown-toggle" data-toggle="dropdown">
-                    More
-                </button>
-                <div class="dropdown-menu p-3 text-light" style="width: 300px;">
-                    <h4>Instructions</h4>
-                    <p>
-                    <b>Drag mouse</b> to move or select<br>
-                    Press <b>F</b> or <b>right-click</b> to flip or rotate<br>
-                    Press <b>R</b> to rotate backwards; for example hide your hand<br>
-                    Hold <b>SPACE</b> (or press <b>Q</b>) to look down<br>
-                    Hold <b>Z</b> to zoom in<br>
-                    Hold <b>X</b> to zoom out<br>
-                    Press <b>P</b> to toggle perspective mode
-                    </p>
-                    <h4>Settings</h4>
-                    <label class="dropdown-menu-item">
-                        <input type="checkbox" id="perspective">
-                        Perspective mode
-                    </label>
-                    <label>
-                        <input type="checkbox" id="benchmark">
-                        Benchmark mode (don't limit FPS)
-                    </label>
-                    <label>
-                        <input type="checkbox" id="muted">
-                        Mute sound
-                    </label>
-                    <label>
-                        <input type="checkbox" id="sticky">
-                        Sticky mouse (click to grab)
-                    </label>
-                    <button class="btn btn-secondary btn-sm btn-block mt-2" id="new-game">New game</button>
+            <div class="d-flex mt-2">
+                <button class="btn btn-dark btn-sm mr-2 w-100" id="leave-seat">Leave seat</button>
+                <div class="dropdown">
+                    <button class="btn btn-dark btn-sm btn-block dropdown-toggle" data-toggle="dropdown">
+                        More
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right p-3 text-light" style="width: 300px;">
+                        <h4>Instructions</h4>
+                        <p>
+                        <b>Drag mouse</b> to move or select<br>
+                        Press <b>F</b> or <b>right-click</b> to flip or rotate<br>
+                        Press <b>R</b> to rotate backwards; for example hide your hand<br>
+                        Hold <b>SPACE</b> (or press <b>Q</b>) to look down<br>
+                        Hold <b>Z</b> to zoom in<br>
+                        Hold <b>X</b> to zoom out<br>
+                        Press <b>P</b> to toggle perspective mode
+                        </p>
+                        <h4>Settings</h4>
+                        <label class="dropdown-menu-item">
+                            <input type="checkbox" id="perspective">
+                            Perspective mode
+                        </label>
+                        <label>
+                            <input type="checkbox" id="benchmark">
+                            Benchmark mode (don't limit FPS)
+                        </label>
+                        <label>
+                            <input type="checkbox" id="muted">
+                            Mute sound
+                        </label>
+                        <label>
+                            <input type="checkbox" id="sticky">
+                            Sticky mouse (click to grab)
+                        </label>
+                        <button class="btn btn-secondary btn-sm btn-block mt-2" id="new-game">New game</button>
+                    </div>
                 </div>
             </div>
 

@@ -15,6 +15,7 @@ export class GameUi {
     leaveSeat: HTMLButtonElement;
     toggleSetup: HTMLButtonElement;
     setupType: HTMLSelectElement;
+    setupDesc: HTMLElement;
     fives: HTMLSelectElement;
   }
 
@@ -30,6 +31,7 @@ export class GameUi {
       leaveSeat: document.getElementById('leave-seat') as HTMLButtonElement,
       toggleSetup: document.getElementById('toggle-setup') as HTMLButtonElement,
       setupType: document.getElementById('setup') as HTMLSelectElement,
+      setupDesc: document.getElementById('setup-desc') as HTMLElement,
       fives: document.getElementById('fives') as HTMLSelectElement,
     };
     for (let i = 0; i < 4; i++) {
@@ -56,18 +58,11 @@ export class GameUi {
     };
 
     this.client.match.on('update', () => {
+      const select = this.elements.fives;
       const match = this.client.match.get(0);
-      let changed = false;
       if (match) {
-        if (this.elements.fives.value !== match.tileSet.fives) {
-          this.elements.fives.value = match.tileSet.fives;
-          changed = true;
-        }
-      }
-      if (changed) {
-        this.showSetup();
-        // @ts-ignore
-        setTimeout(() => this.hideSetup(), 2000);
+        select.value = match.tileSet.fives;
+        this.elements.setupDesc.textContent = select.options[select.selectedIndex].text;
       }
     });
 
