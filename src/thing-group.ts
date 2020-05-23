@@ -126,6 +126,9 @@ attribute vec3 offset;
   setSimple(index: number, position: Vector3, rotation: Euler): void {
     const i = index - this.startIndex;
     const mesh = this.meshes[i];
+    if (!mesh.visible && mesh.position.equals(position) && mesh.rotation.equals(rotation)) {
+      return;
+    }
     mesh.position.copy(position);
     mesh.rotation.copy(rotation);
     mesh.updateMatrix();
