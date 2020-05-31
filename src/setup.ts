@@ -3,6 +3,7 @@ import { shuffle } from "./utils";
 import { Vector3, Euler, Vector2 } from "three";
 import { World } from "./world";
 import { TileSet, SetupType } from "./types";
+import { DEALS, DealPart } from "./setup-data";
 
 
 const Rotation = {
@@ -15,6 +16,7 @@ const Rotation = {
 
 export class Setup {
   slots: Record<string, Slot> = {};
+  slotNames: Array<string> = [];
   things: Array<Thing> = [];
   pushes: Array<[Slot, Slot]> = [];
   private scoreSlots: Array<Array<Slot>> = [[], [], [], []];
@@ -35,7 +37,7 @@ export class Setup {
     for (let num = 0; num < 4; num++) {
       for (let i = 0; i < 17; i++) {
         for (let j = 0; j < 2; j++) {
-          slots.push(this.slots[`wall.${j}.${i+1}@${num}`]);
+          slots.push(this.slots[`wall.${i+1}.${j}@${num}`]);
         }
       }
     }
@@ -49,49 +51,6 @@ export class Setup {
       const tileIndex = this.tileIndex(i, tileSet);
       this.addThing(ThingType.TILE, tileIndex, wallSlots[i]);
 
-    }
-  }
-
-  private dealWalls(): void {
-    const tiles = this.things.filter(thing => thing.type === ThingType.TILE);
-    const slots = this.wallSlots();
-    shuffle(slots);
-    for (const thing of tiles) {
-      thing.prepareMove();
-    }
-    for (let i = 0; i < 136; i++) {
-      tiles[i].moveTo(slots[i]);
-    }
-  }
-
-  private dealWinds(seat: number): void {
-    const tiles = this.things.filter(thing => thing.type === ThingType.TILE);
-    const wallSlots = this.wallSlots();
-    wallSlots.splice(132);
-
-    const windTiles = [108, 112, 116, 120];
-    const handSlots = [
-      `hand.5@${seat}`,
-      `hand.6@${seat}`,
-      `hand.7@${seat}`,
-      `hand.8@${seat}`,
-    ].map(name => this.slots[name]);
-
-    shuffle(wallSlots);
-    shuffle(handSlots);
-
-    for (const thing of tiles) {
-      thing.prepareMove();
-    }
-
-    for (let i = 0; i < 136; i++) {
-      const tile = tiles[i];
-      if (windTiles.indexOf(i) !== -1) {
-        tile.moveTo(handSlots.pop()!, 2);
-      } else {
-
-        tile.moveTo(wallSlots.pop()!);
-      }
     }
   }
 
@@ -120,61 +79,71 @@ export class Setup {
   }
 
   deal(seat: number, setupType: SetupType): void {
-    switch (setupType) {
-      case SetupType.HANDS:
-        this.dealHands(seat);
-        break;
-      case SetupType.WINDS:
-        this.dealWinds(seat);
-        break;
-      case SetupType.INITIAL:
-        this.dealWalls();
-        break;
-    }
-  }
+    const roll = Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6);
+    // Debug
+    // const roll = (window.ROLL && window.ROLL < 12) ? window.ROLL + 1 : 2;
+    // window.ROLL = roll;
 
-  private dealHands(seat: number): void {
+    const dealParts = DEALS[setupType as string];
+
     const tiles = this.things.filter(thing => thing.type === ThingType.TILE);
-    const slots = this.wallSlots();
-    shuffle(slots);
     for (const thing of tiles) {
       thing.prepareMove();
     }
-    for (let i = 0; i < 136; i++) {
-      tiles[i].moveTo(slots[i]);
+
+    shuffle(tiles);
+    for (const part of dealParts) {
+      this.dealPart(part, tiles, roll, seat);
     }
 
-    const slotsToDeal = this.wallSlots();
-    const dice = Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6);
-    const wallNum = (seat + dice - 1) % 4;
-    const deadWallBegin = 136 + (wallNum+1) * 17 * 2 - dice * 2;
+    if (tiles.length !== 0) {
+      throw `bad deal: ${tiles.length} remaining`;
+    }
+  }
 
-    let index = deadWallBegin - 1;
-    for (let num = 0; num < 4; num++) {
-      for (let i = 0; i < 13; i++) {
-        const slot = slotsToDeal[index % 136];
-        const thing = slot.thing!;
-        thing.prepareMove();
-        thing.moveTo(this.slots[`hand.${i}@${num}`], 2);
-        index--;
+  private dealPart(dealPart: DealPart, tiles: Array<Thing>, roll: number, seat: number): void {
+    if (dealPart.roll !== undefined && dealPart.roll !== roll) {
+      return;
+    }
+    if (dealPart.tiles !== undefined) {
+      const searched = [...dealPart.tiles];
+      shuffle(searched);
+
+      for (let i = 0; i < searched.length; i++) {
+        const idx = tiles.findIndex(tile => tile.index === searched[i]);
+        if (idx === -1) {
+          throw `not found: ${searched[i]}`;
+        }
+        const targetIdx = tiles.length - i - 1;
+        const temp = tiles[targetIdx];
+        tiles[targetIdx] = tiles[idx];
+        tiles[idx] = temp;
       }
     }
 
-    // Make a gap at the end of dead wall
-    const moveFrom = [
-      slotsToDeal[(deadWallBegin+12)%136], slotsToDeal[(deadWallBegin+13)%136]
-    ];
-    let moveTo;
-    if (Math.floor((deadWallBegin + 12) / 34) === Math.floor(deadWallBegin / 34)) {
-      moveTo = [slotsToDeal[(deadWallBegin-2)%136], slotsToDeal[(deadWallBegin-1)%136]];
-    } else {
-      const endWall = Math.floor((deadWallBegin + 12) / 34) % 4;
-      moveTo = [this.slots[`wall.0.0@${endWall}`], this.slots[`wall.1.0@${endWall}`]];
-    }
-    for (let i = 0; i < 2; i++) {
-      const thing = moveFrom[i].thing!;
-      thing.prepareMove();
-      thing.moveTo(moveTo[i]);
+    for (const [slotName, slotSeat, n] of dealPart.ranges) {
+      if (tiles.length < n) {
+        throw `tile underflow at ${slotName}`;
+      }
+
+      const idx = this.slotNames.indexOf(slotName);
+      if (idx === -1) {
+        throw `slot not found: ${slotName}`;
+      }
+      const effectiveSeat = (slotSeat + 4 - seat) % 4;
+      for (let i = idx; i < idx + n; i++) {
+        const targetSlotName = this.slotNames[i] + '@' + effectiveSeat;
+        const slot = this.slots[targetSlotName];
+        if (slot === undefined) {
+          throw `slot not found: ${targetSlotName}`;
+        }
+        if (slot.thing !== null) {
+          throw `slot occupied: ${targetSlotName}`;
+        }
+
+        const thing = tiles.pop();
+        thing.moveTo(slot, dealPart.rotationIndex);
+      }
     }
   }
 
@@ -289,7 +258,7 @@ export class Setup {
     for (let i = 0; i < 19; i++) {
       for (let j = 0; j < 2; j++) {
         this.addSlot(new Slot({
-          name: `wall.${j}.${i}`,
+          name: `wall.${i}.${j}`,
           group: `wall`,
           origin: new Vector3(
             30 + i * Size.TILE.x,
@@ -299,8 +268,8 @@ export class Setup {
           rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
           drawShadow: j === 0 && i >= 1 && i < 18,
           links: {
-            down: j === 1 ? `wall.0.${i}` : undefined,
-            up: j === 0 ? `wall.1.${i}` : undefined,
+            down: j === 1 ? `wall.${i}.0` : undefined,
+            up: j === 0 ? `wall.${i}.1` : undefined,
           }
         }));
       }
@@ -401,6 +370,7 @@ export class Setup {
       const rotated = slot.rotated(i, World.WIDTH);
       this.slots[rotated.name] = rotated;
     }
+    this.slotNames.push(slot.name);
   }
 
   private addPush(source: string, target: string): void {
