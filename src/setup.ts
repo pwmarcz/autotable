@@ -130,7 +130,7 @@ export class Setup {
       if (idx === -1) {
         throw `slot not found: ${slotName}`;
       }
-      const effectiveSeat = (slotSeat + 4 - seat) % 4;
+      const effectiveSeat = (slotSeat + seat) % 4;
       for (let i = idx; i < idx + n; i++) {
         const targetSlotName = this.slotNames[i] + '@' + effectiveSeat;
         const slot = this.slots[targetSlotName];
