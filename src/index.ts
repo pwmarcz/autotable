@@ -5,6 +5,7 @@ import { Game } from './game';
 
 const assetLoader = new AssetLoader();
 
+
 assetLoader.loadAll().then(() => {
   const game = new Game(assetLoader);
   // for debugging

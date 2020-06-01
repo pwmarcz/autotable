@@ -91,7 +91,7 @@ export class World {
         continue;
       }
 
-      const thing = this.things.get(thingIndex);
+      const thing = this.things.get(thingIndex)!;
       thing.prepareMove();
     }
     for (const [thingIndex, thingInfo] of entries) {
@@ -99,8 +99,8 @@ export class World {
         continue;
       }
 
-      const thing = this.things.get(thingIndex);
-      const slot = this.slots.get(thingInfo.slotName);
+      const thing = this.things.get(thingIndex)!;
+      const slot = this.slots.get(thingInfo.slotName)!;
       thing.moveTo(slot, thingInfo.rotationIndex);
       thing.sent = true;
 
@@ -111,7 +111,7 @@ export class World {
         thingInfo.heldRotation.z,
       );
 
-      const shiftSlot = thingInfo.shiftSlotName ? this.slots.get(thingInfo.shiftSlotName) : null;
+      const shiftSlot = thingInfo.shiftSlotName ? this.slots.get(thingInfo.shiftSlotName)! : null;
       if (thing.shiftSlot !== shiftSlot) {
         thing.lastShiftSlot = thing.shiftSlot;
         thing.lastShiftSlotTime = now;
@@ -231,7 +231,7 @@ export class World {
 
   onHover(id: any): void {
     if (!this.isHolding()) {
-      this.hovered = id === null ? null : this.things.get(id as number);
+      this.hovered = id === null ? null : this.things.get(id as number)!;
 
       if (this.hovered !== null && !this.canSelect(this.hovered, [])) {
         this.hovered = null;
@@ -240,7 +240,7 @@ export class World {
   }
 
   onSelect(ids: Array<any>): void {
-    this.selected = ids.map(id => this.things.get(id as number));
+    this.selected = ids.map(id => this.things.get(id as number)!);
     this.selected = this.selected.filter(
       thing => this.canSelect(thing, this.selected));
 

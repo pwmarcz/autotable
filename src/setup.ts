@@ -43,7 +43,7 @@ export class Setup {
     for (let num = 0; num < 4; num++) {
       for (let i = 0; i < 17; i++) {
         for (let j = 0; j < 2; j++) {
-          slots.push(this.slots.get(`wall.${i+1}.${j}@${num}`));
+          slots.push(this.slots.get(`wall.${i+1}.${j}@${num}`)!);
         }
       }
     }
@@ -62,7 +62,7 @@ export class Setup {
 
   updateTiles(tileSet: TileSet): void {
     for (let i = 0; i < 136; i++) {
-      this.things.get(i).typeIndex = this.tileIndex(i, tileSet);
+      this.things.get(i)!.typeIndex = this.tileIndex(i, tileSet);
     }
   }
 
@@ -147,7 +147,7 @@ export class Setup {
           throw `slot occupied: ${targetSlotName}`;
         }
 
-        const thing = tiles.pop();
+        const thing = tiles.pop()!;
         thing.moveTo(slot, dealPart.rotationIndex);
       }
     }
@@ -193,7 +193,7 @@ export class Setup {
     const counter = this.counters.get(type) ?? 0;
     this.counters.set(type, counter + 1);
     const thingIndex = this.start[type] + counter;
-    const slot = this.slots.get(slotName);
+    const slot = this.slots.get(slotName)!;
 
     const thing = new Thing(thingIndex, type, typeIndex, slot);
     this.things.set(thingIndex, thing);
@@ -325,7 +325,7 @@ export class Setup {
           }
         }));
         for (let k = 0; k < 4; k++) {
-          this.scoreSlots[k].push(this.slots.get(`tray.${i}.${j}@${k}`));
+          this.scoreSlots[k].push(this.slots.get(`tray.${i}.${j}@${k}`)!);
         }
       }
     }
@@ -383,7 +383,7 @@ export class Setup {
 
   private addPush(source: string, target: string): void {
     for (let i = 0; i < 4; i++) {
-      this.pushes.push([this.slots.get(`${source}@${i}`), this.slots.get(`${target}@${i}`)]);
+      this.pushes.push([this.slots.get(`${source}@${i}`)!, this.slots.get(`${target}@${i}`)!]);
     }
   }
 
