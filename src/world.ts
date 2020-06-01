@@ -22,7 +22,7 @@ export class World {
 
   private objectView: ObjectView;
 
-  slots: Record<string, Slot>;
+  slots: Map<string, Slot>;
   things: Array<Thing>;
   private pushes: Array<[Slot, Slot]>;
 
@@ -100,7 +100,7 @@ export class World {
       }
 
       const thing = this.things[thingIndex];
-      const slot = this.slots[thingInfo.slotName];
+      const slot = this.slots.get(thingInfo.slotName);
       thing.moveTo(slot, thingInfo.rotationIndex);
       thing.sent = true;
 
@@ -111,7 +111,7 @@ export class World {
         thingInfo.heldRotation.z,
       );
 
-      const shiftSlot = thingInfo.shiftSlotName ? this.slots[thingInfo.shiftSlotName] : null;
+      const shiftSlot = thingInfo.shiftSlotName ? this.slots.get(thingInfo.shiftSlotName) : null;
       if (thing.shiftSlot !== shiftSlot) {
         thing.lastShiftSlot = thing.shiftSlot;
         thing.lastShiftSlotTime = now;
@@ -331,8 +331,7 @@ export class World {
     let bestSlot = null;
 
     // Empty slots
-    for (const slotName in this.slots) {
-      const slot = this.slots[slotName];
+    for (const slot of this.slots.values()) {
       if (slot.type !== thingType) {
         continue;
       }
@@ -629,8 +628,7 @@ export class World {
     })));
 
     const places = [];
-    for (const slotName in this.slots) {
-      const slot = this.slots[slotName];
+    for (const slot of this.slots.values()) {
       if (slot.drawShadow) {
         places.push(slot.places[slot.shadowRotation]);
       }

@@ -81,12 +81,12 @@ export class Slot {
     this.links = {};
   }
 
-  setLinks(slots: Record<string, Slot>): void {
+  setLinks(slots: Map<string, Slot>): void {
     for (const key in this.linkDesc) {
       const linkName = key as keyof SlotLinks;
       const linkTarget = this.linkDesc[linkName];
       if (linkTarget !== undefined) {
-        this.links[linkName] = slots[linkTarget];
+        this.links[linkName] = slots.get(linkTarget);
       }
     }
   }

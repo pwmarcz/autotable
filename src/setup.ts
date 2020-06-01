@@ -15,7 +15,7 @@ const Rotation = {
 };
 
 export class Setup {
-  slots: Record<string, Slot> = {};
+  slots: Map<string, Slot> = new Map();
   slotNames: Array<string> = [];
   things: Array<Thing> = [];
   pushes: Array<[Slot, Slot]> = [];
@@ -23,8 +23,8 @@ export class Setup {
 
   setup(tileSet: TileSet): void {
     this.addSlots();
-    for (const slotName in this.slots) {
-      this.slots[slotName].setLinks(this.slots);
+    for (const slot of this.slots.values()) {
+      slot.setLinks(this.slots);
     }
     this.addTiles(tileSet);
     this.addSticks();
@@ -37,7 +37,7 @@ export class Setup {
     for (let num = 0; num < 4; num++) {
       for (let i = 0; i < 17; i++) {
         for (let j = 0; j < 2; j++) {
-          slots.push(this.slots[`wall.${i+1}.${j}@${num}`]);
+          slots.push(this.slots.get(`wall.${i+1}.${j}@${num}`));
         }
       }
     }
@@ -133,7 +133,7 @@ export class Setup {
       const effectiveSeat = (slotSeat + seat) % 4;
       for (let i = idx; i < idx + n; i++) {
         const targetSlotName = this.slotNames[i] + '@' + effectiveSeat;
-        const slot = this.slots[targetSlotName];
+        const slot = this.slots.get(targetSlotName);
         if (slot === undefined) {
           throw `slot not found: ${targetSlotName}`;
         }
@@ -180,12 +180,12 @@ export class Setup {
     slotName: string,
     rotationIndex?: number
   ): void {
-    if (this.slots[slotName] === undefined) {
+    if (this.slots.get(slotName) === undefined) {
       throw `Unknown slot: ${slotName}`;
     }
 
     const thingIndex = this.things.length;
-    const slot = this.slots[slotName];
+    const slot = this.slots.get(slotName);
 
     const thing = new Thing(thingIndex, type, typeIndex, slot);
     this.things.push(thing);
@@ -317,7 +317,7 @@ export class Setup {
           }
         }));
         for (let k = 0; k < 4; k++) {
-          this.scoreSlots[k].push(this.slots[`tray.${i}.${j}@${k}`]);
+          this.scoreSlots[k].push(this.slots.get(`tray.${i}.${j}@${k}`));
         }
       }
     }
@@ -368,14 +368,14 @@ export class Setup {
   private addSlot(slot: Slot): void {
     for (let i = 0; i < 4; i++) {
       const rotated = slot.rotated(i, World.WIDTH);
-      this.slots[rotated.name] = rotated;
+      this.slots.set(rotated.name, rotated);
     }
     this.slotNames.push(slot.name);
   }
 
   private addPush(source: string, target: string): void {
     for (let i = 0; i < 4; i++) {
-      this.pushes.push([this.slots[`${source}@${i}`], this.slots[`${target}@${i}`]]);
+      this.pushes.push([this.slots.get(`${source}@${i}`), this.slots.get(`${target}@${i}`)]);
     }
   }
 
