@@ -17,7 +17,13 @@ const Rotation = {
 export class Setup {
   slots: Map<string, Slot> = new Map();
   slotNames: Array<string> = [];
-  things: Array<Thing> = [];
+  things: Map<number, Thing> = new Map();
+  counters: Map<ThingType, number> = new Map();
+  start: Record<ThingType, number> = {
+    'TILE': 0,
+    'STICK': 1000,
+    'MARKER': 2000,
+  }
   pushes: Array<[Slot, Slot]> = [];
   private scoreSlots: Array<Array<Slot>> = [[], [], [], []];
 
@@ -56,7 +62,7 @@ export class Setup {
 
   updateTiles(tileSet: TileSet): void {
     for (let i = 0; i < 136; i++) {
-      this.things[i].typeIndex = this.tileIndex(i, tileSet);
+      this.things.get(i).typeIndex = this.tileIndex(i, tileSet);
     }
   }
 
@@ -86,7 +92,7 @@ export class Setup {
 
     const dealParts = DEALS[setupType as string];
 
-    const tiles = this.things.filter(thing => thing.type === ThingType.TILE);
+    const tiles = [...this.things.values()].filter(thing => thing.type === ThingType.TILE);
     for (const thing of tiles) {
       thing.prepareMove();
     }
@@ -184,11 +190,13 @@ export class Setup {
       throw `Unknown slot: ${slotName}`;
     }
 
-    const thingIndex = this.things.length;
+    const counter = this.counters.get(type) ?? 0;
+    this.counters.set(type, counter + 1);
+    const thingIndex = this.start[type] + counter;
     const slot = this.slots.get(slotName);
 
     const thing = new Thing(thingIndex, type, typeIndex, slot);
-    this.things.push(thing);
+    this.things.set(thingIndex, thing);
     if (rotationIndex !== undefined) {
       thing.rotationIndex = rotationIndex;
     }

@@ -68,13 +68,15 @@ export class ObjectView {
     this.addStatic();
   }
 
-  replaceThings(params: Array<ThingParams>): void {
+  replaceThings(params: Map<number, ThingParams>): void {
     for (const type of [ThingType.TILE, ThingType.STICK, ThingType.MARKER]) {
-      const typeParams = params.filter(p => p.type === type);
+      const typeParams = [...params.values()].filter(p => p.type === type);
+      typeParams.sort((a, b) => a.index - b.index);
+
       if (typeParams.length === 0) {
         continue;
       }
-      const startIndex = params.indexOf(typeParams[0]);
+      const startIndex = typeParams[0].index;
       const thingGroup = this.thingGroups.get(type)!;
       thingGroup.replace(startIndex, typeParams);
     }

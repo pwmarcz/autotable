@@ -23,7 +23,7 @@ export class World {
   private objectView: ObjectView;
 
   slots: Map<string, Slot>;
-  things: Array<Thing>;
+  things: Map<number, Thing>;
   private pushes: Array<[Slot, Slot]>;
 
   private hovered: Thing | null = null;
@@ -91,7 +91,7 @@ export class World {
         continue;
       }
 
-      const thing = this.things[thingIndex];
+      const thing = this.things.get(thingIndex);
       thing.prepareMove();
     }
     for (const [thingIndex, thingInfo] of entries) {
@@ -99,7 +99,7 @@ export class World {
         continue;
       }
 
-      const thing = this.things[thingIndex];
+      const thing = this.things.get(thingIndex);
       const slot = this.slots.get(thingInfo.slotName);
       thing.moveTo(slot, thingInfo.rotationIndex);
       thing.sent = true;
@@ -145,7 +145,7 @@ export class World {
 
   private sendUpdate(full?: boolean): void {
     const entries: Array<[number, ThingInfo]> = [];
-    for (const thing of this.things) {
+    for (const thing of this.things.values()) {
       if (full) {
         entries.push([thing.index, this.describeThing(thing)]);
         thing.sent = true;
@@ -188,7 +188,7 @@ export class World {
       return;
     }
 
-    for (const thing of this.things) {
+    for (const thing of this.things.values()) {
       thing.release();
     }
     this.selected.splice(0);
@@ -221,7 +221,7 @@ export class World {
       return false;
     }
 
-    for (const thing of this.things) {
+    for (const thing of this.things.values()) {
       if (thing.claimedBy === this.seat) {
         return true;
       }
@@ -231,7 +231,7 @@ export class World {
 
   onHover(id: any): void {
     if (!this.isHolding()) {
-      this.hovered = id === null ? null : this.things[id as number];
+      this.hovered = id === null ? null : this.things.get(id as number);
 
       if (this.hovered !== null && !this.canSelect(this.hovered, [])) {
         this.hovered = null;
@@ -240,7 +240,7 @@ export class World {
   }
 
   onSelect(ids: Array<any>): void {
-    this.selected = ids.map(id => this.things[id as number]);
+    this.selected = ids.map(id => this.things.get(id as number));
     this.selected = this.selected.filter(
       thing => this.canSelect(thing, this.selected));
 
@@ -273,7 +273,7 @@ export class World {
 
     const held: Array<Thing> = [];
 
-    for (const thing of this.things) {
+    for (const thing of this.things.values()) {
       if (thing.claimedBy === this.seat) {
         if (thing.shiftSlot !== null) {
           thing.release();
@@ -282,7 +282,7 @@ export class World {
         }
       }
     }
-    this.things.filter(thing => thing.claimedBy === this.seat);
+    // this.things.filter(thing => thing.claimedBy === this.seat);
     held.sort((a, b) => compareZYX(a.slot.origin, b.slot.origin));
 
     for (let i = 0; i < held.length; i++) {
@@ -299,7 +299,7 @@ export class World {
       this.movement.move(thing, targetSlot);
     }
 
-    const relevantThings = this.things.filter(thing =>
+    const relevantThings = [...this.things.values()].filter(thing =>
       thing.type === held[0].type
     );
     if (!this.movement.findShift(relevantThings, [
@@ -505,7 +505,7 @@ export class World {
   }
 
   private finishDrop(): void {
-    for (const thing of this.things) {
+    for (const thing of this.things.values()) {
       if (thing.claimedBy === this.seat) {
         thing.release();
       }
@@ -540,7 +540,7 @@ export class World {
     const canDrop = this.canDrop();
     const now = new Date().getTime();
 
-    for (const thing of this.things) {
+    for (const thing of this.things.values()) {
       let place = thing.place();
 
       if (thing.claimedBy !== null && thing.shiftSlot === null) {
@@ -611,7 +611,7 @@ export class World {
   toSelect(): Array<Select> {
     const result = [];
     if (this.seat !== null && !this.isHolding()) {
-      for (const thing of this.things) {
+      for (const thing of this.things.values()) {
         if (thing.claimedBy === null) {
           const place = thing.place();
           result.push({...place, id: thing.index});
@@ -622,10 +622,7 @@ export class World {
   }
 
   setupView(): void {
-    this.objectView.replaceThings(this.things.map(thing => ({
-      type: thing.type,
-      typeIndex: thing.typeIndex,
-    })));
+    this.objectView.replaceThings(this.things);
 
     const places = [];
     for (const slot of this.slots.values()) {

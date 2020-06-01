@@ -9,6 +9,7 @@ const STICK_DV = 1 / 6;
 export interface ThingParams {
   type: ThingType;
   typeIndex: number;
+  index: number;
 }
 
 export abstract class ThingGroup {
