@@ -1,18 +1,8 @@
-import { Slot, Thing, ThingType, Size } from "./places";
+import { Slot, Thing, ThingType } from "./places";
 import { shuffle } from "./utils";
-import { Vector3, Euler, Vector2 } from "three";
-import { World } from "./world";
 import { TileSet, SetupType } from "./types";
-import { DEALS, DealPart } from "./setup-data";
+import { DEALS, DealPart, makeSlots } from "./setup-data";
 
-
-const Rotation = {
-  FACE_UP: new Euler(0, 0, 0),
-  FACE_UP_SIDEWAYS: new Euler(0, 0, Math.PI / 2),
-  STANDING: new Euler(Math.PI / 2, 0, 0),
-  FACE_DOWN: new Euler(Math.PI, 0, 0),
-  FACE_DOWN_REVERSE: new Euler(Math.PI, 0, Math.PI),
-};
 
 export class Setup {
   slots: Map<string, Slot> = new Map();
@@ -25,7 +15,6 @@ export class Setup {
     'MARKER': 2000,
   }
   pushes: Array<[Slot, Slot]> = [];
-  private scoreSlots: Array<Array<Slot>> = [[], [], [], []];
 
   setup(tileSet: TileSet): void {
     this.addSlots();
@@ -203,188 +192,14 @@ export class Setup {
   }
 
   private addSlots(): void {
-    for (let i = 0; i < 14; i++) {
-      this.addSlot(new Slot({
-        name: `hand.${i}`,
-        group: `hand`,
-        origin: new Vector3(
-          46 + i*Size.TILE.x,
-          0,
-          0,
-        ),
-        rotations: [Rotation.STANDING, Rotation.FACE_UP, Rotation.FACE_DOWN],
-        canFlipMultiple: true,
-        links: {
-          shiftLeft: i > 0 ? `hand.${i-1}` : undefined,
-          shiftRight: i < 13 ? `hand.${i+1}` : undefined,
-        },
-        drawShadow: true,
-        shadowRotation: 1,
-        rotateHeld: true,
-      }));
-    }
-
-    this.addSlot(new Slot({
-      name: `hand.extra`,
-      group: `hand`,
-      origin: new Vector3(
-        46 + 14.5*Size.TILE.x,
-        0,
-        0,
-      ),
-      rotations: [Rotation.STANDING, Rotation.FACE_UP, Rotation.FACE_DOWN],
-      canFlipMultiple: true,
-      rotateHeld: true,
-    }));
-
-    for (let i = 0; i < 4; i++) {
-      for (let j = 0; j < 4; j++) {
-        this.addSlot(new Slot({
-          name: `meld.${i}.${j}`,
-          group: `meld`,
-          origin: new Vector3(
-            174 - (j)*Size.TILE.x,
-            i * Size.TILE.y,
-            0,
-          ),
-          direction: new Vector2(-1, 1),
-          rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
-          links: {
-            // Hack: This requires the second slot, not first, in case someone
-            // put a pon/chi starting from the second slot.
-            requires: i > 0 ? `meld.${i-1}.1` : undefined,
-            shiftLeft: j > 0 ? `meld.${i}.${j-1}` : undefined,
-            shiftRight: j < 3 ? `meld.${i}.${j+1}` : undefined,
-          }
-        }));
-        if (j > 0) {
-          this.addPush(`meld.${i}.${j-1}`, `meld.${i}.${j}`);
-        }
+    for (const slot of makeSlots()) {
+      this.slots.set(slot.name, slot);
+      if (slot.name.endsWith('@0')) {
+        this.slotNames.push(slot.name.replace('@0', ''));
       }
     }
-
-    for (let i = 0; i < 19; i++) {
-      for (let j = 0; j < 2; j++) {
-        this.addSlot(new Slot({
-          name: `wall.${i}.${j}`,
-          group: `wall`,
-          origin: new Vector3(
-            30 + i * Size.TILE.x,
-            20,
-            j * Size.TILE.z,
-          ),
-          rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
-          drawShadow: j === 0 && i >= 1 && i < 18,
-          links: {
-            down: j === 1 ? `wall.${i}.0` : undefined,
-            up: j === 0 ? `wall.${i}.1` : undefined,
-          }
-        }));
-      }
-    }
-
-    for (let i = 0; i < 3; i++) {
-      const n = i < 2 ? 6 : 10;
-      for (let j = 0; j < n; j++) {
-        this.addSlot(new Slot({
-          name: `discard.${i}.${j}`,
-          group: `discard`,
-          origin: new Vector3(
-            69 + j * Size.TILE.x,
-            60 - i * Size.TILE.y,
-            0,
-          ),
-          direction: new Vector2(1, 1),
-          rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
-          drawShadow: j < 6,
-          links: {
-            requires: j < 6 ? undefined : `discard.${i}.${j-1}`,
-      },
-        }));
-        if (j > 0) {
-          this.addPush(`discard.${i}.${j-1}`, `discard.${i}.${j}`);
-        }
-      }
-    }
-
-    for (let i = 0; i < 6; i++) {
-      for (let j = 0; j < 10; j++) {
-        this.addSlot(new Slot({
-          name: `tray.${i}.${j}`,
-          group: `tray`,
-          type: ThingType.STICK,
-          origin: new Vector3(
-            15 + 24 * i,
-            -25 - j * 3,
-            0,
-          ),
-          rotations: [Rotation.FACE_UP],
-          links: {
-            shiftLeft: j > 0 ? `tray.${i}.${j-1}` : undefined,
-            shiftRight: j < 9 ? `tray.${i}.${j+1}` : undefined,
-          }
-        }));
-        for (let k = 0; k < 4; k++) {
-          this.scoreSlots[k].push(this.slots.get(`tray.${i}.${j}@${k}`)!);
-        }
-      }
-    }
-
-    for (let i = 0; i < 1; i++) {
-      for (let j = 0; j < 8; j++) {
-        this.addSlot(new Slot({
-          name: `payment.${i}.${j }`,
-          group: `payment.${i}`,
-          type: ThingType.STICK,
-          origin: new Vector3(
-            42 + (1-i) * j * 3,
-            42 + i * j * 3,
-            0
-          ),
-          rotations: [i === 0 ? Rotation.FACE_UP_SIDEWAYS : Rotation.FACE_UP],
-          links: {
-            shiftLeft: i > 0 ? `payment.${i}.${j-1}` : undefined,
-            shiftRight: i < 0 ? `payment.${i}.${j+1}` : undefined,
-          },
-        }));
-      }
-    }
-
-    this.addSlot(new Slot({
-      name: 'riichi',
-      group: 'riichi',
-      type: ThingType.STICK,
-      origin: new Vector3(
-        (World.WIDTH - Size.STICK.x) / 2,
-        71.5,
-        1.5,
-      ),
-      rotations: [Rotation.FACE_UP],
-    }));
-
-    this.addSlot(new Slot({
-      name: 'marker',
-      group: 'marker',
-      type: ThingType.MARKER,
-      origin: new Vector3(
-        166, -8, 0,
-      ),
-      rotations: [Rotation.FACE_DOWN_REVERSE, Rotation.FACE_UP],
-    }));
-  }
-
-  private addSlot(slot: Slot): void {
-    for (let i = 0; i < 4; i++) {
-      const rotated = slot.rotated(i, World.WIDTH);
-      this.slots.set(rotated.name, rotated);
-    }
-    this.slotNames.push(slot.name);
-  }
-
-  private addPush(source: string, target: string): void {
-    for (let i = 0; i < 4; i++) {
-      this.pushes.push([this.slots.get(`${source}@${i}`)!, this.slots.get(`${target}@${i}`)!]);
-    }
+    console.log(this.slots);
+    console.log(this.slotNames);
   }
 
   getScores(): Array<number> {
@@ -392,15 +207,11 @@ export class Setup {
     scores.push((25000 + 20000) * 4); // remaining
     const stickScores = [100, 500, 1000, 5000, 10000, 10000];
 
-    for (let i = 0; i < 4; i++) {
-      for (const slot of this.scoreSlots[i]) {
-        if (slot.thing !== null) {
-          if (slot.thing.type === ThingType.STICK) {
-            const score = stickScores[slot.thing.typeIndex];
-            scores[i] += score;
-            scores[4] -= score;
-          }
-        }
+    for (const slot of this.slots.values()) {
+      if (slot.group === 'tray' && slot.thing !== null) {
+        const score = stickScores[slot.thing.typeIndex];
+        scores[slot.seat!] += score;
+        scores[4] -= score;
       }
     }
     return scores;

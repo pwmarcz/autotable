@@ -91,39 +91,8 @@ export class Slot {
     }
   }
 
-  rotated(seat: number, worldWidth: number): Slot {
-    const suffix = '@' + seat;
-    const rotation = seat * Math.PI / 2;
-
-    const quat = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), rotation);
-
+  copy(suffix: string): Slot {
     const name = this.name + suffix;
-
-    const pos = new Vector3(
-      this.origin.x - worldWidth / 2,
-      this.origin.y - worldWidth / 2,
-      this.origin.z,
-    );
-    pos.applyQuaternion(quat);
-    const origin = new Vector3(
-      pos.x + worldWidth / 2,
-      pos.y + worldWidth / 2,
-      pos.z,
-    );
-
-    round3(pos, 16);
-    round3(origin, 16);
-
-    const dir = new Vector3(this.direction.x, this.direction.y, 0);
-    dir.applyQuaternion(quat);
-    const direction = new Vector2(dir.x, dir.y);
-
-    const rotations = this.rotations.map(rot => {
-      const q = new Quaternion().setFromEuler(rot);
-      q.premultiply(quat);
-      return new Euler().setFromQuaternion(q);
-    });
-
     const linkDesc: SlotLinkDesc = {};
     for (const key in this.linkDesc) {
       const linkName = key as keyof SlotLinks;
@@ -133,14 +102,54 @@ export class Slot {
       }
     }
 
-    const slot = new Slot({name, group: this.group, type: this.type, origin, direction, rotations});
-    slot.seat = seat;
+    const slot = new Slot({
+      name,
+      group: this.group,
+      type: this.type,
+      origin: this.origin,
+      direction: this.direction,
+      rotations: this.rotations
+    });
     slot.linkDesc = linkDesc;
     slot.canFlipMultiple = this.canFlipMultiple;
     slot.drawShadow = this.drawShadow;
     slot.shadowRotation = this.shadowRotation;
     slot.rotateHeld = this.rotateHeld;
     return slot;
+  }
+
+  rotate(seat: number, worldWidth: number): void {
+    const rotation = seat * Math.PI / 2;
+
+    const quat = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), rotation);
+
+    const pos = new Vector3(
+      this.origin.x - worldWidth / 2,
+      this.origin.y - worldWidth / 2,
+      this.origin.z,
+    );
+    pos.applyQuaternion(quat);
+    this.origin = new Vector3(
+      pos.x + worldWidth / 2,
+      pos.y + worldWidth / 2,
+      pos.z,
+    );
+
+    round3(this.origin, 16);
+
+    const dir = new Vector3(this.direction.x, this.direction.y, 0);
+    dir.applyQuaternion(quat);
+    this.direction = new Vector2(dir.x, dir.y);
+
+    this.rotations = this.rotations.map(rot => {
+      const q = new Quaternion().setFromEuler(rot);
+      q.premultiply(quat);
+      return new Euler().setFromQuaternion(q);
+    });
+
+    this.places = this.rotations.map(this.makePlace.bind(this));
+
+    this.seat = seat;
   }
 
   makePlace(rotation: Euler): Place {
