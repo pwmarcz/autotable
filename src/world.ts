@@ -1,6 +1,5 @@
 import { Vector3 } from "three";
 
-import { Place, Slot, Thing, Size, ThingType } from "./places";
 import { Movement } from "./movement";
 import { Client } from "./client";
 import { mostCommon, rectangleOverlap, filterMostCommon, compareZYX } from "./utils";
@@ -8,7 +7,9 @@ import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
 import { SoundPlayer } from "./sound-player";
-import { TileSet, ThingInfo, SoundType, SetupType, Fives } from "./types";
+import { TileSet, ThingInfo, SoundType, SetupType, Fives, Place, ThingType, Size } from "./types";
+import { Slot } from "./slot";
+import { Thing } from "./thing";
 
 
 interface Select extends Place {

@@ -1,6 +1,6 @@
 /* eslint no-console: 0 */
 
-import { EventEmitter, Listener } from 'events';
+import { EventEmitter } from 'events';
 
 import { Entry } from '../server/protocol';
 
@@ -60,7 +60,7 @@ export class Collection<K extends string | number, V> {
   private pending: Map<K, V | null> = new Map();
   private events: EventEmitter = new EventEmitter();
   private options: CollectionOptions;
-  private intervalId: number | null = null;
+  private intervalId: NodeJS.Timeout | null = null;
   private lastUpdate: number = 0;
 
   constructor(
@@ -111,8 +111,8 @@ export class Collection<K extends string | number, V> {
   }
 
   on(what: 'update', handler: (localEntries: Array<[K, V | null]>, full: boolean) => void): void;
-  on(what: string, handler: Function): void {
-    this.events.on(what, handler as Listener);
+  on(what: string, handler: (...args: any[]) => void): void {
+    this.events.on(what, handler);
   }
 
   private onUpdate(entries: Array<Entry>, full: boolean): void {

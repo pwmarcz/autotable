@@ -1,3 +1,23 @@
+import { Vector3, Euler } from "three";
+
+export enum ThingType {
+  TILE = 'TILE',
+  STICK = 'STICK',
+  MARKER = 'MARKER',
+}
+
+export const Size = {
+  TILE: new Vector3(6, 9, 4),
+  STICK: new Vector3(20, 2, 1),
+  MARKER: new Vector3(12, 6, 1),
+};
+
+export interface Place {
+  position: Vector3;
+  rotation: Euler;
+  size: Vector3;
+}
+
 export interface ThingInfo {
   slotName: string;
   rotationIndex: number;
