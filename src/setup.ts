@@ -44,11 +44,14 @@ export class Setup {
     }
   }
 
-  updateTiles(tileSet: TileSet): void {
+  replace(tileSet: TileSet): void {
+    const map = new Map<number, string>();
     for (const thing of [...this.things.values()]) {
       thing.prepareMove();
       if (thing.type === ThingType.TILE) {
         this.things.delete(thing.index);
+      } else {
+        map.set(thing.index, thing.slot.name);
       }
     }
     this.counters.set(ThingType.TILE, 0);
@@ -56,7 +59,15 @@ export class Setup {
     this.addTiles(tileSet);
     for (const thing of this.things.values()) {
       if (thing.type !== ThingType.TILE) {
-        thing.moveTo(thing.slot, thing.rotationIndex);
+        const slotName = map.get(thing.index);
+        if (slotName === undefined) {
+          throw `couldn't recover slot name for thing ${thing.index}`;
+        }
+        const slot = this.slots.get(slotName);
+        if (slot === undefined) {
+          throw `trying to move thing to slot ${slotName}, but it doesn't exist`;
+        }
+        thing.moveTo(slot, thing.rotationIndex);
       }
     }
   }

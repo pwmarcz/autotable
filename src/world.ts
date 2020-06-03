@@ -140,26 +140,36 @@ export class World {
 
   updateTileSet(tileSet: TileSet): void {
     this.tileSet = tileSet;
-    this.setup.updateTiles(tileSet);
+    this.setup.replace(tileSet);
     this.setupView();
   }
 
   private sendUpdate(full?: boolean): void {
-    const entries: Array<[number, ThingInfo]> = [];
-    for (const thing of this.things.values()) {
-      if (full) {
+    const entries: Array<[number, ThingInfo | null]> = [];
+    if (full) {
+      for (const thing of this.things.values()) {
         entries.push([thing.index, this.describeThing(thing)]);
         thing.sent = true;
-      } else if (!thing.sent) {
-        const desc = this.describeThing(thing);
-        if (JSON.stringify(desc) !== JSON.stringify(this.client.things.get(thing.index))) {
-          entries.push([thing.index, desc]);
-        }
-        thing.sent = true;
       }
-    }
-    if (entries.length > 0) {
+      for (const [index,] of this.client.things.entries()) {
+        if (!this.things.has(index)) {
+          entries.push([index, null]);
+        }
+      }
       this.client.things.update(entries);
+    } else {
+      for (const thing of this.things.values()) {
+        if (!thing.sent) {
+          const desc = this.describeThing(thing);
+          if (JSON.stringify(desc) !== JSON.stringify(this.client.things.get(thing.index))) {
+            entries.push([thing.index, desc]);
+          }
+          thing.sent = true;
+        }
+      }
+      if (entries.length > 0) {
+        this.client.things.update(entries);
+      }
     }
   }
 

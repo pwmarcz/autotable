@@ -26,7 +26,7 @@ export class Game {
   private collections: Map<string, Map<string | number, any>> = new Map();
 
   constructor(gameId: string) {
-    console.log(`new game: ${gameId}`)
+    console.log(`new game: ${gameId}`);
     this.gameId = gameId;
     this.expiryTime = new Date().getTime() + EXPIRY_TIME;
   }
@@ -108,7 +108,7 @@ export class Game {
         continue;
       }
 
-      const filtered = entries.filter(e => e[0] === kind && e[2] !== null);
+      const filtered = entries.filter(e => e[0] === kind);
       const occupied = new Set<any>();
       for (const item of collection.values()) {
         if (item === null) {
@@ -132,6 +132,9 @@ export class Game {
       }
 
       for (const [, , item] of filtered) {
+        if (item === null) {
+          continue;
+        }
         const value = item[field];
         if (value !== null && value !== undefined) {
           if (occupied.has(value)) {

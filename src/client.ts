@@ -9,9 +9,9 @@ import { ThingInfo, MatchInfo, MouseInfo, SoundInfo, SeatInfo } from './types';
 
 
 export class Client extends BaseClient {
+  match: Collection<number, MatchInfo>;
   seats: Collection<string, SeatInfo>;
   things: Collection<number, ThingInfo>;
-  match: Collection<number, MatchInfo>;
   nicks: Collection<string, string>;
   mouse: Collection<string, MouseInfo>;
   sound: Collection<number, SoundInfo>;
@@ -21,9 +21,12 @@ export class Client extends BaseClient {
 
   constructor() {
     super();
+
+    // Make sure match is first, as it triggers reorganization of slots and things.
+    this.match = new Collection('match', this, { sendOnConnect: true }),
+
     this.seats = new Collection('seats', this, { unique: 'seat', perPlayer: true });
     this.things = new Collection('things', this, { unique: 'slotName', sendOnConnect: true });
-    this.match = new Collection('match', this, { sendOnConnect: true }),
     this.nicks = new Collection('nicks', this, { perPlayer: true });
     this.mouse = new Collection('mouse', this, { rateLimit: 100, perPlayer: true });
     this.sound = new Collection('sound', this, { ephemeral: true });
