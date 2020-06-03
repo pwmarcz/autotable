@@ -141,7 +141,7 @@ const START: Record<string, Slot> = {
     name: 'wall.open',
     group: 'wall.open',
     origin: new Vector3(30, 14, 0),
-    rotations: [Rotation.FACE_DOWN, Rotation.STANDING],
+    rotations: [Rotation.STANDING, Rotation.FACE_DOWN],
     canFlipMultiple: true,
   }),
 

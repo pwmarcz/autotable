@@ -96,11 +96,16 @@ export const DEALS: Record<GameType, Record<DealType, Array<DealPart>>> = {
         ranges: [
           ['wall.1.0', 1, 34],
           ['wall.1.0', 3, 34],
+        ],
+      },
+      {
+        ranges: [
           ['wall.open.0.1', 0, 17],
           ['wall.open.1.1', 0, 17],
           ['wall.open.0.1', 2, 17],
           ['wall.open.1.1', 2, 17],
-        ]
+        ],
+        rotationIndex: 1,
       },
     ],
     WINDS: [
@@ -108,11 +113,16 @@ export const DEALS: Record<GameType, Record<DealType, Array<DealPart>>> = {
         ranges: [
           ['wall.1.0', 1, 34],
           ['wall.1.0', 3, 34],
+        ],
+      },
+      {
+        ranges: [
           ['wall.open.0.1', 0, 17],
           ['wall.open.1.1', 0, 17],
           ['wall.open.0.1', 2, 17],
           ['wall.open.1.1', 2, 17],
-        ]
+        ],
+        rotationIndex: 1,
       },
     ],
     HANDS: [
@@ -120,11 +130,16 @@ export const DEALS: Record<GameType, Record<DealType, Array<DealPart>>> = {
         ranges: [
           ['wall.1.0', 1, 34],
           ['wall.1.0', 3, 34],
+        ],
+      },
+      {
+        ranges: [
           ['wall.open.0.1', 0, 17],
           ['wall.open.1.1', 0, 17],
           ['wall.open.0.1', 2, 17],
           ['wall.open.1.1', 2, 17],
-        ]
+        ],
+        rotationIndex: 1,
       },
     ],
   },
