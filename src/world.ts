@@ -7,7 +7,7 @@ import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
 import { SoundPlayer } from "./sound-player";
-import { TileSet, ThingInfo, SoundType, SetupType, Fives, Place, ThingType, Size } from "./types";
+import { TileSet, ThingInfo, SoundType, Fives, Place, ThingType, Size, DealType } from "./types";
 import { Slot } from "./slot";
 import { Thing } from "./thing";
 
@@ -184,7 +184,7 @@ export class World {
     };
   }
 
-  deal(setupType: SetupType, fives: Fives): void {
+  deal(dealType: DealType, fives: Fives): void {
     if (this.seat === null) {
       return;
     }
@@ -193,7 +193,7 @@ export class World {
       thing.release();
     }
     this.selected.splice(0);
-    this.setup.deal(this.seat, setupType);
+    this.setup.deal(this.seat, dealType);
     this.checkPushes();
 
     const back = 1 - this.tileSet.back;
@@ -203,7 +203,7 @@ export class World {
     let honba;
     if (!match || match.dealer !== this.seat) {
       honba = 0;
-    } else if (setupType === SetupType.HANDS) {
+    } else if (dealType === DealType.HANDS) {
       honba = (match.honba + 1) % 8;
     } else {
       honba = match.honba;

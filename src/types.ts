@@ -38,7 +38,7 @@ export interface Game {
   secret: string;
 }
 
-export enum SetupType {
+export enum DealType {
   INITIAL = 'INITIAL',
   WINDS = 'WINDS',
   HANDS = 'HANDS',

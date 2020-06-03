@@ -1,5 +1,5 @@
 import { shuffle } from "./utils";
-import { TileSet, SetupType, ThingType } from "./types";
+import { TileSet, DealType, ThingType } from "./types";
 import { DEALS, DealPart } from "./setup-deal";
 import { makeSlots } from "./setup-slots";
 import { Slot } from "./slot";
@@ -71,13 +71,13 @@ export class Setup {
     return tileIndex;
   }
 
-  deal(seat: number, setupType: SetupType): void {
+  deal(seat: number, dealType: DealType): void {
     const roll = Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6);
     // Debug
     // const roll = (window.ROLL && window.ROLL < 12) ? window.ROLL + 1 : 2;
     // window.ROLL = roll;
 
-    const dealParts = DEALS[setupType as string];
+    const dealParts = DEALS[dealType as string];
 
     const tiles = [...this.things.values()].filter(thing => thing.type === ThingType.TILE);
     for (const thing of tiles) {
