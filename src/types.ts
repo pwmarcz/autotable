@@ -46,18 +46,30 @@ export enum DealType {
 
 export type Fives = '000' | '111' | '121';
 
+export enum GameType {
+  FOUR_PLAYER = 'FOUR_PLAYER',
+  BAMBOO = 'BAMBOO',
+}
+
 export interface TileSet {
+  gameType: GameType;
   back: number; // 0 or 1
   fives: Fives;
 }
 
 export namespace TileSet {
   export function initial(): TileSet {
-    return { back: 0, fives: '111' };
+    return { gameType: GameType.FOUR_PLAYER, back: 0, fives: '111' };
   }
 
   export function equals(a: TileSet, b: TileSet): boolean {
-    return a.back === b.back && a.fives === b.fives;
+    return a.gameType === b.gameType && a.back === b.back && a.fives === b.fives;
+  }
+
+  export function describe(ts: TileSet): string {
+    const game = {'FOUR_PLAYER': '4p', 'BAMBOO': 'B'}[ts.gameType];
+    const fives = {'000': 'no red', '111': '1-1-1', '121': '1-2-1'}[ts.fives];
+    return `${game}, ${fives}`;
   }
 }
 

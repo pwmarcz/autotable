@@ -56,19 +56,23 @@
             </div>
 
             <div class="mt-2 d-flex">
-                <button disabled class="btn btn-sm btn-outline-secondary text-white w-100 mr-2 " id="setup-desc">
-                    1-1-1
+                <button disabled class="btn btn-sm btn-outline-secondary text-white w-100 mr-2" id="setup-desc">
                 </button>
                 <button class="btn btn-dark btn-sm dropdown-toggle collapsed" id="toggle-setup"
                     data-toggle="collapse" data-target="#setup-group">Setup</button>
             </div>
 
             <div id="setup-group" class="collapse" data-toggle="true">
-                <select class="dark-select form-control form-control-sm mt-2" id="setup">
+                <select class="dark-select form-control form-control-sm mt-2" id="deal-type">
                     <option disabled value="">Deal:</option>
                     <option value="INITIAL">Only walls</option>
                     <option value="WINDS">Wind tiles (for seats)</option>
                     <option value="HANDS" selected>Hands</option>
+                </select>
+                <select class="dark-select form-control form-control-sm mt-2" id="game-type">
+                    <option disabled value="">Game type:</option>
+                    <option value="FOUR_PLAYER" selected>4-player</option>
+                    <option value="BAMBOO">2-player Bamboo</option>
                 </select>
                 <select class="dark-select form-control form-control-sm mt-2" id="fives">
                     <option disabled value="">Red fives:</option>

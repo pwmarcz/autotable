@@ -7,7 +7,7 @@ import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
 import { SoundPlayer } from "./sound-player";
-import { TileSet, ThingInfo, SoundType, Fives, Place, ThingType, Size, DealType } from "./types";
+import { TileSet, ThingInfo, SoundType, Fives, Place, ThingType, Size, DealType, GameType } from "./types";
 import { Slot } from "./slot";
 import { Thing } from "./thing";
 
@@ -141,7 +141,7 @@ export class World {
   updateTileSet(tileSet: TileSet): void {
     this.tileSet = tileSet;
     this.setup.updateTiles(tileSet);
-    this.objectView.replaceThings(this.things);
+    this.setupView();
   }
 
   private sendUpdate(full?: boolean): void {
@@ -184,7 +184,7 @@ export class World {
     };
   }
 
-  deal(dealType: DealType, fives: Fives): void {
+  deal(dealType: DealType, gameType: GameType, fives: Fives): void {
     if (this.seat === null) {
       return;
     }
@@ -193,11 +193,10 @@ export class World {
       thing.release();
     }
     this.selected.splice(0);
-    this.setup.deal(this.seat, dealType);
     this.checkPushes();
 
     const back = 1 - this.tileSet.back;
-    const tileSet = { ...this.tileSet, back, fives };
+    const tileSet = { ...this.tileSet, back, gameType, fives };
 
     let match = this.client.match.get(0);
     let honba;
@@ -208,12 +207,15 @@ export class World {
     } else {
       honba = match.honba;
     }
-    this.updateTileSet(tileSet);
+
     match = {dealer: this.seat, honba, tileSet};
 
+    this.updateTileSet(tileSet);
+    this.setup.deal(this.seat, gameType, dealType);
+
     this.client.transaction(() => {
-      this.sendUpdate(true);
       this.client.match.set(0, match!);
+      this.sendUpdate(true);
     });
   }
 
@@ -631,6 +633,6 @@ export class World {
         places.push(slot.places[slot.shadowRotation]);
       }
     }
-    this.objectView.addShadows(places);
+    this.objectView.replaceShadows(places);
   }
 }

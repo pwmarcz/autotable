@@ -1,5 +1,5 @@
 import { shuffle } from "./utils";
-import { TileSet, DealType, ThingType } from "./types";
+import { TileSet, DealType, ThingType, GameType } from "./types";
 import { DEALS, DealPart } from "./setup-deal";
 import { makeSlots } from "./setup-slots";
 import { Slot } from "./slot";
@@ -19,41 +19,49 @@ export class Setup {
   pushes: Array<[Slot, Slot]> = [];
 
   setup(tileSet: TileSet): void {
-    this.addSlots();
+    this.addSlots(GameType.FOUR_PLAYER);
     this.addTiles(tileSet);
     this.addSticks();
     this.addMarker();
+    this.deal(0, GameType.FOUR_PLAYER, DealType.INITIAL);
   }
 
   private wallSlots(): Array<Slot> {
-    const slots = [];
-
-    for (let num = 0; num < 4; num++) {
-      for (let i = 0; i < 17; i++) {
-        for (let j = 0; j < 2; j++) {
-          slots.push(this.slots.get(`wall.${i+1}.${j}@${num}`)!);
-        }
-      }
-    }
-    return slots;
+    return [...this.slots.values()].filter(
+      slot =>
+        slot.group === 'wall');
   }
 
   private addTiles(tileSet: TileSet): void {
     const wallSlots = this.wallSlots().map(slot => slot.name);
     shuffle(wallSlots);
+    let j = 0;
     for (let i = 0; i < 136; i++) {
       const tileIndex = this.tileIndex(i, tileSet);
-      this.addThing(ThingType.TILE, tileIndex, wallSlots[i]);
+      if (tileIndex !== null) {
+        this.addThing(ThingType.TILE, tileIndex, wallSlots[j++]);
+      }
     }
   }
 
   updateTiles(tileSet: TileSet): void {
-    for (let i = 0; i < 136; i++) {
-      this.things.get(i)!.typeIndex = this.tileIndex(i, tileSet);
+    for (const thing of [...this.things.values()]) {
+      thing.prepareMove();
+      if (thing.type === ThingType.TILE) {
+        this.things.delete(thing.index);
+      }
+    }
+    this.counters.set(ThingType.TILE, 0);
+    this.addSlots(tileSet.gameType);
+    this.addTiles(tileSet);
+    for (const thing of this.things.values()) {
+      if (thing.type !== ThingType.TILE) {
+        thing.moveTo(thing.slot, thing.rotationIndex);
+      }
     }
   }
 
-  private tileIndex(i: number, tileSet: TileSet): number {
+  private tileIndex(i: number, tileSet: TileSet): number | null {
     let tileIndex = Math.floor(i / 4);
 
     if (tileSet.fives !== '000') {
@@ -67,17 +75,27 @@ export class Setup {
       }
     }
 
+    if (tileSet.gameType === GameType.BAMBOO) {
+      if (!(18 <= tileIndex && tileIndex < 27) && tileIndex !== 36) {
+        return null;
+      }
+    }
+
     tileIndex += 37 * tileSet.back;
     return tileIndex;
   }
 
-  deal(seat: number, dealType: DealType): void {
+  deal(seat: number, gameType: GameType, dealType: DealType): void {
     const roll = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1);
     // Debug
     // const roll = (window.ROLL && window.ROLL < 12) ? window.ROLL + 1 : 2;
     // window.ROLL = roll;
 
-    const dealParts = DEALS[dealType as string];
+    if (gameType === GameType.BAMBOO && (seat === 1 || seat === 3)) {
+      seat = 0;
+    }
+
+    const dealParts = DEALS[gameType][dealType];
 
     const tiles = [...this.things.values()].filter(thing => thing.type === ThingType.TILE);
     for (const thing of tiles) {
@@ -103,7 +121,7 @@ export class Setup {
       shuffle(searched);
 
       for (let i = 0; i < searched.length; i++) {
-        const idx = tiles.findIndex(tile => tile.index === searched[i]);
+        const idx = tiles.findIndex(tile => tile.typeIndex === searched[i]);
         if (idx === -1) {
           throw `not found: ${searched[i]}`;
         }
@@ -123,7 +141,7 @@ export class Setup {
       if (idx === -1) {
         throw `slot not found: ${slotName}`;
       }
-      const effectiveSeat = (slotSeat + seat) % 4;
+      const effectiveSeat = dealPart.absolute ? slotSeat : (slotSeat + seat) % 4;
       for (let i = idx; i < idx + n; i++) {
         const targetSlotName = this.slotNames[i] + '@' + effectiveSeat;
         const slot = this.slots.get(targetSlotName);
@@ -189,17 +207,20 @@ export class Setup {
     }
   }
 
-  private addSlots(): void {
+  private addSlots(gameType: GameType): void {
     this.slots.clear();
     this.slotNames.splice(0);
     this.pushes.splice(0);
 
-    for (const slot of makeSlots()) {
+    const slotNames: Set<string> = new Set();
+    for (const slot of makeSlots(gameType)) {
       this.slots.set(slot.name, slot);
-      if (slot.name.endsWith('@0')) {
-        this.slotNames.push(slot.name.replace('@0', ''));
+      const shortName = slot.name.replace(/@.*/, '');
+      if (!slotNames.has(shortName)) {
+        slotNames.add(shortName);
       }
     }
+    this.slotNames.push(...slotNames.values());
     Slot.setLinks(this.slots);
 
     this.pushes.push(...Slot.computePushes([...this.slots.values()]));

@@ -82,7 +82,7 @@ export class ObjectView {
     }
   }
 
-  addShadows(places: Array<Place>): void {
+  replaceShadows(places: Array<Place>): void {
     const dummy = new Object3D();
 
     this.shadowObject.count = 0;

@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import { Client } from "./client";
 import { World } from "./world";
-import { SetupType, Fives } from './types';
+import { DealType, Fives, GameType, TileSet } from './types';
 
 export class GameUi {
   private client: Client;
@@ -14,7 +14,8 @@ export class GameUi {
     takeSeat: Array<HTMLButtonElement>;
     leaveSeat: HTMLButtonElement;
     toggleSetup: HTMLButtonElement;
-    setupType: HTMLSelectElement;
+    dealType: HTMLSelectElement;
+    gameType: HTMLSelectElement;
     setupDesc: HTMLElement;
     fives: HTMLSelectElement;
   }
@@ -30,7 +31,8 @@ export class GameUi {
       takeSeat: [],
       leaveSeat: document.getElementById('leave-seat') as HTMLButtonElement,
       toggleSetup: document.getElementById('toggle-setup') as HTMLButtonElement,
-      setupType: document.getElementById('setup') as HTMLSelectElement,
+      dealType: document.getElementById('deal-type') as HTMLSelectElement,
+      gameType: document.getElementById('game-type') as HTMLSelectElement,
       setupDesc: document.getElementById('setup-desc') as HTMLElement,
       fives: document.getElementById('fives') as HTMLSelectElement,
     };
@@ -58,14 +60,8 @@ export class GameUi {
       this.client.seats.set(this.client.playerId(), { seat: null });
     };
 
-    this.client.match.on('update', () => {
-      const select = this.elements.fives;
-      const match = this.client.match.get(0);
-      if (match) {
-        select.value = match.tileSet.fives;
-        this.elements.setupDesc.textContent = select.options[select.selectedIndex].text;
-      }
-    });
+    this.client.match.on('update', this.updateSetup.bind(this));
+    this.updateSetup();
 
     // Hack for settings menu
     const doNotClose = ['LABEL', 'SELECT', 'OPTION'];
@@ -78,6 +74,15 @@ export class GameUi {
         }
       });
     }
+  }
+
+  private updateSetup(): void {
+    const match = this.client.match.get(0);
+    const tileSet = match?.tileSet ?? TileSet.initial();
+
+    this.elements.fives.value = tileSet.fives;
+    this.elements.gameType.value = tileSet.gameType;
+    this.elements.setupDesc.textContent = TileSet.describe(tileSet);
   }
 
   private updateSeats(): void {
@@ -141,11 +146,12 @@ export class GameUi {
       buttonElement.blur();
 
       if (deal) {
-        const setupType = this.elements.setupType.value as SetupType;
+        const dealType = this.elements.dealType.value as DealType;
+        const gameType = this.elements.gameType.value as GameType;
         const fives = this.elements.fives.value as Fives;
 
-        this.world.deal(setupType, fives);
-        this.elements.setupType.value = SetupType.HANDS;
+        this.world.deal(dealType, gameType, fives);
+        this.elements.dealType.value = DealType.HANDS;
         this.hideSetup();
       }
     };

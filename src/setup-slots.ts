@@ -1,6 +1,6 @@
 import { Vector3, Vector2, Euler } from "three";
 import { Slot } from "./slot";
-import { Size, ThingType } from "./types";
+import { Size, ThingType, GameType } from "./types";
 
 const WORLD_SIZE = 174;
 
@@ -15,10 +15,10 @@ const Rotation = {
 type SlotOp = (slots: Array<Slot>) => Array<Slot>;
 type SlotGroup = Array<SlotOp>;
 
-export function makeSlots(): Array<Slot> {
+export function makeSlots(gameType: GameType): Array<Slot> {
   const slots = [];
 
-  for (const group of SLOT_GROUPS) {
+  for (const group of SLOT_GROUPS[gameType]) {
     let current: Array<Slot> = [];
     for (const op of group) {
       current = op(current);
@@ -26,7 +26,7 @@ export function makeSlots(): Array<Slot> {
     slots.push(...current);
   }
 
-  fixupSlots(slots);
+  fixupSlots(slots, gameType);
   return slots;
 }
 
@@ -193,20 +193,36 @@ const START: Record<string, Slot> = {
   }),
 };
 
-export const SLOT_GROUPS: Array<SlotGroup> = [
-  [start('hand'), row(14, undefined, {shift: true}), seats()],
-  [start('hand.extra'), seats()],
-  [start('meld'), column(4), row(4, -Size.TILE.x, {push: true, shift: true}), seats()],
-  [start('wall'), row(19), stack(), seats()],
-  [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats()],
-  [start('discard.extra'), row(4, undefined, {push: true}), seats()],
-  [start('tray'), row(6, 24), column(10, -3), seats()],
-  [start('payment'), row(8, 3), column(10, -3), seats()],
-  [start('riichi'), seats()],
-  [start('marker'), seats()],
-];
+export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
+  FOUR_PLAYER: [
+    [start('hand'), row(14, undefined, {shift: true}), seats()],
+    [start('hand.extra'), seats()],
+    [start('meld'), column(4), row(4, -Size.TILE.x, {push: true, shift: true}), seats()],
+    [start('wall'), row(19), stack(), seats()],
+    [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats()],
+    [start('discard.extra'), row(4, undefined, {push: true}), seats()],
 
-function fixupSlots(slots: Array<Slot>): void {
+    [start('tray'), row(6, 24), column(10, -3), seats()],
+    [start('payment'), row(8, 3), column(10, -3), seats()],
+    [start('riichi'), seats()],
+    [start('marker'), seats()],
+  ],
+
+  BAMBOO: [
+    [start('hand'), row(14, undefined, {shift: true}), seats([0, 2])],
+    [start('hand.extra'), seats([0, 2])],
+    [start('meld'), column(4), row(4, -Size.TILE.x, {push: true, shift: true}), seats([0, 2])],
+    [start('wall'), row(19), stack(), seats([0, 2])],
+    [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats([0, 2])],
+
+    [start('tray'), row(6, 24), column(10, -3), seats()],
+    [start('payment'), row(8, 3), column(10, -3), seats()],
+    [start('riichi'), seats()],
+    [start('marker'), seats()],
+  ]
+};
+
+function fixupSlots(slots: Array<Slot>, gameType: GameType): void {
   for (const slot of slots) {
     if (slot.name.startsWith('discard.extra')) {
       slot.linkDesc.requires = `discard.2.5@${slot.seat}`;
