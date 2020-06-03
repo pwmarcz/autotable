@@ -19,17 +19,18 @@ export class Setup {
   pushes: Array<[Slot, Slot]> = [];
 
   setup(tileSet: TileSet): void {
-    this.addSlots(GameType.FOUR_PLAYER);
+    const gameType = GameType.FOUR_PLAYER;
+
+    this.addSlots(gameType);
     this.addTiles(tileSet);
     this.addSticks();
     this.addMarker();
-    this.deal(0, GameType.FOUR_PLAYER, DealType.INITIAL);
+    this.deal(0, gameType, DealType.INITIAL);
   }
 
   private wallSlots(): Array<Slot> {
     return [...this.slots.values()].filter(
-      slot =>
-        slot.group === 'wall');
+      slot => slot.name.startsWith('wall'));
   }
 
   private addTiles(tileSet: TileSet): void {

@@ -49,6 +49,7 @@ export type Fives = '000' | '111' | '121';
 export enum GameType {
   FOUR_PLAYER = 'FOUR_PLAYER',
   BAMBOO = 'BAMBOO',
+  MINEFIELD = 'MINEFIELD',
 }
 
 export interface TileSet {
@@ -67,7 +68,7 @@ export namespace TileSet {
   }
 
   export function describe(ts: TileSet): string {
-    const game = {'FOUR_PLAYER': '4p', 'BAMBOO': 'B'}[ts.gameType];
+    const game = {'FOUR_PLAYER': '4p', 'BAMBOO': 'b', 'MINEFIELD': 'm'}[ts.gameType];
     const fives = {'000': 'no red', '111': '1-1-1', '121': '1-2-1'}[ts.fives];
     return `${game}, ${fives}`;
   }

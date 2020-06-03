@@ -88,5 +88,44 @@ export const DEALS: Record<GameType, Record<DealType, Array<DealPart>>> = {
         ranges: [['wall.1.0', 0, 10]],
       },
     ],
-  }
+  },
+
+  MINEFIELD: {
+    INITIAL: [
+      {
+        ranges: [
+          ['wall.1.0', 1, 34],
+          ['wall.1.0', 3, 34],
+          ['wall.open.0.1', 0, 17],
+          ['wall.open.1.1', 0, 17],
+          ['wall.open.0.1', 2, 17],
+          ['wall.open.1.1', 2, 17],
+        ]
+      },
+    ],
+    WINDS: [
+      {
+        ranges: [
+          ['wall.1.0', 1, 34],
+          ['wall.1.0', 3, 34],
+          ['wall.open.0.1', 0, 17],
+          ['wall.open.1.1', 0, 17],
+          ['wall.open.0.1', 2, 17],
+          ['wall.open.1.1', 2, 17],
+        ]
+      },
+    ],
+    HANDS: [
+      {
+        ranges: [
+          ['wall.1.0', 1, 34],
+          ['wall.1.0', 3, 34],
+          ['wall.open.0.1', 0, 17],
+          ['wall.open.1.1', 0, 17],
+          ['wall.open.0.1', 2, 17],
+          ['wall.open.1.1', 2, 17],
+        ]
+      },
+    ],
+  },
 };

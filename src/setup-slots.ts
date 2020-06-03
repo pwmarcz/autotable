@@ -111,15 +111,15 @@ const START: Record<string, Slot> = {
 
   'hand.extra': new Slot({
     name: `hand.extra`,
-      group: `hand`,
-      origin: new Vector3(
-        46 + 14.5*Size.TILE.x,
-        0,
-        0,
-      ),
-      rotations: [Rotation.STANDING, Rotation.FACE_UP, Rotation.FACE_DOWN],
-      canFlipMultiple: true,
-      rotateHeld: true,
+    group: `hand`,
+    origin: new Vector3(
+      46 + 14.5*Size.TILE.x,
+      0,
+      0,
+    ),
+    rotations: [Rotation.STANDING, Rotation.FACE_UP, Rotation.FACE_DOWN],
+    canFlipMultiple: true,
+    rotateHeld: true,
   }),
 
   'meld': new Slot({
@@ -135,6 +135,14 @@ const START: Record<string, Slot> = {
     group: 'wall',
     origin: new Vector3(30, 20, 0),
     rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
+  }),
+
+  'wall.open': new Slot({
+    name: 'wall.open',
+    group: 'wall.open',
+    origin: new Vector3(30, 14, 0),
+    rotations: [Rotation.FACE_DOWN, Rotation.STANDING],
+    canFlipMultiple: true,
   }),
 
   'discard': new Slot({
@@ -219,7 +227,20 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('payment'), row(8, 3), column(10, -3), seats()],
     [start('riichi'), seats()],
     [start('marker'), seats()],
-  ]
+  ],
+
+  MINEFIELD: [
+    [start('hand'), row(14, undefined, {shift: true}), seats([0, 2])],
+    [start('hand.extra'), seats([0, 2])],
+    [start('wall'), row(19), stack(), seats([1, 3])],
+    [start('wall.open'), column(2, Size.TILE.y * 1.6), row(19, undefined, {shift: true}), seats([0, 2])],
+    [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats([0, 2])],
+
+    [start('tray'), row(6, 24), column(10, -3), seats()],
+    [start('payment'), row(8, 3), column(10, -3), seats()],
+    [start('riichi'), seats()],
+    [start('marker'), seats()],
+  ],
 };
 
 function fixupSlots(slots: Array<Slot>, gameType: GameType): void {
