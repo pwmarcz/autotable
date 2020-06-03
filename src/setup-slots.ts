@@ -230,8 +230,7 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
   ],
 
   MINEFIELD: [
-    [start('hand'), row(14, undefined, {shift: true}), seats([0, 2])],
-    [start('hand.extra'), seats([0, 2])],
+    [start('hand'), row(13, undefined, {shift: true}), seats([0, 2])],
     [start('wall'), row(19), stack(), seats([1, 3])],
     [start('wall.open'), column(2, Size.TILE.y * 1.6), row(17, undefined, {shift: true}), seats([0, 2])],
     [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats([0, 2])],
