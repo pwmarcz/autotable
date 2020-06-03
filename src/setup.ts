@@ -72,7 +72,7 @@ export class Setup {
   }
 
   deal(seat: number, dealType: DealType): void {
-    const roll = Math.floor(Math.random() * 6) + Math.floor(Math.random() * 6);
+    const roll = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1);
     // Debug
     // const roll = (window.ROLL && window.ROLL < 12) ? window.ROLL + 1 : 2;
     // window.ROLL = roll;
