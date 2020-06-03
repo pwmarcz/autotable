@@ -1,8 +1,9 @@
-import { Slot, Thing, ThingType } from "./places";
 import { shuffle } from "./utils";
-import { TileSet, SetupType } from "./types";
+import { TileSet, SetupType, ThingType } from "./types";
 import { DEALS, DealPart } from "./setup-deal";
 import { makeSlots } from "./setup-slots";
+import { Slot } from "./slot";
+import { Thing } from "./thing";
 
 
 export class Setup {

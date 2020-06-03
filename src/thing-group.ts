@@ -1,5 +1,4 @@
 import { Vector3, Euler, Mesh, Group, Material, InstancedMesh, Matrix4, BufferGeometry, MeshLambertMaterial, InstancedBufferGeometry, InstancedBufferAttribute } from "three";
-import { ThingType } from "./places";
 import { AssetLoader } from "./asset-loader";
 
 const TILE_DU = 32 / 256;

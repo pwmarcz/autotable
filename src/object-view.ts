@@ -4,8 +4,8 @@ import { World } from "./world";
 import { Client } from "./client";
 import { AssetLoader } from "./asset-loader";
 import { Center } from "./center";
-import { ThingType, Place } from "./places";
 import { ThingParams, ThingGroup, TileThingGroup, StickThingGroup, MarkerThingGroup } from "./thing-group";
+import { ThingType, Place } from "./types";
 
 export interface Render {
   type: ThingType;

@@ -1,5 +1,6 @@
 import { Vector3, Vector2, Euler } from "three";
-import { Slot, ThingType, Size } from "./places";
+import { Slot } from "./slot";
+import { Size, ThingType } from "./types";
 
 const WORLD_SIZE = 174;
 

@@ -1,6 +1,6 @@
 /* eslint no-console: 0 */
 
-import { EventEmitter, Listener } from 'events';
+import { EventEmitter } from 'events';
 
 import { Message, Entry } from '../server/protocol';
 
@@ -54,8 +54,8 @@ export class BaseClient {
   on(what: 'disconnect', handler: (game: Game | null) => void): void;
   on(what: 'update', handler: (things: Array<Entry>, full: boolean) => void): void;
 
-  on(what: string, handler: Function): void {
-    this.events.on(what, handler as Listener);
+  on(what: string, handler: (...args: any[]) => void): void {
+    this.events.on(what, handler);
   }
 
   transaction(func: () => void): void {

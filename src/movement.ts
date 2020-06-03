@@ -1,5 +1,5 @@
-
-import { Slot, Thing } from './places';
+import { Slot } from "./slot";
+import { Thing } from "./thing";
 
 type SlotOp = (slot: Slot) => Slot | null;
 
