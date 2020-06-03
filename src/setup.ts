@@ -19,9 +19,6 @@ export class Setup {
 
   setup(tileSet: TileSet): void {
     this.addSlots();
-    for (const slot of this.slots.values()) {
-      slot.setLinks(this.slots);
-    }
     this.addTiles(tileSet);
     this.addSticks();
     this.addMarker();
@@ -46,7 +43,6 @@ export class Setup {
     for (let i = 0; i < 136; i++) {
       const tileIndex = this.tileIndex(i, tileSet);
       this.addThing(ThingType.TILE, tileIndex, wallSlots[i]);
-
     }
   }
 
@@ -193,14 +189,19 @@ export class Setup {
   }
 
   private addSlots(): void {
+    this.slots.clear();
+    this.slotNames.splice(0);
+    this.pushes.splice(0);
+
     for (const slot of makeSlots()) {
       this.slots.set(slot.name, slot);
       if (slot.name.endsWith('@0')) {
         this.slotNames.push(slot.name.replace('@0', ''));
       }
     }
-    console.log(this.slots);
-    console.log(this.slotNames);
+    Slot.setLinks(this.slots);
+
+    this.pushes.push(...Slot.computePushes([...this.slots.values()]));
   }
 
   getScores(): Array<number> {

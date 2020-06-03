@@ -22,9 +22,10 @@ export function makeSlots(): Array<Slot> {
     for (const op of group) {
       current = op(current);
     }
-
     slots.push(...current);
   }
+
+  fixupSlots(slots);
   return slots;
 }
 
@@ -32,7 +33,13 @@ function start(name: string): SlotOp {
   return _ => [START[name]];
 }
 
-function repeat(count: number, offset: Vector3): SlotOp {
+interface RepeatOptions {
+  stack?: boolean;
+  shift?: boolean;
+  push?: boolean;
+}
+
+function repeat(count: number, offset: Vector3, options: RepeatOptions = {}): SlotOp {
   return (slots: Array<Slot>) => {
     const result: Array<Slot> = [];
     for (const slot of slots) {
@@ -40,16 +47,30 @@ function repeat(count: number, offset: Vector3): SlotOp {
       for (let i = 0; i < count; i++) {
         const copied = slot.copy(`.${i}`);
         copied.origin = copied.origin.clone().add(totalOffset);
+        copied.indexes.push(i);
         result.push(copied);
         totalOffset.add(offset);
+
+        if (i < count - 1) {
+          const next = `${slot.name}.${i+1}`;
+          if (options.stack) copied.linkDesc.up = next;
+          if (options.shift) copied.linkDesc.shiftRight = next;
+          if (options.push) copied.linkDesc.push = next;
+        }
+
+        if (i > 0) {
+          const prev = `${slot.name}.${i-1}`;
+          if (options.stack) copied.linkDesc.down = prev;
+          if (options.shift) copied.linkDesc.shiftLeft = prev;
+        }
       }
     }
     return result;
   };
 }
 
-function row(count: number, dx?: number): SlotOp {
-  return repeat(count, new Vector3(dx ?? Size.TILE.x, 0, 0));
+function row(count: number, dx?: number, options: RepeatOptions = {}): SlotOp {
+  return repeat(count, new Vector3(dx ?? Size.TILE.x, 0, 0), options);
 }
 
 function column(count: number, dy?: number): SlotOp {
@@ -57,7 +78,7 @@ function column(count: number, dy?: number): SlotOp {
 }
 
 function stack(dz?: number): SlotOp {
-  return repeat(2, new Vector3(0, 0, dz ?? Size.TILE.z));
+  return repeat(2, new Vector3(0, 0, dz ?? Size.TILE.z), {stack: true});
 }
 
 function seats(which?: Array<number>): SlotOp {
@@ -113,7 +134,6 @@ const START: Record<string, Slot> = {
     group: 'wall',
     origin: new Vector3(30, 20, 0),
     rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
-    drawShadow: true,
   }),
 
   'discard': new Slot({
@@ -126,7 +146,7 @@ const START: Record<string, Slot> = {
   }),
 
   'discard.extra': new Slot({
-    name: `discard`,
+    name: `discard.extra`,
     group: `discard`,
     origin: new Vector3(69 + 6 * Size.TILE.x, 60 - 2 * Size.TILE.y, 0),
     direction: new Vector2(1, 1),
@@ -173,14 +193,32 @@ const START: Record<string, Slot> = {
 };
 
 export const SLOT_GROUPS: Array<SlotGroup> = [
-  [start('hand'), row(14), seats()],
+  [start('hand'), row(14, undefined, {shift: true}), seats()],
   [start('hand.extra'), seats()],
-  [start('meld'), column(4), row(4, -Size.TILE.x), seats()],
+  [start('meld'), column(4), row(4, -Size.TILE.x, {push: true, shift: true}), seats()],
   [start('wall'), row(19), stack(), seats()],
-  [start('discard'), column(3, -Size.TILE.y), row(6), seats()],
-  [start('discard.extra'), row(3), seats()],
+  [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats()],
+  [start('discard.extra'), row(4, undefined, {push: true}), seats()],
   [start('tray'), row(6, 24), column(10, -3), seats()],
   [start('payment'), row(8, 3), column(10, -3), seats()],
   [start('riichi'), seats()],
   [start('marker'), seats()],
 ];
+
+function fixupSlots(slots: Array<Slot>): void {
+  for (const slot of slots) {
+    if (slot.name.startsWith('discard.extra')) {
+      slot.linkDesc.requires = `discard.2.5@${slot.seat}`;
+    }
+    if (slot.name.startsWith('discard.2.5')) {
+      slot.linkDesc.push = `discard.extra.0@${slot.seat}`;
+    }
+    if (slot.group === 'wall' &&
+        slot.indexes[0] !== 0 && slot.indexes[0] !== 18 && slot.indexes[1] === 0) {
+      slot.drawShadow = true;
+    }
+    if (slot.group === 'meld' && slot.indexes[0] > 0) {
+      slot.linkDesc.requires = `meld.${slot.indexes[0]-1}.1@${slot.seat}`;
+    }
+  }
+}

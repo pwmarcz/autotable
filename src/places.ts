@@ -25,6 +25,7 @@ interface SlotLinks {
   requires?: Slot;
   shiftLeft?: Slot;
   shiftRight?: Slot;
+  push?: Slot;
 }
 
 type SlotLinkDesc = Partial<Record<keyof SlotLinks, string>>;
@@ -37,6 +38,7 @@ export class Slot {
   direction: Vector2;
   rotations: Array<Euler>;
 
+  indexes: Array<number> = [];
   seat: number | null = null;
 
   places: Array<Place>;
@@ -81,14 +83,39 @@ export class Slot {
     this.links = {};
   }
 
-  setLinks(slots: Map<string, Slot>): void {
-    for (const key in this.linkDesc) {
-      const linkName = key as keyof SlotLinks;
-      const linkTarget = this.linkDesc[linkName];
-      if (linkTarget !== undefined) {
-        this.links[linkName] = slots.get(linkTarget);
+  static setLinks(slots: Map<string, Slot>): void {
+    for (const slot of slots.values()) {
+      for (const key in slot.linkDesc) {
+        const linkName = key as keyof SlotLinks;
+        const linkTarget = slot.linkDesc[linkName];
+        if (linkTarget !== undefined) {
+          slot.links[linkName] = slots.get(linkTarget);
+        }
       }
     }
+  }
+
+  static computePushes(slots: Array<Slot>): Array<[Slot, Slot]> {
+    const result: Array<[Slot, Slot]> = [];
+    const seen: Set<Slot> = new Set();
+
+    function recurse(slot: Slot): void {
+      if (seen.has(slot)) {
+        return;
+      }
+      seen.add(slot);
+
+      if (slot.links.push) {
+        recurse(slot.links.push);
+        result.push([slot, slot.links.push]);
+      }
+    }
+
+    for (const slot of slots) {
+      recurse(slot);
+    }
+    result.reverse();
+    return result;
   }
 
   copy(suffix: string): Slot {
@@ -108,13 +135,14 @@ export class Slot {
       type: this.type,
       origin: this.origin,
       direction: this.direction,
-      rotations: this.rotations
+      rotations: this.rotations,
     });
     slot.linkDesc = linkDesc;
     slot.canFlipMultiple = this.canFlipMultiple;
     slot.drawShadow = this.drawShadow;
     slot.shadowRotation = this.shadowRotation;
     slot.rotateHeld = this.rotateHeld;
+    slot.indexes = this.indexes.slice();
     return slot;
   }
 
