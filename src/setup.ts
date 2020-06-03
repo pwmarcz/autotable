@@ -103,7 +103,7 @@ export class Setup {
     // const roll = (window.ROLL && window.ROLL < 12) ? window.ROLL + 1 : 2;
     // window.ROLL = roll;
 
-    if (gameType === GameType.BAMBOO && (seat === 1 || seat === 3)) {
+    if ((gameType === GameType.BAMBOO || gameType === GameType.MINEFIELD) && (seat === 1 || seat === 3)) {
       seat = 0;
     }
 
