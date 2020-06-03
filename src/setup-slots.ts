@@ -258,5 +258,11 @@ function fixupSlots(slots: Array<Slot>, gameType: GameType): void {
     if (slot.group === 'meld' && slot.indexes[0] > 0) {
       slot.linkDesc.requires = `meld.${slot.indexes[0]-1}.1@${slot.seat}`;
     }
+    if (slot.group === 'wall.open' && slot.indexes[0] === 1 && slot.indexes[1] === 16) {
+      slot.linkDesc.shiftRight = `wall.open.0.0@${slot.seat}`;
+    }
+    if (slot.group === 'wall.open' && slot.indexes[0] === 0 && slot.indexes[1] === 0) {
+      slot.linkDesc.shiftLeft = `wall.open.1.16@${slot.seat}`;
+    }
   }
 }
