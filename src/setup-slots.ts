@@ -140,7 +140,7 @@ const START: Record<string, Slot> = {
   'wall.open': new Slot({
     name: 'wall.open',
     group: 'wall.open',
-    origin: new Vector3(30, 14, 0),
+    origin: new Vector3(36, 14, 0),
     rotations: [Rotation.STANDING, Rotation.FACE_DOWN],
     canFlipMultiple: true,
   }),
@@ -233,7 +233,7 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('hand'), row(14, undefined, {shift: true}), seats([0, 2])],
     [start('hand.extra'), seats([0, 2])],
     [start('wall'), row(19), stack(), seats([1, 3])],
-    [start('wall.open'), column(2, Size.TILE.y * 1.6), row(19, undefined, {shift: true}), seats([0, 2])],
+    [start('wall.open'), column(2, Size.TILE.y * 1.6), row(17, undefined, {shift: true}), seats([0, 2])],
     [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats([0, 2])],
 
     [start('tray'), row(6, 24), column(10, -3), seats()],
