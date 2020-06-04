@@ -107,7 +107,7 @@ export class Setup {
       seat = 0;
     }
 
-    const dealParts = DEALS[gameType][dealType];
+    const dealParts = DEALS[gameType][dealType]!;
 
     const tiles = [...this.things.values()].filter(thing => thing.type === ThingType.TILE);
     for (const thing of tiles) {

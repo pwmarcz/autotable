@@ -2,6 +2,7 @@ import $ from 'jquery';
 import { Client } from "./client";
 import { World } from "./world";
 import { DealType, Fives, GameType, TileSet } from './types';
+import { DEALS } from './setup-deal';
 
 export class GameUi {
   private client: Client;
@@ -61,6 +62,7 @@ export class GameUi {
     };
 
     this.client.match.on('update', this.updateSetup.bind(this));
+    this.elements.gameType.onchange = this.updateVisibility.bind(this);
     this.updateSetup();
 
     // Hack for settings menu
@@ -83,6 +85,26 @@ export class GameUi {
     this.elements.fives.value = tileSet.fives;
     this.elements.gameType.value = tileSet.gameType;
     this.elements.setupDesc.textContent = TileSet.describe(tileSet);
+
+    this.updateVisibility();
+  }
+
+  private updateVisibility(): void {
+    const gameType = this.elements.gameType.value as GameType;
+
+    for (const option of Array.from(this.elements.dealType.querySelectorAll('option'))) {
+      const dealType = option.value as DealType;
+      if (DEALS[gameType][dealType] === undefined) {
+        option.style.display = 'none';
+      } else {
+        option.style.display = 'block';
+      }
+    }
+
+    const dealType = this.elements.dealType.value as DealType;
+    if (DEALS[gameType][dealType] === undefined) {
+      this.elements.dealType.value = 'HANDS';
+    }
   }
 
   private updateSeats(): void {

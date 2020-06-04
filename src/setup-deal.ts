@@ -10,7 +10,7 @@ export interface DealPart {
   absolute?: boolean;
 }
 
-export const DEALS: Record<GameType, Record<DealType, Array<DealPart>>> = {
+export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>> = {
   FOUR_PLAYER: {
     INITIAL: [
       {
@@ -91,40 +91,6 @@ export const DEALS: Record<GameType, Record<DealType, Array<DealPart>>> = {
   },
 
   MINEFIELD: {
-    INITIAL: [
-      {
-        ranges: [
-          ['wall.1.0', 1, 34],
-          ['wall.1.0', 3, 34],
-        ],
-      },
-      {
-        ranges: [
-          ['wall.open.0.0', 0, 17],
-          ['wall.open.1.0', 0, 17],
-          ['wall.open.0.0', 2, 17],
-          ['wall.open.1.0', 2, 17],
-        ],
-        rotationIndex: 1,
-      },
-    ],
-    WINDS: [
-      {
-        ranges: [
-          ['wall.1.0', 1, 34],
-          ['wall.1.0', 3, 34],
-        ],
-      },
-      {
-        ranges: [
-          ['wall.open.0.0', 0, 17],
-          ['wall.open.1.0', 0, 17],
-          ['wall.open.0.0', 2, 17],
-          ['wall.open.1.0', 2, 17],
-        ],
-        rotationIndex: 1,
-      },
-    ],
     HANDS: [
       {
         ranges: [
