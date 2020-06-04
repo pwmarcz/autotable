@@ -46,6 +46,8 @@ export class Setup {
   }
 
   replace(tileSet: TileSet): void {
+    // console.log('replace', tileSet);
+
     const map = new Map<number, string>();
     for (const thing of [...this.things.values()]) {
       thing.prepareMove();
@@ -88,7 +90,13 @@ export class Setup {
     }
 
     if (tileSet.gameType === GameType.BAMBOO) {
-      if (!(18 <= tileIndex && tileIndex < 27) && tileIndex !== 36) {
+      if (!((18 <= tileIndex && tileIndex < 27) || tileIndex === 36)) {
+        return null;
+      }
+    }
+
+    if (tileSet.gameType === GameType.THREE_PLAYER) {
+      if ((1 <= tileIndex && tileIndex < 8) || tileIndex === 34) {
         return null;
       }
     }
@@ -98,12 +106,16 @@ export class Setup {
   }
 
   deal(seat: number, gameType: GameType, dealType: DealType): void {
+    // console.log('deal', gameType, dealType);
+
     const roll = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1);
     // Debug
     // const roll = (window.ROLL && window.ROLL < 12) ? window.ROLL + 1 : 2;
     // window.ROLL = roll;
 
-    if ((gameType === GameType.BAMBOO || gameType === GameType.MINEFIELD) && (seat === 1 || seat === 3)) {
+    if (((gameType === GameType.BAMBOO || gameType === GameType.MINEFIELD) && (seat === 1 || seat === 3)) ||
+        (gameType === GameType.THREE_PLAYER && seat === 3))
+    {
       seat = 0;
     }
 

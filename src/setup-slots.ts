@@ -109,6 +109,17 @@ const START: Record<string, Slot> = {
     rotateHeld: true,
   }),
 
+  'hand.3p': new Slot({
+    name: 'hand',
+    group: 'hand',
+    origin: new Vector3(37, 0, 0),
+    rotations: [Rotation.STANDING, Rotation.FACE_UP, Rotation.FACE_DOWN],
+    canFlipMultiple: true,
+    drawShadow: true,
+    shadowRotation: 1,
+    rotateHeld: true,
+  }),
+
   'hand.extra': new Slot({
     name: `hand.extra`,
     group: `hand`,
@@ -128,6 +139,14 @@ const START: Record<string, Slot> = {
     origin: new Vector3(174, 0, 0),
     direction: new Vector2(-1, 1),
     rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
+  }),
+
+  'kita': new Slot({
+    name: `kita`,
+    group: `kita`,
+    origin: new Vector3(146, 0, 0),
+    direction: new Vector2(-1, 1),
+    rotations: [Rotation.FACE_UP, Rotation.FACE_DOWN],
   }),
 
   'wall': new Slot({
@@ -209,6 +228,20 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('wall'), row(19), stack(), seats()],
     [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats()],
     [start('discard.extra'), row(4, undefined, {push: true}), seats()],
+
+    [start('tray'), row(6, 24), column(10, -3), seats()],
+    [start('payment'), row(8, 3), column(10, -3), seats()],
+    [start('riichi'), seats()],
+    [start('marker'), seats()],
+  ],
+
+  THREE_PLAYER: [
+    [start('hand.3p'), row(14, undefined, {shift: true}), seats([0, 1, 2])],
+    [start('meld'), column(4), row(4, -Size.TILE.x, {push: true, shift: true}), seats([0, 1, 2])],
+    [start('kita'), row(4, -Size.TILE.x, {shift: true}), seats([0, 1, 2])],
+    [start('wall'), row(19), stack(), seats()],
+    [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats([0, 1, 2])],
+    [start('discard.extra'), row(4, undefined, {push: true}), seats([0, 1, 2])],
 
     [start('tray'), row(6, 24), column(10, -3), seats()],
     [start('payment'), row(8, 3), column(10, -3), seats()],

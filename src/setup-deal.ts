@@ -64,6 +64,34 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
     ],
   },
 
+  THREE_PLAYER: {
+    INITIAL: [
+      {
+        ranges: [
+          ['wall.3.0', 0, 28],
+          ['wall.3.0', 1, 26],
+          ['wall.2.0', 2, 28],
+          ['wall.3.0', 3, 26],
+        ]
+      },
+    ],
+    WINDS: [
+      {
+        tiles: [27, 28, 29],
+        ranges: [['hand.5', 0, 3]],
+        rotationIndex: 2,
+      },
+      {
+        ranges: [
+          ['wall.3.0', 0, 28],
+          ['wall.3.0', 1, 26],
+          ['wall.2.0', 2, 28],
+          ['wall.3.0', 3, 23],
+        ],
+      },
+    ],
+  },
+
   BAMBOO: {
     INITIAL: [{ ranges: [['wall.1.0', 0, 36]], absolute: true}],
     WINDS: [

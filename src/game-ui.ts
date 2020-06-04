@@ -103,7 +103,19 @@ export class GameUi {
 
     const dealType = this.elements.dealType.value as DealType;
     if (DEALS[gameType][dealType] === undefined) {
-      this.elements.dealType.value = 'HANDS';
+      this.resetDealType();
+    }
+  }
+
+  private resetDealType(): void {
+    const gameType = this.elements.gameType.value as GameType;
+
+    for (const option of Array.from(this.elements.dealType.querySelectorAll('option'))) {
+      const dealType = option.value as DealType;
+      if (DEALS[gameType][dealType] !== undefined) {
+        this.elements.dealType.value = dealType;
+        break;
+      }
     }
   }
 
@@ -173,7 +185,7 @@ export class GameUi {
         const fives = this.elements.fives.value as Fives;
 
         this.world.deal(dealType, gameType, fives);
-        this.elements.dealType.value = DealType.HANDS;
+        this.resetDealType();
         this.hideSetup();
       }
     };
