@@ -11,6 +11,10 @@ ICONS = img/icon-16.auto.png img/icon-32.auto.png img/icon-96.auto.png
 parcel: files
 	node run-parcel.js
 
+.PHONY: server
+server:
+	cd server && yarn start
+
 .PHONY: files
 files: img/models.auto.glb $(ICONS)
 
