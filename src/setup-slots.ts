@@ -146,7 +146,7 @@ const START: Record<string, Slot> = {
     group: `kita`,
     origin: new Vector3(146, 0, 0),
     direction: new Vector2(-1, 1),
-    rotations: [Rotation.FACE_UP, Rotation.FACE_DOWN],
+    rotations: [Rotation.FACE_UP],
   }),
 
   'wall': new Slot({
