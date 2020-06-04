@@ -1,5 +1,5 @@
 import { shuffle } from "./utils";
-import { TileSet, DealType, ThingType, GameType } from "./types";
+import { Conditions, DealType, ThingType, GameType } from "./types";
 import { DEALS, DealPart } from "./setup-deal";
 import { makeSlots } from "./setup-slots";
 import { Slot } from "./slot";
@@ -18,11 +18,11 @@ export class Setup {
   }
   pushes: Array<[Slot, Slot]> = [];
 
-  setup(tileSet: TileSet): void {
+  setup(conditions: Conditions): void {
     const gameType = GameType.FOUR_PLAYER;
 
     this.addSlots(gameType);
-    this.addTiles(tileSet);
+    this.addTiles(conditions);
     this.addSticks();
     this.addMarker();
     this.deal(0, gameType, DealType.INITIAL);
@@ -33,20 +33,20 @@ export class Setup {
       slot => slot.name.startsWith('wall'));
   }
 
-  private addTiles(tileSet: TileSet): void {
+  private addTiles(conditions: Conditions): void {
     const wallSlots = this.wallSlots().map(slot => slot.name);
     shuffle(wallSlots);
     let j = 0;
     for (let i = 0; i < 136; i++) {
-      const tileIndex = this.tileIndex(i, tileSet);
+      const tileIndex = this.tileIndex(i, conditions);
       if (tileIndex !== null) {
         this.addThing(ThingType.TILE, tileIndex, wallSlots[j++]);
       }
     }
   }
 
-  replace(tileSet: TileSet): void {
-    // console.log('replace', tileSet);
+  replace(conditions: Conditions): void {
+    // console.log('replace', conditions);
 
     const map = new Map<number, string>();
     for (const thing of [...this.things.values()]) {
@@ -58,8 +58,8 @@ export class Setup {
       }
     }
     this.counters.set(ThingType.TILE, 0);
-    this.addSlots(tileSet.gameType);
-    this.addTiles(tileSet);
+    this.addSlots(conditions.gameType);
+    this.addTiles(conditions);
     for (const thing of this.things.values()) {
       if (thing.type !== ThingType.TILE) {
         const slotName = map.get(thing.index);
@@ -75,33 +75,33 @@ export class Setup {
     }
   }
 
-  private tileIndex(i: number, tileSet: TileSet): number | null {
+  private tileIndex(i: number, conditions: Conditions): number | null {
     let tileIndex = Math.floor(i / 4);
 
-    if (tileSet.fives !== '000') {
+    if (conditions.fives !== '000') {
       if (tileIndex === 4 && i % 4 === 0) {
         tileIndex = 34;
       } else if (tileIndex === 13 &&
-          (i % 4 === 0 || (i % 4 === 1 && tileSet.fives === '121'))) {
+          (i % 4 === 0 || (i % 4 === 1 && conditions.fives === '121'))) {
         tileIndex = 35;
       } else if (tileIndex === 22 && i % 4 === 0) {
         tileIndex = 36;
       }
     }
 
-    if (tileSet.gameType === GameType.BAMBOO) {
+    if (conditions.gameType === GameType.BAMBOO) {
       if (!((18 <= tileIndex && tileIndex < 27) || tileIndex === 36)) {
         return null;
       }
     }
 
-    if (tileSet.gameType === GameType.THREE_PLAYER) {
+    if (conditions.gameType === GameType.THREE_PLAYER) {
       if ((1 <= tileIndex && tileIndex < 8) || tileIndex === 34) {
         return null;
       }
     }
 
-    tileIndex += 37 * tileSet.back;
+    tileIndex += 37 * conditions.back;
     return tileIndex;
   }
 

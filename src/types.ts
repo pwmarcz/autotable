@@ -29,7 +29,7 @@ export interface ThingInfo {
 export interface MatchInfo {
   dealer: number;
   honba: number;
-  tileSet: TileSet;
+  conditions: Conditions;
 }
 
 export interface Game {
@@ -53,22 +53,22 @@ export enum GameType {
   MINEFIELD = 'MINEFIELD',
 }
 
-export interface TileSet {
+export interface Conditions {
   gameType: GameType;
   back: number; // 0 or 1
   fives: Fives;
 }
 
-export namespace TileSet {
-  export function initial(): TileSet {
+export namespace Conditions {
+  export function initial(): Conditions {
     return { gameType: GameType.FOUR_PLAYER, back: 0, fives: '111' };
   }
 
-  export function equals(a: TileSet, b: TileSet): boolean {
+  export function equals(a: Conditions, b: Conditions): boolean {
     return a.gameType === b.gameType && a.back === b.back && a.fives === b.fives;
   }
 
-  export function describe(ts: TileSet): string {
+  export function describe(ts: Conditions): string {
     const game = {'FOUR_PLAYER': '4p', 'THREE_PLAYER': '3p', 'BAMBOO': 'b', 'MINEFIELD': 'm'}[ts.gameType];
     const fives = {'000': 'no red', '111': '1-1-1', '121': '1-2-1'}[ts.fives];
     return `${game}, ${fives}`;

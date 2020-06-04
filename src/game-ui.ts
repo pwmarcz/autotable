@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import { Client } from "./client";
 import { World } from "./world";
-import { DealType, Fives, GameType, TileSet } from './types';
+import { DealType, Fives, GameType, Conditions } from './types';
 import { DEALS } from './setup-deal';
 
 export class GameUi {
@@ -80,11 +80,11 @@ export class GameUi {
 
   private updateSetup(): void {
     const match = this.client.match.get(0);
-    const tileSet = match?.tileSet ?? TileSet.initial();
+    const conditions = match?.conditions ?? Conditions.initial();
 
-    this.elements.fives.value = tileSet.fives;
-    this.elements.gameType.value = tileSet.gameType;
-    this.elements.setupDesc.textContent = TileSet.describe(tileSet);
+    this.elements.fives.value = conditions.fives;
+    this.elements.gameType.value = conditions.gameType;
+    this.elements.setupDesc.textContent = Conditions.describe(conditions);
 
     this.updateVisibility();
   }

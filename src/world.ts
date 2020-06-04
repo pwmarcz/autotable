@@ -7,7 +7,7 @@ import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
 import { SoundPlayer } from "./sound-player";
-import { TileSet, ThingInfo, SoundType, Fives, Place, ThingType, Size, DealType, GameType } from "./types";
+import { Conditions, ThingInfo, SoundType, Fives, Place, ThingType, Size, DealType, GameType } from "./types";
 import { Slot } from "./slot";
 import { Thing } from "./thing";
 
@@ -43,15 +43,15 @@ export class World {
 
   private client: Client;
 
-  tileSet: TileSet;
+  conditions: Conditions;
 
   constructor(objectView: ObjectView, soundPlayer: SoundPlayer, client: Client) {
     this.setup = new Setup();
     this.slots = this.setup.slots;
     this.things = this.setup.things;
     this.pushes = this.setup.pushes;
-    this.tileSet = TileSet.initial();
-    this.setup.setup(this.tileSet);
+    this.conditions = Conditions.initial();
+    this.setup.setup(this.conditions);
 
     this.objectView = objectView;
     this.setupView();
@@ -68,13 +68,13 @@ export class World {
   }
 
   toggleDealer(): void {
-    const match = this.client.match.get(0) ?? { dealer: 3, honba: 0, tileSet: TileSet.initial()};
+    const match = this.client.match.get(0) ?? { dealer: 3, honba: 0, conditions: Conditions.initial()};
     match.dealer = (match.dealer + 1) % 4;
     this.client.match.set(0, match);
   }
 
   toggleHonba(): void {
-    const match = this.client.match.get(0) ?? { dealer: 0, honba: 0, tileSet: TileSet.initial()};
+    const match = this.client.match.get(0) ?? { dealer: 0, honba: 0, conditions: Conditions.initial()};
     match.honba = (match.honba + 1) % 8;
     this.client.match.set(0, match);
   };
@@ -129,18 +129,18 @@ export class World {
       return;
     }
 
-    const tileSet = match.tileSet;
-    if (!TileSet.equals(tileSet, this.tileSet)) {
-      this.updateTileSet(tileSet);
+    const conditions = match.conditions;
+    if (!Conditions.equals(conditions, this.conditions)) {
+      this.updateConditions(conditions);
 
       // Prevent selection persisting after deal
       this.selected.splice(0);
     }
   }
 
-  updateTileSet(tileSet: TileSet): void {
-    this.tileSet = tileSet;
-    this.setup.replace(tileSet);
+  updateConditions(conditions: Conditions): void {
+    this.conditions = conditions;
+    this.setup.replace(conditions);
     this.setupView();
   }
 
@@ -205,8 +205,8 @@ export class World {
     this.selected.splice(0);
     this.checkPushes();
 
-    const back = 1 - this.tileSet.back;
-    const tileSet = { ...this.tileSet, back, gameType, fives };
+    const back = 1 - this.conditions.back;
+    const conditions = { ...this.conditions, back, gameType, fives };
 
     let match = this.client.match.get(0);
     let honba;
@@ -218,9 +218,9 @@ export class World {
       honba = match.honba;
     }
 
-    match = {dealer: this.seat, honba, tileSet};
+    match = {dealer: this.seat, honba, conditions};
 
-    this.updateTileSet(tileSet);
+    this.updateConditions(conditions);
     this.setup.deal(this.seat, gameType, dealType);
 
     this.client.transaction(() => {
