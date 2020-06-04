@@ -243,10 +243,10 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats([0, 1, 2])],
     [start('discard.extra'), row(4, undefined, {push: true}), seats([0, 1, 2])],
 
-    [start('tray'), row(6, 24), column(10, -3), seats()],
-    [start('payment'), row(8, 3), column(10, -3), seats()],
-    [start('riichi'), seats()],
-    [start('marker'), seats()],
+    [start('tray'), row(6, 24), column(10, -3), seats([0, 1, 2])],
+    [start('payment'), row(8, 3), column(10, -3), seats([0, 1, 2])],
+    [start('riichi'), seats([0, 1, 2])],
+    [start('marker'), seats([0, 1, 2])],
   ],
 
   BAMBOO: [
@@ -256,10 +256,10 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('wall'), row(19), stack(), seats([0, 2])],
     [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats([0, 2])],
 
-    [start('tray'), row(6, 24), column(10, -3), seats()],
-    [start('payment'), row(8, 3), column(10, -3), seats()],
-    [start('riichi'), seats()],
-    [start('marker'), seats()],
+    [start('tray'), row(6, 24), column(10, -3), seats([0, 2])],
+    [start('payment'), row(8, 3), column(10, -3), seats([0, 2])],
+    [start('riichi'), seats([0, 2])],
+    [start('marker'), seats([0, 2])],
   ],
 
   MINEFIELD: [
@@ -268,10 +268,10 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('wall.open'), column(2, Size.TILE.y * 1.6), row(17, undefined, {shift: true}), seats([0, 2])],
     [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats([0, 2])],
 
-    [start('tray'), row(6, 24), column(10, -3), seats()],
-    [start('payment'), row(8, 3), column(10, -3), seats()],
-    [start('riichi'), seats()],
-    [start('marker'), seats()],
+    [start('tray'), row(6, 24), column(10, -3), seats([0, 2])],
+    [start('payment'), row(8, 3), column(10, -3), seats([0, 2])],
+    [start('riichi'), seats([0, 2])],
+    [start('marker'), seats([0, 2])],
   ],
 };
 
