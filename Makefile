@@ -50,7 +50,7 @@ release: build
 	git push -f origin @:refs/heads/release/client
 	rsync -rva --checksum --delete build/ $(SERVER):autotable/dist/
 
-.PHONY: deploy-server
+.PHONY: release-server
 release-server: build-server
 	git push -f origin @:refs/heads/release/server
 	rsync -rva --checksum --delete --exclude node_modules/ server/ $(SERVER):autotable/server/
