@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import { Client } from "./client";
 import { World } from "./world";
-import { DealType, Fives, GameType, Conditions, Points } from './types';
+import { DealType, Fives, GameType, Conditions, Points, GAME_TYPES } from './types';
 import { DEALS } from './setup-deal';
 
 export class GameUi {
@@ -64,7 +64,10 @@ export class GameUi {
     };
 
     this.client.match.on('update', this.updateSetup.bind(this));
-    this.elements.gameType.onchange = this.updateVisibility.bind(this);
+    this.elements.gameType.onchange = () => {
+      this.updateVisibility();
+      this.resetPoints();
+    };
     this.updateSetup();
 
     // Hack for settings menu
@@ -108,6 +111,11 @@ export class GameUi {
     if (DEALS[gameType][dealType] === undefined) {
       this.resetDealType();
     }
+  }
+
+  private resetPoints(): void {
+    const gameType = this.elements.gameType.value as GameType;
+    this.elements.points.value = GAME_TYPES[gameType].points;
   }
 
   private resetDealType(): void {

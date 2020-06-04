@@ -127,7 +127,7 @@ export class ObjectView {
     }
   }
 
-  updateScores(scores: Array<number>): void {
+  updateScores(scores: Array<number | null>): void {
     this.center.setScores(scores);
     this.center.draw();
   }

@@ -8,7 +8,7 @@ export class Center {
   ctx: CanvasRenderingContext2D;
   texture: CanvasTexture;
 
-  scores: Array<number> = new Array(5).fill(0);
+  scores: Array<number | null> = new Array(5).fill(null);
   nicks: Array<string | null> = new Array(4).fill(null);
   dealer: number | null = null;
   honba = 0;
@@ -61,7 +61,7 @@ export class Center {
     this.dirty = true;
   }
 
-  setScores(scores: Array<number>): void {
+  setScores(scores: Array<number | null>): void {
     for (let i = 0; i < 5; i++) {
       if (scores[i] !== this.scores[i]) {
         this.dirty = true;
@@ -100,20 +100,11 @@ export class Center {
     this.texture.needsUpdate = true;
   }
 
-  drawRemainingScore(score: number): void {
-    if (score === 0) {
+  drawScore(score: number | null): void {
+    if (score === null) {
       return;
     }
 
-    this.ctx.textAlign = 'right';
-    this.ctx.font = '30px Segment7Standard, monospace';
-
-    this.ctx.fillStyle = '#e80';
-    const text = `${score}.`;
-    this.ctx.fillText(text, 40, 0);
-  }
-
-  drawScore(score: number): void {
     this.ctx.textAlign = 'right';
     this.ctx.font = '40px Segment7Standard, monospace';
     if (score > 0) {

@@ -1,5 +1,5 @@
 import { shuffle } from "./utils";
-import { Conditions, DealType, ThingType, GameType, Points } from "./types";
+import { Conditions, DealType, ThingType, GameType, Points, GAME_TYPES } from "./types";
 import { DEALS, DealPart, POINTS } from "./setup-deal";
 import { makeSlots } from "./setup-slots";
 import { Slot } from "./slot";
@@ -24,7 +24,7 @@ export class Setup {
 
     this.addSlots(conditions.gameType);
     this.addTiles(conditions);
-    this.addSticks(conditions.points);
+    this.addSticks(conditions.gameType, conditions.points);
     this.addMarker();
     this.deal(0, conditions.gameType, DealType.INITIAL);
   }
@@ -67,7 +67,7 @@ export class Setup {
     this.addSlots(conditions.gameType);
     this.addTiles(conditions);
     if (replaceSticks) {
-      this.addSticks(conditions.points);
+      this.addSticks(conditions.gameType, conditions.points);
     }
     for (const thing of this.things.values()) {
       if (!(thing.type === ThingType.TILE || (thing.type === ThingType.STICK && replaceSticks))) {
@@ -123,9 +123,7 @@ export class Setup {
     // const roll = (window.ROLL && window.ROLL < 12) ? window.ROLL + 1 : 2;
     // window.ROLL = roll;
 
-    if (((gameType === GameType.BAMBOO || gameType === GameType.MINEFIELD) && (seat === 1 || seat === 3)) ||
-        (gameType === GameType.THREE_PLAYER && seat === 3))
-    {
+    if (GAME_TYPES[gameType].seats.indexOf(seat) === -1) {
       seat = 0;
     }
 
@@ -192,11 +190,12 @@ export class Setup {
     }
   }
 
-  private addSticks(points: Points): void {
+  private addSticks(gameType: GameType, points: Points): void {
+    const seats = GAME_TYPES[gameType].seats;
     const add = (index: number, n: number, slot: number): void => {
-      for (let i = 0; i < 4; i++) {
+      for (const seat of seats) {
         for (let j = 0; j < n; j++) {
-          this.addThing(ThingType.STICK, index, `tray.${slot}.${j}@${i}`);
+          this.addThing(ThingType.STICK, index, `tray.${slot}.${j}@${seat}`);
         }
       }
     };
@@ -260,7 +259,7 @@ export class Setup {
     this.pushes.push(...Slot.computePushes([...this.slots.values()]));
   }
 
-  getScores(): Array<number> {
+  getScores(): Array<number | null> {
     const scores = new Array(4).fill(-20000);
     scores.push((25000 + 20000) * 4); // remaining
     const stickScores = [100, 500, 1000, 5000, 10000, 10000];
@@ -272,6 +271,12 @@ export class Setup {
         scores[4] -= score;
       }
     }
-    return scores;
+
+    const result = new Array(4).fill(null);
+    for (const seat of GAME_TYPES[this.conditions.gameType].seats) {
+      result[seat] = scores[seat];
+    }
+
+    return result;
   }
 }
