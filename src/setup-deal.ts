@@ -79,7 +79,7 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
     WINDS: [
       {
         tiles: [27, 28, 29],
-        ranges: [['hand.5', 0, 3]],
+        ranges: [['hand.6', 0, 3]],
         rotationIndex: 2,
       },
       {

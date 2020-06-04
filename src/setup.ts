@@ -153,7 +153,9 @@ export class Setup {
       shuffle(searched);
 
       for (let i = 0; i < searched.length; i++) {
-        const idx = tiles.findIndex(tile => tile.typeIndex === searched[i]);
+        // HACK: typeIndex includes back color
+        const idx = tiles.findIndex(tile =>
+          (tile.typeIndex === searched[i] || tile.typeIndex === searched[i] + 37));
         if (idx === -1) {
           throw `not found: ${searched[i]}`;
         }
