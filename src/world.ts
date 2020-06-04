@@ -7,7 +7,7 @@ import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
 import { SoundPlayer } from "./sound-player";
-import { Conditions, ThingInfo, SoundType, Fives, Place, ThingType, Size, DealType, GameType } from "./types";
+import { Conditions, ThingInfo, SoundType, Fives, Place, ThingType, Size, DealType, GameType, Points } from "./types";
 import { Slot } from "./slot";
 import { Thing } from "./thing";
 
@@ -194,7 +194,7 @@ export class World {
     };
   }
 
-  deal(dealType: DealType, gameType: GameType, fives: Fives): void {
+  deal(dealType: DealType, gameType: GameType, fives: Fives, points: Points): void {
     if (this.seat === null) {
       return;
     }
@@ -206,7 +206,7 @@ export class World {
     this.checkPushes();
 
     const back = 1 - this.conditions.back;
-    const conditions = { ...this.conditions, back, gameType, fives };
+    const conditions = { ...this.conditions, back, gameType, fives, points };
 
     let match = this.client.match.get(0);
     let honba;

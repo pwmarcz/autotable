@@ -53,15 +53,18 @@ export enum GameType {
   MINEFIELD = 'MINEFIELD',
 }
 
+export type Points = '25' | '30' | '35' | '40' | '100';
+
 export interface Conditions {
   gameType: GameType;
   back: number; // 0 or 1
   fives: Fives;
+  points: Points;
 }
 
 export namespace Conditions {
   export function initial(): Conditions {
-    return { gameType: GameType.FOUR_PLAYER, back: 0, fives: '111' };
+    return { gameType: GameType.FOUR_PLAYER, back: 0, fives: '111', points: '25' };
   }
 
   export function equals(a: Conditions, b: Conditions): boolean {

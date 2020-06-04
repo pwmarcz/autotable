@@ -1,6 +1,6 @@
 import { shuffle } from "./utils";
-import { Conditions, DealType, ThingType, GameType } from "./types";
-import { DEALS, DealPart } from "./setup-deal";
+import { Conditions, DealType, ThingType, GameType, Points } from "./types";
+import { DEALS, DealPart, POINTS } from "./setup-deal";
 import { makeSlots } from "./setup-slots";
 import { Slot } from "./slot";
 import { Thing } from "./thing";
@@ -17,15 +17,16 @@ export class Setup {
     'MARKER': 2000,
   }
   pushes: Array<[Slot, Slot]> = [];
+  conditions!: Conditions;
 
   setup(conditions: Conditions): void {
-    const gameType = GameType.FOUR_PLAYER;
+    this.conditions = conditions;
 
-    this.addSlots(gameType);
+    this.addSlots(conditions.gameType);
     this.addTiles(conditions);
-    this.addSticks();
+    this.addSticks(conditions.points);
     this.addMarker();
-    this.deal(0, gameType, DealType.INITIAL);
+    this.deal(0, conditions.gameType, DealType.INITIAL);
   }
 
   private wallSlots(): Array<Slot> {
@@ -48,10 +49,15 @@ export class Setup {
   replace(conditions: Conditions): void {
     // console.log('replace', conditions);
 
+    const replaceSticks = (
+      conditions.gameType !== this.conditions.gameType ||
+      conditions.points !== this.conditions.points
+    );
+
     const map = new Map<number, string>();
     for (const thing of [...this.things.values()]) {
       thing.prepareMove();
-      if (thing.type === ThingType.TILE) {
+      if (thing.type === ThingType.TILE || (thing.type === ThingType.STICK && replaceSticks)) {
         this.things.delete(thing.index);
       } else {
         map.set(thing.index, thing.slot.name);
@@ -60,8 +66,11 @@ export class Setup {
     this.counters.set(ThingType.TILE, 0);
     this.addSlots(conditions.gameType);
     this.addTiles(conditions);
+    if (replaceSticks) {
+      this.addSticks(conditions.points);
+    }
     for (const thing of this.things.values()) {
-      if (thing.type !== ThingType.TILE) {
+      if (!(thing.type === ThingType.TILE || (thing.type === ThingType.STICK && replaceSticks))) {
         const slotName = map.get(thing.index);
         if (slotName === undefined) {
           throw `couldn't recover slot name for thing ${thing.index}`;
@@ -73,6 +82,7 @@ export class Setup {
         thing.moveTo(slot, thing.rotationIndex);
       }
     }
+    this.conditions = conditions;
   }
 
   private tileIndex(i: number, conditions: Conditions): number | null {
@@ -182,7 +192,7 @@ export class Setup {
     }
   }
 
-  private addSticks(): void {
+  private addSticks(points: Points): void {
     const add = (index: number, n: number, slot: number): void => {
       for (let i = 0; i < 4; i++) {
         for (let j = 0; j < n; j++) {
@@ -192,17 +202,17 @@ export class Setup {
     };
 
     // Debt
-    add(5, 2, 0);
+    add(5, POINTS[points][0], 0);
     // 10k
-    add(4, 1, 1);
+    add(4, POINTS[points][1], 1);
     // 5k
-    add(3, 2, 2);
+    add(3, POINTS[points][2], 2);
     // 1k
-    add(2, 4, 3);
+    add(2, POINTS[points][3], 3);
     // 500
-    add(1, 1, 4);
+    add(1, POINTS[points][4], 4);
     // 100
-    add(0, 5, 5);
+    add(0, POINTS[points][5], 5);
   }
 
   private addMarker(): void {

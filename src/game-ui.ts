@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import { Client } from "./client";
 import { World } from "./world";
-import { DealType, Fives, GameType, Conditions } from './types';
+import { DealType, Fives, GameType, Conditions, Points } from './types';
 import { DEALS } from './setup-deal';
 
 export class GameUi {
@@ -19,6 +19,7 @@ export class GameUi {
     gameType: HTMLSelectElement;
     setupDesc: HTMLElement;
     fives: HTMLSelectElement;
+    points: HTMLSelectElement;
   }
 
   constructor(client: Client, world: World) {
@@ -36,6 +37,7 @@ export class GameUi {
       gameType: document.getElementById('game-type') as HTMLSelectElement,
       setupDesc: document.getElementById('setup-desc') as HTMLElement,
       fives: document.getElementById('fives') as HTMLSelectElement,
+      points: document.getElementById('points') as HTMLSelectElement,
     };
     for (let i = 0; i < 4; i++) {
       this.elements.takeSeat[i] = document.querySelector(
@@ -83,6 +85,7 @@ export class GameUi {
     const conditions = match?.conditions ?? Conditions.initial();
 
     this.elements.fives.value = conditions.fives;
+    this.elements.points.value = conditions.points;
     this.elements.gameType.value = conditions.gameType;
     this.elements.setupDesc.textContent = Conditions.describe(conditions);
 
@@ -183,8 +186,9 @@ export class GameUi {
         const dealType = this.elements.dealType.value as DealType;
         const gameType = this.elements.gameType.value as GameType;
         const fives = this.elements.fives.value as Fives;
+        const points = this.elements.points.value as Points;
 
-        this.world.deal(dealType, gameType, fives);
+        this.world.deal(dealType, gameType, fives, points);
         this.resetDealType();
         this.hideSetup();
       }
