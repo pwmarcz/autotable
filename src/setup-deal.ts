@@ -72,7 +72,8 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
           ['wall.3.0', 1, 26],
           ['wall.2.0', 2, 28],
           ['wall.3.0', 3, 26],
-        ]
+        ],
+        absolute: true,
       },
     ],
     WINDS: [
@@ -88,7 +89,27 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
           ['wall.2.0', 2, 28],
           ['wall.3.0', 3, 23],
         ],
+        absolute: true,
       },
+    ],
+
+    HANDS: [
+      {
+        ranges: [
+          ['hand.0', 0, 13],
+          ['hand.0', 1, 13],
+          ['hand.0', 2, 13],
+        ],
+        rotationIndex: 2,
+        absolute: true,
+      },
+      {
+        ranges: [
+          ['wall.10.0', 0, 14],
+          ['wall.3.0', 1, 26],
+          ['wall.2.0', 2, 29],
+        ],
+      }
     ],
   },
 
