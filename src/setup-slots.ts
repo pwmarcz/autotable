@@ -230,7 +230,7 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('discard.extra'), row(4, undefined, {push: true}), seats()],
 
     [start('tray'), row(6, 24), column(10, -3), seats()],
-    [start('payment'), row(8, 3), column(10, -3), seats()],
+    [start('payment'), row(8, 3), seats()],
     [start('riichi'), seats()],
     [start('marker'), seats()],
   ],
@@ -244,7 +244,7 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('discard.extra'), row(4, undefined, {push: true}), seats([0, 1, 2])],
 
     [start('tray'), row(6, 24), column(10, -3), seats([0, 1, 2])],
-    [start('payment'), row(8, 3), column(10, -3), seats([0, 1, 2])],
+    [start('payment'), row(8, 3), seats()],
     [start('riichi'), seats([0, 1, 2])],
     [start('marker'), seats([0, 1, 2])],
   ],
@@ -257,7 +257,7 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats([0, 2])],
 
     [start('tray'), row(6, 24), column(10, -3), seats([0, 2])],
-    [start('payment'), row(8, 3), column(10, -3), seats([0, 2])],
+    [start('payment'), row(8, 3), seats()],
     [start('riichi'), seats([0, 2])],
     [start('marker'), seats([0, 2])],
   ],
@@ -269,7 +269,7 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats([0, 2])],
 
     [start('tray'), row(6, 24), column(10, -3), seats([0, 2])],
-    [start('payment'), row(8, 3), column(10, -3), seats([0, 2])],
+    [start('payment'), row(8, 3), seats()],
     [start('riichi'), seats([0, 2])],
     [start('marker'), seats([0, 2])],
   ],
