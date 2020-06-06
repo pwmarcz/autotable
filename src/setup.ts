@@ -49,28 +49,40 @@ export class Setup {
   replace(conditions: Conditions): void {
     // console.log('replace', conditions);
 
-    const replaceSticks = (
-      conditions.gameType !== this.conditions.gameType ||
-      conditions.points !== this.conditions.points
-    );
+    const whatReplace: Record<ThingType, boolean> = {
+      TILE: true,
+      STICK: (
+        conditions.gameType !== this.conditions.gameType ||
+        conditions.points !== this.conditions.points
+      ),
+      MARKER: conditions.gameType !== this.conditions.gameType,
+    };
 
     const map = new Map<number, string>();
     for (const thing of [...this.things.values()]) {
       thing.prepareMove();
-      if (thing.type === ThingType.TILE || (thing.type === ThingType.STICK && replaceSticks)) {
+      if (whatReplace[thing.type]) {
         this.things.delete(thing.index);
       } else {
         map.set(thing.index, thing.slot.name);
       }
     }
-    this.counters.set(ThingType.TILE, 0);
     this.addSlots(conditions.gameType);
-    this.addTiles(conditions);
-    if (replaceSticks) {
+    if (whatReplace.TILE) {
+      this.counters.set(ThingType.TILE, 0);
+      this.addTiles(conditions);
+    }
+    if (whatReplace.STICK) {
+      this.counters.set(ThingType.STICK, 0);
       this.addSticks(conditions.gameType, conditions.points);
     }
+    if (whatReplace.MARKER) {
+      this.counters.set(ThingType.MARKER, 0);
+      this.addMarker();
+    }
+
     for (const thing of this.things.values()) {
-      if (!(thing.type === ThingType.TILE || (thing.type === ThingType.STICK && replaceSticks))) {
+      if (!whatReplace[thing.type]) {
         const slotName = map.get(thing.index);
         if (slotName === undefined) {
           throw `couldn't recover slot name for thing ${thing.index}`;
