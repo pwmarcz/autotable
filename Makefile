@@ -60,3 +60,7 @@ release-server: build-server
 	rsync -rva --checksum --delete --exclude node_modules/ server/ $(SERVER):autotable/server/
 	ssh $(SERVER) 'cd autotable/server && yarn'
 	ssh $(SERVER) 'sudo systemctl restart autotable-server.service'
+
+.PHONY:
+test:
+	cd server && yarn test
