@@ -29,7 +29,7 @@ Run:
 
 The frontend can be served as static files. Run `make build`.
 
-The server is a WebSocket application. You can run it locally, and use your HTTP server to expose it to the world.
+The server is a WebSocket application. You can run it on the server listening on localhost, and use your HTTP server to expose it to the world.
 
 By default, the frontend should be under `/autotable/` and server under `/autotable/ws`.
 
