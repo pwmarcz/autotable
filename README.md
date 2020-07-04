@@ -6,6 +6,8 @@ For more information, see the about page: https://pwmarcz.pl/autotable/about.htm
 
 ## Running
 
+This repository uses [Git LFS](https://git-lfs.github.com/) to track large files. To clone all files, you need to install it first.
+
 You need the following:
 
 * GNU make
