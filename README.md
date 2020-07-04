@@ -67,7 +67,7 @@ This is a very opinionated project. I will be grateful for contributions that fi
 
 * Making the engine **too general**, at the cost of simplicity. I'm not interested in a general-purpose tabletop engine.
 * Other mahjong **variants** than Riichi Mahjong, unless it has a low maintenance cost. Same reason as above - I would rather have a great support for Riichi than mediocre support for all kinds of mahjong.
-* Any form of **automation**, such as automatic tile drawing sorting, scoring etc. This is contrary to the project's philosophy.
+* Any form of **automation**, such as automatic tile drawing, sorting, scoring etc. This is contrary to the project's philosophy.
 
 However, please don't feel discouraged from making these changes in your own fork! While I want to do my thing here, I would be very interested to see in what directions people take the project.
 
