@@ -2,7 +2,9 @@
 
 Autotable is a tabletop simulator for Riichi Mahjong.
 
-For more information, see the about page: https://pwmarcz.pl/autotable/about.html
+* Game: https://pwmarcz.pl/autotable/
+* About page: https://pwmarcz.pl/autotable/about.html
+* Blog post: https://pwmarcz.pl/blog/autotable/
 
 ## Running
 
@@ -74,7 +76,7 @@ However, please don't feel discouraged from making these changes in your own for
 
 ## Development
 
-See my blog posts for explanation of many technical decisions: https://pwmarcz.pl/blog/autotable/
+See the blog post for explanation of many technical decisions: https://pwmarcz.pl/blog/autotable/
 
 The main parts are:
 
