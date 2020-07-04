@@ -3,6 +3,10 @@ import { Thing } from "./thing";
 
 type SlotOp = (slot: Slot) => Slot | null;
 
+// Represents a group of things that will be moved to different slots when
+// dragging.
+// Includes both things dragged directly (thingMap), and shifted to make space
+// (shiftMap).
 export class Movement {
   private thingMap: Map<Thing, Slot> = new Map();
   private reverseMap: Map<Slot, Thing> = new Map();

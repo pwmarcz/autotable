@@ -48,11 +48,25 @@ export class Client extends BaseClient {
 }
 
 interface CollectionOptions {
+  // Key that has to be kept unique. Enforced by the server.
+  // For example, for 'things', the unique key is 'slotName', and if you
+  // attempt to store two things with the same slots, server will reject the
+  // update.
   unique?: string;
+
+  // Updates will be sent to other players, but not stored on the server (new
+  // will not receive them on connection).
   ephemeral?: boolean;
+
+  // This is a collection indexed by player ID, and values will be deleted
+  // when a player disconnect.
   perPlayer?: boolean;
 
+  // The server will not send all updates, but limit to N per second.
   rateLimit?: number;
+
+  // If we are initializing the server (i.e. we're the first player), send
+  // our value.
   sendOnConnect?: boolean;
 }
 

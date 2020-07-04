@@ -5,37 +5,69 @@ import { round3 } from "./utils";
 
 
 interface SlotLinks {
+  // A slot stacked above/below current one, in a wall.
   down?: Slot;
   up?: Slot;
+
+  // You have to fill that slot before current one becomes usable.
   requires?: Slot;
+
+  // Move things in this slot to left/right when dropping. Used for example for
+  // sorting your hand.
   shiftLeft?: Slot;
   shiftRight?: Slot;
+
+  // A rotated tile in current slot pushes this one. Used for riichi.
   push?: Slot;
 }
 
 type SlotLinkDesc = Partial<Record<keyof SlotLinks, string>>;
 
 export class Slot {
+  // Full name: 'wall.1.1@3'
   name: string;
+
+  // Group: 'wall'
   group: string;
+
   type: ThingType;
+
   origin: Vector3;
   direction: Vector2;
+
+  // Permitted rotations for things in this slot
   rotations: Array<Euler>;
 
+  // Coordinates of this slot, e.g. 'wall.1.2@3' has indexes [1, 2]
   indexes: Array<number> = [];
+
+  // Player number
   seat: number | null = null;
 
+  // Places (box parameters) corresponding to rotations
   places: Array<Place>;
+
+  // Offset from origin, recomputed when pushing
   offset: Vector2;
 
+  // Current thing in this slot
   thing: Thing | null = null;
 
+  // Slots related to this one - first as strings, then as references
   links: SlotLinks;
   linkDesc: SlotLinkDesc;
+
+  // Can select and filp multiple of this kind
   canFlipMultiple: boolean;
+
+  // Draw a permanent shadow for this slot
   drawShadow: boolean;
+
+  // Rotation to use for this shadow (for example, 'hand' slots have shadows
+  // for tiles lying down, even though the tiles are standing by default)
   shadowRotation: number;
+
+  // Rotate a tile hovered over this slot. Used for hand.
   rotateHeld: boolean;
 
   constructor(params: {
