@@ -98,7 +98,7 @@ The main parts are:
 Some terminology:
 
 - **thing** - all moving objects: tiles, sticks, marker
-    - **thing type** - tile/stick/marer
+    - **thing type** - tile/stick/marker
     - **thing index** - a unique number
 - **slot** - a space that can be occupied by a thing
     - **slot name** - a string identifying the slot in game
