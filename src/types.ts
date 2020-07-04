@@ -35,7 +35,6 @@ export interface MatchInfo {
 export interface Game {
   gameId: string;
   num: number;
-  secret: string;
 }
 
 export enum DealType {
