@@ -14,7 +14,7 @@ You need the following:
 
 * GNU make
 * node and yarn
-* Inkscape (for textures: .svg -> .png conversion)
+* Inkscape 1.0+ (for textures: .svg -> .png conversion)
 * Blender (for 3D models: .blend -> .glb conversion)
 
 Run:

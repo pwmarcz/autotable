@@ -19,19 +19,19 @@ server:
 files: img/models.auto.glb $(ICONS)
 
 img/tiles.auto.png: img/tiles.svg
-	inkscape $< --export-png=$@ --export-width=512
+	inkscape $< --export-filename=$@ --export-width=512
 
 img/sticks.auto.png: img/sticks.svg
-	inkscape $< --export-png=$@ --export-width=256 --export-height=512
+	inkscape $< --export-filename=$@ --export-width=256 --export-height=512
 
 img/center.auto.png: img/center.svg
-	inkscape $< --export-png=$@ --export-width=512 --export-height=512
+	inkscape $< --export-filename=$@ --export-width=512 --export-height=512
 
 img/winds.auto.png: img/winds.svg
-	inkscape $< --export-png=$@ --export-width=128 --export-height=64
+	inkscape $< --export-filename=$@ --export-width=128 --export-height=64
 
 img/icon-%.auto.png: img/icon.svg
-	inkscape $< --export-png=$@ --export-width=$*
+	inkscape $< --export-filename=$@ --export-width=$*
 
 img/models.auto.glb: img/models.blend $(TEXTURES)
 	blender $< --background --python export.py -- $@
