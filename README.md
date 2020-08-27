@@ -10,7 +10,7 @@ Autotable is a tabletop simulator for Riichi Mahjong.
 
 This repository uses [Git LFS](https://git-lfs.github.com/) to track large files. To clone all files, you need to install it first.
 
-You need the following:
+You need the following utilities installed and present in `PATH`:
 
 * GNU make
 * node and yarn
@@ -19,7 +19,8 @@ You need the following:
 
 Run:
 
-* `yarn` to install packages
+* `yarn` to install frontend packages
+* `cd server && yarn` to install server packages
 * `make parcel` to run and serve frontend
 * `make files` to re-generate static files (textures and models)
 * `make server` to run server
