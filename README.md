@@ -17,13 +17,16 @@ You need the following:
 * Inkscape (for textures: .svg -> .png conversion)
 * Blender (for 3D models: .blend -> .glb conversion)
 
+You must ensure that the executables for both Inkscape and Blender are on your PATH
+
 Run:
 
 * `yarn` to install packages
+* `cd server && yarn && cd ..` to install more packages
 * `make parcel` to run and serve frontend
 * `make files` to re-generate static files (textures and models)
 * `make server` to run server
-* `make test` to run server tests
+* `make test` to run server tests (having used `make server` to ensure it's running)
 
 ## Deployment
 
