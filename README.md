@@ -26,7 +26,7 @@ Run:
 * `make parcel` to run and serve frontend
 * `make files` to re-generate static files (textures and models)
 * `make server` to run server
-* `make test` to run server tests (having used `make server` to ensure it's running)
+* `make test` to run server tests
 
 ## Deployment
 
