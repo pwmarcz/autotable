@@ -12,8 +12,10 @@ FROM debian:bullseye-slim AS blender
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
         blender \
+        python3-pip \
         make
 
+RUN pip3 install -U numpy
 
 WORKDIR /build/
 COPY Makefile ./
@@ -27,8 +29,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-rec
     make
 
 COPY ./ /build/
-COPY --from=blender /build/img/* ./img/
 WORKDIR /build/
+COPY --from=blender /build/img/* ./img/
 
 RUN yarn
 RUN make -o files build

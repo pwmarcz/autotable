@@ -6,6 +6,9 @@ build/
 *.blend1
 .vscode/
 
+img/*.png
+img/*.glb
+
 server/
 .eslintrc.json
 .gitignore
