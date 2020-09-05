@@ -5,8 +5,6 @@ services:
     build:
       context: .
     image: autotable-nginx
-    ports:
-      - 80:80
 
   server:
     build:
