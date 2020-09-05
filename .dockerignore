@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+.cache/
+*.auto.*
+*.blend1
+.vscode/
+
+server/
+.eslintrc.json
+.gitignore
+.gitattributes
+COPYING
+docker-compose.yml
+Dockerfile
+README.md

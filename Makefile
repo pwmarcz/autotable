@@ -18,6 +18,9 @@ server:
 .PHONY: files
 files: img/models.auto.glb $(ICONS)
 
+.PHONY: svgs
+svgs: $(ICONS) $(TEXTURES)
+
 img/tiles.auto.png: img/tiles.svg
 	inkscape $< --export-filename=$@ --export-width=512 --export-background=#ffffff --export-background-opacity=1
 
@@ -39,7 +42,7 @@ img/models.auto.glb: img/models.blend $(TEXTURES)
 .PHONY: build
 build: files
 	rm -rf build
-	./node_modules/.bin/parcel build *.html --public-url . --cache-dir .cache/build/ --out-dir build/ --no-source-maps
+	yarn run parcel build *.html --public-url . --cache-dir .cache/build/ --out-dir build/ --no-source-maps
 
 .PHONY: build-server
 build-server:
