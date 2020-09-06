@@ -148,7 +148,7 @@ export class Collection<K extends string | number, V> {
       }
     }
     if (full || localEntries.length > 0) {
-      console.log(full ? 'full update' : 'update', this.kind, localEntries.length);
+      // console.log(full ? 'full update' : 'update', this.kind, localEntries.length);
       this.events.emit('update', localEntries, full);
     }
   }

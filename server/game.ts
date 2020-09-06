@@ -26,7 +26,7 @@ export class Game {
   private collections: Map<string, Map<string | number, any>> = new Map();
 
   constructor(gameId: string) {
-    console.log(`new game: ${gameId}`);
+    // console.log(`new game: ${gameId}`);
     this.gameId = gameId;
     this.expiryTime = new Date().getTime() + EXPIRY_TIME;
   }
@@ -44,7 +44,7 @@ export class Game {
     client.playerId = playerId;
     client.game = this;
 
-    console.log(`${this.gameId}: join: ${playerId}`);
+    // console.log(`${this.gameId}: join: ${playerId}`);
 
     this.send(client, {
       type: 'JOINED',
@@ -138,7 +138,7 @@ export class Game {
         const value = item[field];
         if (value !== null && value !== undefined) {
           if (occupied.has(value)) {
-            console.log(`conflict on ${kind}, ${field} = ${value}`);
+            // console.log(`conflict on ${kind}, ${field} = ${value}`);
             return false;
           }
           occupied.add(value);
@@ -149,7 +149,7 @@ export class Game {
   }
 
   leave(client: Client): void {
-    console.log(`${this.gameId}: leave: ${client.playerId}`);
+    // console.log(`${this.gameId}: leave: ${client.playerId}`);
 
     this.clients.delete(client.playerId!);
     const toUpdate: Array<Entry> = [];

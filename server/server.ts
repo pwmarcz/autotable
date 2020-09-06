@@ -50,7 +50,7 @@ export class Server {
 
     setInterval(this.checkExpiry.bind(this), 5000);
 
-    console.log(`listening at ${this.port}`);
+    // console.log(`listening at ${this.port}`);
   }
 
   onMessage(client: Client, message: Message): void {
@@ -97,7 +97,7 @@ export class Server {
     const now = new Date().getTime();
     for (const [gameId, game] of this.games.entries()) {
       if (game.expiryTime !== null && game.expiryTime < now) {
-        console.log(`deleting expired: ${gameId}`);
+        // console.log(`deleting expired: ${gameId}`);
         this.games.delete(gameId);
       }
     }
