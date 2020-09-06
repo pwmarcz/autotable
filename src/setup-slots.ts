@@ -9,6 +9,7 @@ const Rotation = {
   FACE_UP_SIDEWAYS: new Euler(0, 0, Math.PI / 2),
   STANDING: new Euler(Math.PI / 2, 0, 0),
   FACE_DOWN: new Euler(Math.PI, 0, 0),
+  FACE_DOWN_SIDEWAYS: new Euler(Math.PI, 0, Math.PI / 2),
   FACE_DOWN_REVERSE: new Euler(Math.PI, 0, Math.PI),
 };
 
@@ -169,7 +170,7 @@ const START: Record<string, Slot> = {
     group: `discard`,
     origin: new Vector3(69, 60, 0),
     direction: new Vector2(1, 1),
-    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
+    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN, Rotation.FACE_DOWN_SIDEWAYS],
     drawShadow: true,
   }),
 
@@ -178,7 +179,7 @@ const START: Record<string, Slot> = {
     group: `discard`,
     origin: new Vector3(69 + 6 * Size.TILE.x, 60 - 2 * Size.TILE.y, 0),
     direction: new Vector2(1, 1),
-    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
+    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN, Rotation.FACE_DOWN_SIDEWAYS],
   }),
 
   'tray': new Slot({
