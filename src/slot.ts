@@ -241,7 +241,6 @@ export class Slot {
     if (source.thing === null) {
       return;
     }
-
     const rotationIndex = this.thing ? this.thing.rotationIndex : 0;
 
     const place = this.places[rotationIndex];
