@@ -36,6 +36,7 @@ export class Slot {
   direction: Vector2;
 
   // Permitted rotations for things in this slot
+  readonly rotationOptions: Array<Euler>;
   rotations: Array<Euler>;
 
   // Coordinates of this slot, e.g. 'wall.1.2@3' has indexes [1, 2]
@@ -88,6 +89,7 @@ export class Slot {
     this.type = params.type ?? ThingType.TILE;
     this.origin = params.origin;
     this.direction = params.direction ?? new Vector2(1, 1);
+    this.rotationOptions = params.rotations;
     this.rotations = params.rotations;
     this.linkDesc = params.links ?? {};
     this.canFlipMultiple = params.canFlipMultiple ?? false;
