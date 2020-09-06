@@ -1,5 +1,6 @@
 import { Slot } from "./slot";
 import { Thing } from "./thing";
+import { TileThingGroup } from "./thing-group";
 
 type SlotOp = (slot: Slot) => Slot | null;
 
@@ -75,9 +76,12 @@ export class Movement {
     }
     for (const [thing, slot] of this.thingMap.entries()) {
       // TODO instead of group, check if rotations are the same?
-      const rotationIndex = thing.slot.group === slot.group
+      let rotationIndex = thing.slot.group === slot.group
         ? thing.rotationIndex
         : Math.max(0, slot.rotationOptions.findIndex(r => r.equals(thing.slot.rotationOptions[thing.rotationIndex])));
+      if (slot.group === 'hand' && slot.group !== thing.slot.group) {
+        rotationIndex = 0;
+      }
       thing.moveTo(slot, rotationIndex);
       thing.release();
     }
