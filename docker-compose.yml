@@ -5,8 +5,16 @@ services:
     build:
       context: .
     image: autotable-nginx
+    networks:
+      - riichi-ingress
+      - default
 
   server:
     build:
       context: ./server
     image: autotable-server
+
+networks:
+  riichi-ingress:
+    external: true
+    internal: true
