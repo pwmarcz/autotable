@@ -85,6 +85,7 @@ export class World {
 
   private onThings(entries: Array<[number, ThingInfo | null]>): void {
     const now = new Date().getTime();
+    console.log(entries);
 
     for (const [thingIndex, thingInfo] of entries) {
       // TODO handle deletion
@@ -168,6 +169,7 @@ export class World {
         }
       }
       if (entries.length > 0) {
+        console.log("update", entries);
         this.client.things.update(entries);
       }
     }
