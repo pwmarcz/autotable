@@ -68,7 +68,7 @@ export class Game {
     return entries;
   }
 
-  private update(entries: Array<Entry>): void {
+  private update(entries: Array<Entry>, senderId: string | null): void {
     if (!this.checkUnique(entries)) {
       this.sendAll({type: 'UPDATE', entries: this.allEntries(), full: true});
       return;
@@ -98,7 +98,17 @@ export class Game {
         this.perPlayer.set(key as string, value);
       }
     }
-    this.sendAll({type: 'UPDATE', entries, full: false});
+
+    const message: Message = {type: 'UPDATE', entries, full: false};
+    this.sendAll(message, [senderId]);
+
+    if (senderId !== null) {
+      const filteredEntries = entries.filter(f => f[0] !== "things");
+      const client = this.clients.get(senderId);
+      if (filteredEntries.length > 0 && client !== undefined) {
+        this.send(client, message);
+      }
+    }
   }
 
   private checkUnique(entries: Array<Entry>): boolean {
@@ -164,7 +174,7 @@ export class Game {
       }
     }
     if (toUpdate.length > 0) {
-      this.update(toUpdate);
+      this.update(toUpdate, client.playerId);
     }
     if (this.clients.size === 0) {
       this.expiryTime = new Date().getTime() + EXPIRY_TIME;
@@ -177,8 +187,11 @@ export class Game {
     client.send(data);
   }
 
-  private sendAll(message: Message): void {
+  private sendAll(message: Message, blacklist: Array<string|null> = []): void {
     for (const client of this.clients.values()) {
+      if (client.playerId !== null && blacklist.indexOf(client.playerId) >= 0) {
+        continue;
+      }
       this.send(client, message);
     }
   }
@@ -186,7 +199,7 @@ export class Game {
   onMessage(client: Client, message: Message): void {
     switch (message.type) {
       case 'UPDATE':
-        this.update(message.entries);
+        this.update(message.entries, client.playerId);
         break;
     }
   }
