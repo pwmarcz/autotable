@@ -4,9 +4,16 @@ services:
   nginx:
     build:
       context: .
+    networks:
+      - ingress_link
+      - default
     image: autotable-nginx
 
   server:
     build:
       context: ./server
     image: autotable-server
+
+networks:
+  ingress_link:
+    external: true
