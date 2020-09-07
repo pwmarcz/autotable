@@ -103,23 +103,17 @@ export class Collection<K extends string | number, V> {
   }
 
   update(localEntries: Array<[K, V | null]>): void {
-    if (!this.client.connected()) {
-      for (const [key, value] of localEntries) {
-        if (value !== null) {
-          this.map.set(key, value);
-        } else {
-          this.map.delete(key);
-        }
-      }
-      this.events.emit('update', localEntries, false);
-    } else {
-      const now = new Date().getTime();
-      for (const [key, value] of localEntries) {
-        this.pending.set(key, value);
-      }
-      if (!this.options.rateLimit || now > this.lastUpdate + this.options.rateLimit) {
-        this.sendPending();
-      }
+    this.cacheEntries(localEntries, false);
+    if(!this.client.connected()) {
+      return;
+    }
+
+    const now = new Date().getTime();
+    for (const [key, value] of localEntries) {
+      this.pending.set(key, value);
+    }
+    if (!this.options.rateLimit || now > this.lastUpdate + this.options.rateLimit) {
+      this.sendPending();
     }
   }
 
@@ -136,19 +130,23 @@ export class Collection<K extends string | number, V> {
     if (full) {
       this.map.clear();
     }
+    this.cacheEntries(
+      entries.filter(([kind, _, __]) => kind === this.kind).map(([_, k, v]) => [k as K, v as V | null]),
+      true,
+    )
+  }
+
+  private cacheEntries(entries: Array<[K, V | null]>, full: boolean): void {
     const localEntries = [];
-    for (const [kind, key, value] of entries) {
-      if (kind === this.kind) {
-        localEntries.push([key, value]);
-        if (value !== null) {
-          this.map.set(key as K, value);
-        } else {
-          this.map.delete(key as K);
-        }
+    for (const [key, value] of entries) {
+      localEntries.push([key, value]);
+      if (value !== null) {
+        this.map.set(key as K, value);
+      } else {
+        this.map.delete(key as K);
       }
     }
     if (full || localEntries.length > 0) {
-      console.log(full ? 'full update' : 'update', this.kind, localEntries.length);
       this.events.emit('update', localEntries, full);
     }
   }
