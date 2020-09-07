@@ -100,10 +100,13 @@ export class Game {
     }
 
     const message: Message = {type: 'UPDATE', entries, full: false};
-    this.sendAll(message, [senderId]);
-
     if (senderId !== null) {
       const filteredEntries = entries.filter(f => f[0] !== "things");
+      if (filteredEntries.length === entries.length) {
+        this.sendAll(message);
+        return;
+      }
+      this.sendAll(message, [senderId]);
       const client = this.clients.get(senderId);
       if (filteredEntries.length > 0 && client !== undefined) {
         this.send(client, message);

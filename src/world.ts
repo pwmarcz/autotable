@@ -165,9 +165,7 @@ export class World {
       for (const thing of this.things.values()) {
         if (!thing.sent) {
           const desc = this.describeThing(thing);
-          if (JSON.stringify(desc) !== JSON.stringify(this.client.things.get(thing.index))) {
-            entries.push([thing.index, desc]);
-          }
+          entries.push([thing.index, desc]);
           thing.sent = true;
         }
       }
