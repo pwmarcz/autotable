@@ -62,7 +62,6 @@ export class Thing {
       throw `slot not empty: ${this.index} ${target.name}`;
     }
     this.slot = target;
-    console.log("rot", rotationIndex);
     this.rotationIndex = rotationIndex ?? 0;
     target.thing = this;
 

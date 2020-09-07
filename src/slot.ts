@@ -270,6 +270,4 @@ export class Slot {
       }
     }
   }
-
-
 }

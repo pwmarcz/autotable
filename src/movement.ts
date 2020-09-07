@@ -1,6 +1,6 @@
 import { Slot } from "./slot";
 import { Thing } from "./thing";
-import { TileThingGroup } from "./thing-group";
+import { Euler } from "three";
 
 type SlotOp = (slot: Slot) => Slot | null;
 
@@ -12,6 +12,7 @@ export class Movement {
   private thingMap: Map<Thing, Slot> = new Map();
   private reverseMap: Map<Slot, Thing> = new Map();
   private shiftMap: Map<Thing, Slot> = new Map();
+  private heldRotation: Euler | null = null;
 
   move(thing: Thing, slot: Slot): void {
     if (this.reverseMap.has(slot)) {
@@ -75,13 +76,22 @@ export class Movement {
       thing.prepareMove();
     }
     for (const [thing, slot] of this.thingMap.entries()) {
-      // TODO instead of group, check if rotations are the same?
-      let rotationIndex = thing.slot.group === slot.group
-        ? thing.rotationIndex
-        : Math.max(0, slot.rotationOptions.findIndex(r => r.equals(thing.slot.rotationOptions[thing.rotationIndex])));
+      let rotationIndex = 0;
+      if (this.heldRotation !== null) {
+        const matchingIndex = slot.rotationOptions.findIndex(o => o.equals(this.heldRotation!));
+        if (matchingIndex >= 0) {
+          rotationIndex = matchingIndex;
+        }
+      } else {
+        rotationIndex = thing.slot.group === slot.group
+         ? thing.rotationIndex
+         : Math.max(0, slot.rotationOptions.findIndex(r => r.equals(thing.slot.rotationOptions[thing.rotationIndex])));
+      }
+
       if (slot.group === 'hand' && slot.group !== thing.slot.group) {
         rotationIndex = 0;
       }
+
       thing.moveTo(slot, rotationIndex);
       thing.release();
     }
@@ -92,23 +102,31 @@ export class Movement {
     }
   }
 
-  rotateHeld(): void {
+  setHeldRotation(heldRotation: Euler): void {
+    this.heldRotation = heldRotation;
+  }
+
+  rotateHeld(): Euler | null {
     // Don't rotate more than 1 tile, they may collide
     if (this.thingMap.size > 1) {
-      return;
+      return null;
     }
 
     for (const [thing, slot] of this.thingMap.entries()) {
-      if (slot.rotateHeld) {
-        const rotationIndex =
-          thing.slot.group === slot.group ? thing.rotationIndex : 0;
-        const rotation = slot.rotations[rotationIndex];
-        if (!thing.heldRotation.equals(rotation)) {
-          thing.heldRotation.copy(rotation);
-          thing.sent = false;
-        }
+      if (!slot.rotateHeld) {
+        return null;
       }
+
+      const rotationIndex = thing.slot.group === slot.group ? thing.rotationIndex : 0;
+      const rotation = slot.rotations[rotationIndex];
+      if (!thing.heldRotation.equals(rotation)) {
+        thing.heldRotation.copy(rotation);
+        thing.sent = false;
+      }
+      return slot.rotationOptions[rotationIndex];
     }
+
+    return null;
   }
 
   findShift(allThings: Array<Thing>, ops: Array<SlotOp>): boolean {

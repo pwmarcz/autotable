@@ -4,7 +4,7 @@ import { Size, ThingType, GameType } from "./types";
 
 const WORLD_SIZE = 174;
 
-const Rotation = {
+export const Rotation = {
   FACE_UP: new Euler(0, 0, 0),
   FACE_UP_SIDEWAYS: new Euler(0, 0, Math.PI / 2),
   STANDING: new Euler(Math.PI / 2, 0, 0),
