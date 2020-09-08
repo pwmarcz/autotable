@@ -16,11 +16,10 @@ function parseTileString(tiles: string): Record<string, number> {
       tileMap[tile] = (tileMap[tile] ?? 0) + 1;
     }
   }
-  console.log(tileMap);
   return tileMap;
 }
 
-function toString(tileMap: Record<string, number>): string {
+export function tileMapToString(tileMap: Record<string, number>): string {
   const groups: Record<string, string> = {};
   for (const [key, value] of Object.entries(tileMap).sort((a, b) => a[0].codePointAt(0) - b[0].codePointAt(0))) {
     groups[key[1]] = (groups[key[1]] ?? "") + key[0].repeat(value);
@@ -123,7 +122,7 @@ export class GameUi {
     const match = this.client.match.get(0);
     const conditions = match?.conditions ?? Conditions.initial();
 
-    this.elements.aka.value = conditions.aka;
+    this.elements.aka.value = tileMapToString(conditions.aka);
     this.elements.points.value = conditions.points;
     this.elements.gameType.value = conditions.gameType;
     this.elements.setupDesc.textContent = Conditions.describe(conditions);
@@ -176,7 +175,7 @@ export class GameUi {
 
   private updateAkaText(event: FocusEvent): void {
     this.elements.aka.value = "-";
-    this.elements.akaText.value = toString(parseTileString(this.elements.akaText.value));
+    this.elements.akaText.value = tileMapToString(parseTileString(this.elements.akaText.value));
   }
 
   private updateSeats(): void {
@@ -242,7 +241,7 @@ export class GameUi {
       if (deal) {
         const dealType = this.elements.dealType.value as DealType;
         const gameType = this.elements.gameType.value as GameType;
-        const aka = this.elements.aka.value;
+        const aka = parseTileString(this.elements.akaText.value);
         const points = this.elements.points.value as Points;
 
         this.world.deal(dealType, gameType, aka, points);

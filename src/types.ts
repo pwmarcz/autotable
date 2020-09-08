@@ -1,4 +1,5 @@
 import { Vector3, Euler } from "three";
+import { tileMapToString } from "./game-ui";
 
 export enum ThingType {
   TILE = 'TILE',
@@ -67,7 +68,7 @@ export type Points = '25' | '30' | '35' | '40' | '100';
 export interface Conditions {
   gameType: GameType;
   back: number; // 0 or 1
-  aka: string;
+  aka: Record<string, number>;
   points: Points;
 }
 
@@ -82,9 +83,9 @@ export namespace Conditions {
 
   export function describe(ts: Conditions): string {
     const game = {'FOUR_PLAYER': '4p', 'THREE_PLAYER': '3p', 'BAMBOO': 'b', 'MINEFIELD': 'm'}[ts.gameType];
-    let aka = ts.aka;
-    if (ts.aka === undefined || ts.aka === "") {
-      aka = "no reds";
+    let aka = tileMapToString(ts.aka);
+    if (ts.aka === undefined || aka === "") {
+      aka = "no aka";
     }
     return `${game}, ${aka}`;
   }

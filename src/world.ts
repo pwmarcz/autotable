@@ -198,7 +198,7 @@ export class World {
     };
   }
 
-  deal(dealType: DealType, gameType: GameType, aka: string, points: Points): void {
+  deal(dealType: DealType, gameType: GameType, aka: Record<string, number>, points: Points): void {
     if (this.seat === null) {
       return;
     }
