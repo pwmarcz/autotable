@@ -85,4 +85,8 @@ export class Thing {
     this.shiftSlot = null;
     this.sent = false;
   }
+
+  getTypeIndexNoFlags(): number {
+    return this.typeIndex & 0xff;
+  }
 }

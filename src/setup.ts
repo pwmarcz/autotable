@@ -166,8 +166,7 @@ export class Setup {
 
       for (let i = 0; i < searched.length; i++) {
         // HACK: typeIndex includes back color
-        const idx = tiles.findIndex(tile =>
-          (tile.typeIndex === searched[i] || tile.typeIndex === searched[i] + 37));
+        const idx = tiles.findIndex(tile => (tile.getTypeIndexNoFlags() === searched[i]));
         if (idx === -1) {
           throw `not found: ${searched[i]}`;
         }
