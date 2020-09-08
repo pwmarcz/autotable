@@ -2,8 +2,8 @@ import { Vector3, Euler, Mesh, Group, Material, InstancedMesh, Matrix4, BufferGe
 import { AssetLoader } from "./asset-loader";
 import { ThingType } from "./types";
 
-const TILE_DU = 32 / 256;
-const TILE_DV = 40 / 256;
+const TILE_DU = 1 / 10;
+const TILE_DV = 1 / 8;
 const STICK_DV = 1 / 6;
 
 export interface ThingParams {
@@ -163,25 +163,25 @@ export class TileThingGroup extends InstancedThingGroup {
 if (vUv.x <= ${TILE_DU} && vUv.y <= ${TILE_DV}) {
   vUv.x += offset.x;
   vUv.y += offset.y;
-} else if (vUv.y >= ${4*TILE_DV}) {
+} else {
   vUv.y += offset.z;
 }
 `;
   }
 
   getOffset(typeIndex: number): Vector3 {
-    const x = (typeIndex % 37) % 8;
-    const y = Math.floor((typeIndex % 37) / 8);
-    const back = Math.floor(typeIndex / 37);
-    return new Vector3(x * TILE_DU, y * TILE_DV, back * TILE_DV);
+    const back = (typeIndex & (1 << 8)) >> 8;
+    const dora = (typeIndex & (1 << 9)) >> 9;
+    typeIndex &= 0xff;
+    const x = typeIndex % 40 % 9;
+    const  y = Math.floor(typeIndex % 40 / 9) + dora * 4;
+    return new Vector3(x * TILE_DU, y * TILE_DV, back * TILE_DV * 4);
   }
 
   createMesh(typeIndex: number): Mesh {
     const mesh = this.assetLoader.make('tile');
 
-    const x = (typeIndex % 37) % 8;
-    const y = Math.floor((typeIndex % 37) / 8);
-    const back = Math.floor(typeIndex / 37);
+    const offset = this.getOffset(typeIndex);
 
     // Clone geometry and modify front face
     const geometry = mesh.geometry.clone() as BufferGeometry;
@@ -189,10 +189,10 @@ if (vUv.x <= ${TILE_DU} && vUv.y <= ${TILE_DV}) {
     const uvs: Float32Array = geometry.attributes.uv.array as Float32Array;
     for (let i = 0; i < uvs.length; i += 2) {
       if (uvs[i] <= TILE_DU && uvs[i+1] <= TILE_DV) {
-        uvs[i] += x * TILE_DU;
-        uvs[i+1] += y * TILE_DV;
-      } else if (uvs[i+1] >= 4 * TILE_DV) {
-        uvs[i+1] += back * TILE_DV;
+        uvs[i] += offset.x;
+        uvs[i+1] += offset.y;
+      } else {
+        uvs[i+1] += offset.z;
       }
     }
 

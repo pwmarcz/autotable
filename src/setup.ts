@@ -100,16 +100,7 @@ export class Setup {
   private tileIndex(i: number, conditions: Conditions): number | null {
     let tileIndex = Math.floor(i / 4);
 
-    if (conditions.fives !== '000') {
-      if (tileIndex === 4 && i % 4 === 0) {
-        tileIndex = 34;
-      } else if (tileIndex === 13 &&
-          (i % 4 === 0 || (i % 4 === 1 && conditions.fives === '121'))) {
-        tileIndex = 35;
-      } else if (tileIndex === 22 && i % 4 === 0) {
-        tileIndex = 36;
-      }
-    }
+    tileIndex |= 1 << 9;
 
     if (conditions.gameType === GameType.BAMBOO) {
       if (!((18 <= tileIndex && tileIndex < 27) || tileIndex === 36)) {
@@ -123,7 +114,10 @@ export class Setup {
       }
     }
 
-    tileIndex += 37 * conditions.back;
+    if (conditions.back > 0){
+      tileIndex |= 1 << 8;
+    }
+
     return tileIndex;
   }
 
