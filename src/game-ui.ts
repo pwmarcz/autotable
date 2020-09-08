@@ -1,8 +1,39 @@
 import $ from 'jquery';
 import { Client } from "./client";
 import { World } from "./world";
-import { DealType, Fives, GameType, Conditions, Points, GAME_TYPES } from './types';
+import { DealType, GameType, Conditions, Points, GAME_TYPES } from './types';
 import { DEALS } from './setup-deal';
+
+function parseTileString(tiles: string): Record<string, number> {
+  const tileMap: Record<string, number> = {};
+  for (const result of [..."mpsz"].map(g => new RegExp(`[1-9]+${g}`).exec(tiles))) {
+    if(result === null) {
+      continue;
+    }
+    const group = result[0];
+    for (let i = 0; i < group.length - 1; i++) {
+      const tile = group[i] + group[group.length - 1];
+      tileMap[tile] = (tileMap[tile] ?? 0) + 1;
+    }
+  }
+  console.log(tileMap);
+  return tileMap;
+}
+
+function toString(tileMap: Record<string, number>): string {
+  const groups: Record<string, string> = {};
+  for (const [key, value] of Object.entries(tileMap).sort((a, b) => a[0].codePointAt(0) - b[0].codePointAt(0))) {
+    groups[key[1]] = (groups[key[1]] ?? "") + key[0].repeat(value);
+  }
+  let desc = "";
+  for (const group of ["m", "p", "s", "z"]) {
+    if (!(group in groups)) {
+      continue;
+    }
+    desc += groups[group] + group;
+  }
+  return desc;
+}
 
 export class GameUi {
   private client: Client;
@@ -18,7 +49,8 @@ export class GameUi {
     dealType: HTMLSelectElement;
     gameType: HTMLSelectElement;
     setupDesc: HTMLElement;
-    fives: HTMLSelectElement;
+    aka: HTMLSelectElement;
+    akaText: HTMLInputElement;
     points: HTMLSelectElement;
   }
 
@@ -36,7 +68,8 @@ export class GameUi {
       dealType: document.getElementById('deal-type') as HTMLSelectElement,
       gameType: document.getElementById('game-type') as HTMLSelectElement,
       setupDesc: document.getElementById('setup-desc') as HTMLElement,
-      fives: document.getElementById('fives') as HTMLSelectElement,
+      aka: document.getElementById('aka') as HTMLSelectElement,
+      akaText: document.getElementById('aka-text') as HTMLInputElement,
       points: document.getElementById('points') as HTMLSelectElement,
     };
     for (let i = 0; i < 4; i++) {
@@ -70,6 +103,9 @@ export class GameUi {
     };
     this.updateSetup();
 
+    this.elements.aka.onchange = this.updateAka.bind(this);
+    this.elements.akaText.onblur = this.updateAkaText.bind(this);
+
     // Hack for settings menu
     const doNotClose = ['LABEL', 'SELECT', 'OPTION'];
     for (const menu of Array.from(document.querySelectorAll('.dropdown-menu'))) {
@@ -87,7 +123,7 @@ export class GameUi {
     const match = this.client.match.get(0);
     const conditions = match?.conditions ?? Conditions.initial();
 
-    this.elements.fives.value = conditions.fives;
+    this.elements.aka.value = conditions.aka;
     this.elements.points.value = conditions.points;
     this.elements.gameType.value = conditions.gameType;
     this.elements.setupDesc.textContent = Conditions.describe(conditions);
@@ -128,6 +164,19 @@ export class GameUi {
         break;
       }
     }
+  }
+
+  private updateAka(event: Event): void {
+    if (this.elements.aka.value === "-") {
+      return;
+    }
+
+    this.elements.akaText.value = this.elements.aka.value;
+  }
+
+  private updateAkaText(event: FocusEvent): void {
+    this.elements.aka.value = "-";
+    this.elements.akaText.value = toString(parseTileString(this.elements.akaText.value));
   }
 
   private updateSeats(): void {
@@ -193,10 +242,10 @@ export class GameUi {
       if (deal) {
         const dealType = this.elements.dealType.value as DealType;
         const gameType = this.elements.gameType.value as GameType;
-        const fives = this.elements.fives.value as Fives;
+        const aka = this.elements.aka.value;
         const points = this.elements.points.value as Points;
 
-        this.world.deal(dealType, gameType, fives, points);
+        this.world.deal(dealType, gameType, aka, points);
         this.resetDealType();
         this.hideSetup();
       }
