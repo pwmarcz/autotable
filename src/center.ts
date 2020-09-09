@@ -144,7 +144,7 @@ export class Center {
     }
 
     if (this.remainingTiles > 0) {
-      if(this.remainingTiles < 15) {
+      if(this.remainingTiles < 14) {
         this.ctx.fillStyle = '#f44';
       } else {
         this.ctx.fillStyle = '#88f';
