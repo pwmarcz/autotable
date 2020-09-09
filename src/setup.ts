@@ -47,8 +47,6 @@ export class Setup {
   }
 
   replace(conditions: Conditions): void {
-    // console.log('replace', conditions);
-
     const whatReplace: Record<ThingType, boolean> = {
       TILE: true,
       STICK: (
@@ -133,12 +131,7 @@ export class Setup {
   }
 
   deal(seat: number, gameType: GameType, dealType: DealType): void {
-    // console.log('deal', gameType, dealType);
-
     const roll = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1);
-    // Debug
-    // const roll = (window.ROLL && window.ROLL < 12) ? window.ROLL + 1 : 2;
-    // window.ROLL = roll;
 
     if (GAME_TYPES[gameType].seats.indexOf(seat) === -1) {
       seat = 0;
@@ -188,6 +181,7 @@ export class Setup {
       }
 
       const idx = this.slotNames.indexOf(slotName);
+      console.log(this.slotNames);
       if (idx === -1) {
         throw `slot not found: ${slotName}`;
       }
@@ -203,7 +197,6 @@ export class Setup {
         }
 
         const thing = tiles.pop()!;
-        console.log(dealPart.rotationIndex)
         thing.moveTo(slot, dealPart.rotationIndex);
       }
     }

@@ -102,8 +102,6 @@ export class Slot {
     this.phantom = params.phantom ?? false;
 
     this.places = this.rotations.map(this.makePlace.bind(this));
-    console.log(this.group, this.places);
-    console.log(this.group, this.places);
     this.offset = new Vector2(0, 0);
     this.links = {};
   }
@@ -161,6 +159,7 @@ export class Slot {
       origin: this.origin,
       direction: this.direction,
       rotations: this.rotations,
+      phantom: this.phantom,
     });
     slot.linkDesc = linkDesc;
     slot.canFlipMultiple = this.canFlipMultiple;
@@ -201,7 +200,6 @@ export class Slot {
     });
 
     this.places = this.rotations.map(this.makePlace.bind(this));
-    console.log(this.group, this.places);
 
     this.seat = seat;
   }
@@ -276,5 +274,13 @@ export class Slot {
         this.offset.y = Math.sign(sdy) * dist;
       }
     }
+  }
+
+  getTop(): Slot {
+    let top: Slot = this;
+    while(top.links.up != null) {
+      top = top.links.up;
+    }
+    return top;
   }
 }

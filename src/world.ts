@@ -616,11 +616,6 @@ export class World {
       } else if (thing.claimedBy !== null && thing.shiftSlot !== null) {
         place = thing.shiftSlot.places[thing.rotationIndex];
       }
-
-      if(!place) {
-        console.log(thing.place());
-      }
-
       const held = thing.claimedBy !== null && thing.shiftSlot === null;
       const selected = this.selected.indexOf(thing) !== -1;
       const hovered = thing === this.hovered ||
@@ -667,7 +662,11 @@ export class World {
     if (this.seat !== null && !this.isHolding()) {
       for (const thing of this.things.values()) {
         if (thing.claimedBy === null) {
-          const place = thing.place();
+          let place = thing.place();
+          if (thing.slot?.phantom === true && thing.slot.links.up?.thing == null) {
+            place = thing.slot.getTop().placeWithOffset(thing.rotationIndex);
+            console.log(place);
+          }
           result.push({...place, id: thing.index});
         }
       }

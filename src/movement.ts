@@ -162,7 +162,6 @@ export class Movement {
   private findShiftFor(
     slot: Slot, ops: Array<SlotOp>, shift: Map<Slot, Thing>
   ): Map<Slot, Thing> | null {
-    // console.log('findShiftFor', slot.name);
     if (!shift.has(slot)) {
       return null;
     }
@@ -183,7 +182,6 @@ export class Movement {
     if (thing.claimedBy !== null) {
       return false;
     }
-    // console.log('tryShift start', thing.index, slot.name);
     while (slot === initialSlot || this.reverseMap.has(slot)) {
       const nextSlot = op(slot);
       if (nextSlot === null) {
@@ -199,7 +197,6 @@ export class Movement {
       shift.set(nextSlot, thing);
       slot = nextSlot;
     }
-    // console.log('tryShift end', thing.index, slot.name);
     return true;
   }
 }

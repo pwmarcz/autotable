@@ -79,8 +79,8 @@ function column(count: number, dy?: number): SlotOp {
   return repeat(count, new Vector3(0, dy ?? Size.TILE.y, 0));
 }
 
-function stack(dz?: number): SlotOp {
-  return repeat(2, new Vector3(0, 0, dz ?? Size.TILE.z), {stack: true});
+function stack(count?: number, dz?: number): SlotOp {
+  return repeat(count ?? 2, new Vector3(0, 0, dz ?? Size.TILE.z), {stack: true});
 }
 
 function seats(which?: Array<number>): SlotOp {
@@ -190,9 +190,9 @@ const START: Record<string, Slot> = {
       new Vector3(
         WORLD_SIZE, WORLD_SIZE, 0,
       ),
-      Size.TILE).divideScalar(2),
+      Size.TILE).divideScalar(2).add(new Vector3(0, 0, -135 * Size.TILE.z)),
     rotations: [Rotation.FACE_DOWN],
-    // phantom: true,
+    phantom: true,
   }),
 
   'tray': new Slot({
@@ -293,7 +293,7 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('hand.extra'), seats()],
     [start('meld'), column(4), row(4, -Size.TILE.x, {push: true, shift: true}), seats()],
     [start('wall'), row(19), stack(), seats()],
-    [start('washizu.bag'), row(136), seats([0])],
+    [start('washizu.bag'), stack(136), seats([0])],
     [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats()],
     [start('discard.extra'), row(4, undefined, {push: true}), seats()],
 

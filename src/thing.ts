@@ -52,12 +52,10 @@ export class Thing {
   }
 
   prepareMove(): void {
-    // console.log('remove', this.index, this.slot.name);
     this.slot.thing = null;
   }
 
   moveTo(target: Slot, rotationIndex?: number): void {
-    // console.log('moveTo', this.index, target.name);
     if (target.thing !== null) {
       throw `slot not empty: ${this.index} ${target.name}`;
     }

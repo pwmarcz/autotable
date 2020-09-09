@@ -45,7 +45,6 @@ export class BaseClient {
 
     this.ws.onmessage = event => {
       const message = JSON.parse(event.data as string) as Message;
-      // console.log('recv', message);
       this.onMessage(message);
     };
   }
@@ -82,7 +81,6 @@ export class BaseClient {
     if (!this.open) {
       return;
     }
-    // console.log('send', message);
     const data = JSON.stringify(message);
     this.ws!.send(data);
   }
