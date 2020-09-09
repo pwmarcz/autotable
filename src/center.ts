@@ -12,6 +12,7 @@ export class Center {
   nicks: Array<string | null> = new Array(4).fill(null);
   dealer: number | null = null;
   honba = 0;
+  remainingTiles = 0;
 
   client: Client;
 
@@ -40,6 +41,7 @@ export class Center {
     this.client.nicks.on('update', this.update.bind(this));
     this.client.match.on('update', this.update.bind(this));
     this.client.seats.on('update', this.update.bind(this));
+    this.client.things.on('update', this.update.bind(this));
 
     client.on('disconnect', this.update.bind(this));
   }
@@ -53,6 +55,8 @@ export class Center {
 
     this.dealer = this.client.match.get(0)?.dealer ?? null;
     this.honba = this.client.match.get(0)?.honba ?? 0;
+    this.remainingTiles = [...this.client.things.entries()].filter(([i, t]) =>
+      t.slotName.startsWith("washizu.bag") && t.claimedBy === null).length;
 
     this.dirty = true;
   }
@@ -137,6 +141,13 @@ export class Center {
       this.ctx.textAlign = 'right';
       this.ctx.font = '40px Segment7Standard, monospace';
       this.ctx.fillText('' + this.honba, -90, 100);
+    }
+
+    if (this.remainingTiles > 0) {
+      this.ctx.fillStyle = '#88f';
+      this.ctx.textAlign = 'center';
+      this.ctx.font = '40px Segment7Standard, monospace';
+      this.ctx.fillText('' + this.remainingTiles, 0, 5);
     }
   }
 }
