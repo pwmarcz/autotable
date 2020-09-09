@@ -144,7 +144,11 @@ export class Center {
     }
 
     if (this.remainingTiles > 0) {
-      this.ctx.fillStyle = '#88f';
+      if(this.remainingTiles < 15) {
+        this.ctx.fillStyle = '#f44';
+      } else {
+        this.ctx.fillStyle = '#88f';
+      }
       this.ctx.textAlign = 'center';
       this.ctx.font = '40px Segment7Standard, monospace';
       this.ctx.fillText('' + this.remainingTiles, 0, 5);
