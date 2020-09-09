@@ -181,7 +181,6 @@ export class Setup {
       }
 
       const idx = this.slotNames.indexOf(slotName);
-      console.log(this.slotNames);
       if (idx === -1) {
         throw `slot not found: ${slotName}`;
       }
