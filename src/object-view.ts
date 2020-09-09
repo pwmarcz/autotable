@@ -166,7 +166,7 @@ export class ObjectView {
         material.color.setHex(0xbbbbbb);
       }
 
-      if (thing.selected) {
+      if (thing.selected && !thing.hidden) {
         this.selectedObjects.push(obj);
       }
 

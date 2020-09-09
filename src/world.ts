@@ -303,7 +303,6 @@ export class World {
     this.movement = new Movement();
 
     const held = this.getHeld();
-    // this.things.filter(thing => thing.claimedBy === this.seat);
     held.sort((a, b) => compareZYX(a.slot.origin, b.slot.origin));
 
     for (let i = 0; i < held.length; i++) {
@@ -608,6 +607,9 @@ export class World {
           };
           place.position.x += mouse.x - heldMouse.x;
           place.position.y += mouse.y - heldMouse.y;
+          if (thing.slot.phantom) {
+            place.position.z = mouse.z - heldMouse.z;
+          }
         }
       } else if (thing.lastShiftSlotTime >= now - SHIFT_TIME) {
         if (thing.lastShiftSlot !== null) {
@@ -663,9 +665,11 @@ export class World {
       for (const thing of this.things.values()) {
         if (thing.claimedBy === null) {
           let place = thing.place();
-          if (thing.slot?.phantom === true && thing.slot.links.up?.thing == null) {
+          if (thing.slot?.phantom === true) {
+            if (thing.slot.links.up?.thing != null) {
+              continue;
+            }
             place = thing.slot.getTop().placeWithOffset(thing.rotationIndex);
-            console.log(place);
           }
           result.push({...place, id: thing.index});
         }
