@@ -77,7 +77,7 @@ export class Movement {
     }
     for (const [thing, slot] of this.thingMap.entries()) {
       let rotationIndex = 0;
-      if (this.heldRotation !== null) {
+      if (this.heldRotation !== null && slot.group !== thing.slot.group) {
         const matchingIndex = slot.rotationOptions.findIndex(o => o.equals(this.heldRotation!));
         if (matchingIndex >= 0) {
           rotationIndex = matchingIndex;
@@ -86,10 +86,6 @@ export class Movement {
         rotationIndex = thing.slot.group === slot.group
          ? thing.rotationIndex
          : Math.max(0, slot.rotationOptions.findIndex(r => r.equals(thing.slot.rotationOptions[thing.rotationIndex])));
-      }
-
-      if (slot.group === 'hand' && slot.group !== thing.slot.group) {
-        rotationIndex = 0;
       }
 
       thing.moveTo(slot, rotationIndex);
