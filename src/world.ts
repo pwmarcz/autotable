@@ -632,6 +632,8 @@ export class World {
         (slot.links.up.thing === null ||
          slot.links.up.thing.claimedBy !== null);
 
+      const hidden = thing.slot?.phantom ?? false;
+
       toRender.push({
         type: thing.type,
         thingIndex: thing.index,
@@ -641,6 +643,7 @@ export class World {
         held,
         temporary,
         bottom,
+        hidden,
       });
     }
     this.objectView.updateThings(toRender);

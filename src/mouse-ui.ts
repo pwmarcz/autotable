@@ -158,6 +158,7 @@ export class MouseUi {
     let hoverPos = null;
     if (intersects.length > 0) {
       hovered = intersects[0].object.userData.id;
+      console.log(hovered);
       hoverPos = intersects[0].point.clone();
       this.raycastGroup.worldToLocal(hoverPos);
     }

@@ -182,6 +182,19 @@ const START: Record<string, Slot> = {
     rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN, Rotation.FACE_DOWN_SIDEWAYS],
   }),
 
+  'washizu.bag': new Slot({
+    name: 'washizu.bag',
+    group: 'washizu.bag',
+    type: ThingType.TILE,
+    origin: new Vector3().subVectors(
+      new Vector3(
+        WORLD_SIZE, WORLD_SIZE, 0,
+      ),
+      Size.TILE).divideScalar(2),
+    rotations: [Rotation.FACE_DOWN],
+    phantom: true
+  }),
+
   'tray': new Slot({
     name: `tray`,
     group: `tray`,
@@ -280,8 +293,9 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('hand.extra'), seats()],
     [start('meld'), column(4), row(4, -Size.TILE.x, {push: true, shift: true}), seats()],
     [start('wall'), row(19), stack(), seats()],
-    [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats()],
-    [start('discard.extra'), row(4, undefined, {push: true}), seats()],
+    [start('washizu.bag')],
+    // [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats()],
+    // [start('discard.extra'), row(4, undefined, {push: true}), seats()],
 
     [start('tray'), row(6, 24), column(10, -3), seats()],
     [start('payment'), row(8, 3), seats()],

@@ -16,6 +16,7 @@ export interface Render {
   held: boolean;
   temporary: boolean;
   bottom: boolean;
+  hidden: boolean;
 }
 
 const MAX_SHADOWS = 300;
@@ -136,7 +137,7 @@ export class ObjectView {
     this.selectedObjects.splice(0);
     for (const thing of things) {
       const thingGroup = this.thingGroups.get(thing.type)!;
-      const custom = thing.hovered || thing.selected || thing.held || thing.bottom;
+      const custom = thing.hovered || thing.selected || thing.held || thing.bottom || thing.hidden;
       if (!custom && thingGroup.canSetSimple()) {
         thingGroup.setSimple(thing.thingIndex, thing.place.position, thing.place.rotation);
         continue;
@@ -148,7 +149,12 @@ export class ObjectView {
       const material = obj.material as MeshLambertMaterial;
       material.emissive.setHex(0);
       material.color.setHex(0xeeeeee);
-      material.transparent = false;
+
+      if (thing.hidden) {
+        material.transparent = true;
+        material.opacity = 0.0;
+      }
+
       material.depthTest = true;
       obj.renderOrder = 0;
 

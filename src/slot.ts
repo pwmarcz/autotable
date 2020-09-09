@@ -71,6 +71,8 @@ export class Slot {
   // Rotate a tile hovered over this slot. Used for hand.
   rotateHeld: boolean;
 
+  phantom: boolean;
+
   constructor(params: {
     name: string;
     group: string;
@@ -83,6 +85,7 @@ export class Slot {
     drawShadow?: boolean;
     shadowRotation?: number;
     rotateHeld?: boolean;
+    phantom?: boolean;
   }) {
     this.name = params.name;
     this.group = params.group;
@@ -96,6 +99,7 @@ export class Slot {
     this.drawShadow = params.drawShadow ?? false;
     this.shadowRotation = params.shadowRotation ?? 0;
     this.rotateHeld = params.rotateHeld ?? false;
+    this.phantom = params.phantom ?? false;
 
     this.places = this.rotations.map(this.makePlace.bind(this));
     this.offset = new Vector2(0, 0);
