@@ -4,7 +4,7 @@ import { World } from "./world";
 import { DealType, GameType, Conditions, Points, GAME_TYPES } from './types';
 import { DEALS } from './setup-deal';
 
-function parseTileString(tiles: string): Record<string, number> {
+export function parseTileString(tiles: string): Record<string, number> {
   const tileMap: Record<string, number> = {};
   for (const result of [..."mpsz"].map(g => new RegExp(`[1-9]+${g}`).exec(tiles))) {
     if(result === null) {

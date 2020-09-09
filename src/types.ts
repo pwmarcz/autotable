@@ -1,5 +1,5 @@
 import { Vector3, Euler } from "three";
-import { tileMapToString } from "./game-ui";
+import { tileMapToString, parseTileString } from "./game-ui";
 
 export enum ThingType {
   TILE = 'TILE',
@@ -74,7 +74,7 @@ export interface Conditions {
 
 export namespace Conditions {
   export function initial(): Conditions {
-    return { gameType: GameType.FOUR_PLAYER, back: 0, aka: '5m5p5s', points: '25' };
+    return { gameType: GameType.FOUR_PLAYER, back: 0, aka: parseTileString('5m5p5s'), points: '25' };
   }
 
   export function equals(a: Conditions, b: Conditions): boolean {
