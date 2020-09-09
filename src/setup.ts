@@ -101,12 +101,6 @@ export class Setup {
 
   private tileIndex(i: number, conditions: Conditions): number | null {
     let tileIndex = Math.floor(i / 4);
-    const tileNumber = tileIndex % 9;
-    const tileSuit = Setup.suits[Math.floor(tileIndex / 9)];
-
-    if ( conditions.aka[(tileNumber + 1) + tileSuit] > i % 4 ) {
-      tileIndex |= 1 << 9;
-    }
 
     if (conditions.gameType === GameType.BAMBOO) {
       if (!((18 <= tileIndex && tileIndex < 27) || tileIndex === 36)) {
@@ -118,6 +112,13 @@ export class Setup {
       if ((1 <= tileIndex && tileIndex < 8) || tileIndex === 34) {
         return null;
       }
+    }
+
+    const tileNumber = tileIndex % 9;
+    const tileSuit = Setup.suits[Math.floor(tileIndex / 9)];
+
+    if ( conditions.aka[(tileNumber + 1) + tileSuit] > i % 4 ) {
+      tileIndex |= 1 << 9;
     }
 
     if (conditions.back > 0){
