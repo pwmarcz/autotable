@@ -89,4 +89,8 @@ export class Thing {
   getTypeIndexNoFlags(): number {
     return this.typeIndex & 0xff;
   }
+
+  isTransparent(): boolean {
+    return (this.typeIndex & (1 << 10)) > 0;
+  }
 }

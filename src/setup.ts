@@ -171,7 +171,7 @@ export class Setup {
 
       for (let i = 0; i < searched.length; i++) {
         // HACK: typeIndex includes back color
-        const idx = tiles.findIndex(tile => (tile.getTypeIndexNoFlags() === searched[i]));
+        const idx = tiles.findIndex(tile => (tile.getTypeIndexNoFlags() === searched[i] && tile.isTransparent() == false));
         if (idx === -1) {
           throw `not found: ${searched[i]}`;
         }
@@ -203,6 +203,7 @@ export class Setup {
         }
 
         const thing = tiles.pop()!;
+        console.log(dealPart.rotationIndex)
         thing.moveTo(slot, dealPart.rotationIndex);
       }
     }

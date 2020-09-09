@@ -132,7 +132,7 @@ export class Movement {
   findShift(allThings: Array<Thing>, ops: Array<SlotOp>): boolean {
     let shift: Map<Slot, Thing> | null = new Map();
     for (const thing of allThings) {
-      if (!this.thingMap.has(thing)) {
+      if (!this.thingMap.has(thing) && thing.slot?.phantom !== true) {
         shift.set(thing.slot, thing);
       }
     }

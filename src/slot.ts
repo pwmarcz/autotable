@@ -102,6 +102,8 @@ export class Slot {
     this.phantom = params.phantom ?? false;
 
     this.places = this.rotations.map(this.makePlace.bind(this));
+    console.log(this.group, this.places);
+    console.log(this.group, this.places);
     this.offset = new Vector2(0, 0);
     this.links = {};
   }
@@ -199,6 +201,7 @@ export class Slot {
     });
 
     this.places = this.rotations.map(this.makePlace.bind(this));
+    console.log(this.group, this.places);
 
     this.seat = seat;
   }

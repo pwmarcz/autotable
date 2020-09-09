@@ -385,7 +385,6 @@ export class World {
       if (slot.links.requires && slot.links.requires.thing === null) {
         continue;
       }
-
       const place = slot.placeWithOffset(0);
 
       const margin = Size.TILE.x / 2;
@@ -616,6 +615,10 @@ export class World {
         }
       } else if (thing.claimedBy !== null && thing.shiftSlot !== null) {
         place = thing.shiftSlot.places[thing.rotationIndex];
+      }
+
+      if(!place) {
+        console.log(thing.place());
       }
 
       const held = thing.claimedBy !== null && thing.shiftSlot === null;
