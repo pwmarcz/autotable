@@ -132,7 +132,7 @@ export class Collection<K extends string | number, V> {
     }
     this.cacheEntries(
       entries.filter(([kind, _, __]) => kind === this.kind).map(([_, k, v]) => [k as K, v as V | null]),
-      true,
+      full,
     )
   }
 
