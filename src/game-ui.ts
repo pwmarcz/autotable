@@ -51,6 +51,7 @@ export class GameUi {
     aka: HTMLSelectElement;
     akaText: HTMLInputElement;
     points: HTMLSelectElement;
+    nick: HTMLInputElement;
   }
 
   constructor(client: Client, world: World) {
@@ -70,6 +71,7 @@ export class GameUi {
       aka: document.getElementById('aka') as HTMLSelectElement,
       akaText: document.getElementById('aka-text') as HTMLInputElement,
       points: document.getElementById('points') as HTMLSelectElement,
+      nick: document.getElementById('nick')! as HTMLInputElement,
     };
     for (let i = 0; i < 4; i++) {
       this.elements.takeSeat[i] = document.querySelector(
@@ -88,6 +90,7 @@ export class GameUi {
     this.client.nicks.on('update', this.updateSeats.bind(this));
     for (let i = 0; i < 4; i++) {
       this.elements.takeSeat[i].onclick = () => {
+        this.client.nicks.set(this.client.playerId(), this.elements.nick.value);
         this.client.seats.set(this.client.playerId(), { seat: i });
       };
     }
@@ -197,7 +200,7 @@ export class GameUi {
         const playerId = this.client.seatPlayers[i];
         const button = document.querySelector(`.seat-button-${i} button`) as HTMLButtonElement;
         if (playerId !== null) {
-          const nick = this.client.nicks.get(playerId) || 'Player';
+          const nick = this.client.nicks.get(playerId) || 'Jyanshi';
           button.disabled = true;
           button.className = 'btn btn-secondary';
           button.textContent = nick;

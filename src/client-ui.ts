@@ -88,10 +88,7 @@ export class ClientUi {
   }
 
   onNickChange(): void {
-    if (this.client.connected()) {
-      this.client.nicks.set(this.client.playerId(), this.nickElement.value);
-    }
-    localStorage.setItem('autotable.nick', this.nickElement.value);
+    this.client.nicks.set(this.client.playerId(), this.nickElement.value);
   }
 
   onConnect(game: Game): void {

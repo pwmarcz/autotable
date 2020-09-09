@@ -46,13 +46,9 @@ export class Center {
 
   update(): void {
     for (let i = 0; i < 4; i++) {
-      if (this.client.connected()) {
-        const playerId = this.client.seatPlayers[i];
-        const nick = playerId !== null ? this.client.nicks.get(playerId) : null;
-        this.nicks[i] = nick ?? null;
-      } else {
-        this.nicks[i] = null;
-      }
+      const playerId = this.client.seatPlayers[i];
+      const nick = playerId !== null ? this.client.nicks.get(playerId) : null;
+      this.nicks[i] = nick ?? null;
     }
 
     this.dealer = this.client.match.get(0)?.dealer ?? null;
