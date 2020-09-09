@@ -125,11 +125,11 @@ export class GameUi {
     const match = this.client.match.get(0);
     const conditions = match?.conditions ?? Conditions.initial();
 
-    this.elements.akaText.value = tileMapToString(conditions.aka);
     this.elements.aka.value = tileMapToString(conditions.aka);
     if (this.elements.aka.selectedIndex === -1) {
       this.elements.aka.value = "-";
     }
+    this.elements.akaText.value = tileMapToString(conditions.aka);
 
     this.elements.points.value = conditions.points;
     this.elements.gameType.value = conditions.gameType;
