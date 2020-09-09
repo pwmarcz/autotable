@@ -49,6 +49,7 @@ export enum GameType {
   THREE_PLAYER = 'THREE_PLAYER',
   BAMBOO = 'BAMBOO',
   MINEFIELD = 'MINEFIELD',
+  WASHIZU = 'WASHIZU',
 }
 
 interface GameTypeMeta {
@@ -61,6 +62,7 @@ export const GAME_TYPES: Record<GameType, GameTypeMeta> = {
   THREE_PLAYER: { points: '35', seats: [0, 1, 2]},
   BAMBOO: { points: '100', seats: [0, 2]},
   MINEFIELD: { points: '25', seats: [0, 2]},
+  WASHIZU: { points: '25', seats: [0, 1, 2, 3] },
 };
 
 export type Points = '25' | '30' | '35' | '40' | '100';
@@ -82,7 +84,13 @@ export namespace Conditions {
   }
 
   export function describe(ts: Conditions): string {
-    const game = {'FOUR_PLAYER': '4p', 'THREE_PLAYER': '3p', 'BAMBOO': 'b', 'MINEFIELD': 'm'}[ts.gameType];
+    const game = {
+      'FOUR_PLAYER': '4p',
+      'THREE_PLAYER': '3p',
+      'BAMBOO': 'b',
+      'MINEFIELD': 'm',
+      'WASHIZU': 'w',
+    }[ts.gameType];
     let aka = tileMapToString(ts.aka);
     if (ts.aka === undefined || aka === "") {
       aka = "no aka";
