@@ -97,7 +97,8 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
       {
         ranges: [
           ['washizu.bag.0', 0, 84],
-        ]
+        ],
+        absolute: true
       }
     ],
   },
