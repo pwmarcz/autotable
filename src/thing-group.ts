@@ -1,4 +1,4 @@
-import { Vector3, Euler, Mesh, Group, Material, InstancedMesh, Matrix4, BufferGeometry, MeshLambertMaterial, InstancedBufferGeometry, InstancedBufferAttribute } from "three";
+import { Vector3, Euler, Mesh, Group, Material, InstancedMesh, Matrix4, BufferGeometry, MeshLambertMaterial, InstancedBufferGeometry, InstancedBufferAttribute, Vector4 } from "three";
 import { AssetLoader } from "./asset-loader";
 import { ThingType } from "./types";
 
@@ -68,7 +68,7 @@ abstract class InstancedThingGroup extends ThingGroup {
 
   abstract getOriginalMesh(): Mesh;
   abstract getUvChunk(): string;
-  abstract getOffset(typeIndex: number): Vector3;
+  abstract getOffset(typeIndex: number): Vector4;
 
   canSetSimple(): boolean {
     return true;
@@ -84,7 +84,7 @@ abstract class InstancedThingGroup extends ThingGroup {
     });
 
     const paramChunk = `
-attribute vec3 offset;
+attribute vec4 offset;
 #include <common>
 `;
     const uvChunk = this.getUvChunk();
@@ -98,16 +98,17 @@ attribute vec3 offset;
     material.defines = material.defines ?? {};
     material.defines.THING_TYPE = origMesh.name;
 
-    const data = new Float32Array(params.length * 3);
+    const data = new Float32Array(params.length * 4);
     for (let i = 0; i < params.length; i++) {
       const v = this.getOffset(params[i].typeIndex);
-      data[3 * i] = v.x;
-      data[3 * i + 1] = v.y;
-      data[3 * i + 2] = v.z;
+      data[4 * i] = v.x;
+      data[4 * i + 1] = v.y;
+      data[4 * i + 2] = v.z;
+      data[4 * i + 3] = v.w;
     }
 
     const geometry = new InstancedBufferGeometry().copy(origMesh.geometry as BufferGeometry);
-    geometry.setAttribute('offset', new InstancedBufferAttribute(data, 3));
+    geometry.setAttribute('offset', new InstancedBufferAttribute(data, 4));
     const instancedMesh = new InstancedMesh(geometry, material, params.length);
     return instancedMesh;
   }
@@ -160,22 +161,34 @@ export class TileThingGroup extends InstancedThingGroup {
   getUvChunk(): string {
     return `
 #include <uv_vertex>
-if (vUv.x <= ${TILE_DU} && vUv.y <= ${TILE_DV}) {
+if (vUv.x <= ${TILE_DU}) {
   vUv.x += offset.x;
   vUv.y += offset.y;
+} else if (offset.w > 0.0) {
+  if (vUv.x >= ${TILE_DU * 9}) {
+    vUv.x = 1.0 - vUv.x + offset.x;
+    vUv.y = ${TILE_DV * 4} - vUv.y + offset.y;
+  } else {
+    if (vUv.x < ${TILE_DU * 8}) {
+      vUv.x += ${TILE_DU * 1};
+    }
+    vUv.x += ${TILE_DU * 1};
+    vUv.y -= ${TILE_DV};
+  }
 } else {
   vUv.y += offset.z;
 }
 `;
   }
 
-  getOffset(typeIndex: number): Vector3 {
+  getOffset(typeIndex: number): Vector4 {
     const back = (typeIndex & (1 << 8)) >> 8;
     const dora = (typeIndex & (1 << 9)) >> 9;
+    const washizu = (typeIndex & (1 << 10)) >> 10;
     typeIndex &= 0xff;
     const x = typeIndex % 40 % 9;
     const  y = Math.floor(typeIndex % 40 / 9) + dora * 4;
-    return new Vector3(x * TILE_DU, y * TILE_DV, back * TILE_DV * 4);
+    return new Vector4(x * TILE_DU, y * TILE_DV, back * TILE_DV * 4, washizu);
   }
 
   createMesh(typeIndex: number): Mesh {
@@ -188,9 +201,20 @@ if (vUv.x <= ${TILE_DU} && vUv.y <= ${TILE_DV}) {
     mesh.geometry = geometry;
     const uvs: Float32Array = geometry.attributes.uv.array as Float32Array;
     for (let i = 0; i < uvs.length; i += 2) {
-      if (uvs[i] <= TILE_DU && uvs[i+1] <= TILE_DV) {
+      if (uvs[i] <= TILE_DU) {
         uvs[i] += offset.x;
         uvs[i+1] += offset.y;
+      } else if (offset.w > 0.0) {
+        if (uvs[i] >= TILE_DU * 9) {
+          uvs[i] = 1.0 - uvs[i] + offset.x;
+          uvs[i+1] = TILE_DV * 4 - uvs[i+1] + offset.y;
+        } else {
+          if (uvs[i] < TILE_DU * 8) {
+            uvs[i] += TILE_DU * 1;
+          }
+          uvs[i] += TILE_DU * 1;
+          uvs[i+1] -= TILE_DV;
+        }
       } else {
         uvs[i+1] += offset.z;
       }
@@ -212,8 +236,8 @@ vUv += offset.xy;
 `;
   }
 
-  getOffset(typeIndex: number): Vector3 {
-    return new Vector3(0, typeIndex * STICK_DV, 0);
+  getOffset(typeIndex: number): Vector4 {
+    return new Vector4(0, typeIndex * STICK_DV, 0, 0);
   }
 
   createMesh(typeIndex: number): Mesh {

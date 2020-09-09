@@ -117,12 +117,16 @@ export class Setup {
     const tileNumber = tileIndex % 9;
     const tileSuit = Setup.suits[Math.floor(tileIndex / 9)];
 
+    if (conditions.back > 0){
+      tileIndex |= 1 << 8;
+    }
+
     if ( conditions.aka[(tileNumber + 1) + tileSuit] > i % 4 ) {
       tileIndex |= 1 << 9;
     }
 
-    if (conditions.back > 0){
-      tileIndex |= 1 << 8;
+    if ( conditions.gameType === GameType.WASHIZU && i % 4 !== 0 ) {
+      tileIndex |= 1 << 10;
     }
 
     return tileIndex;
