@@ -330,9 +330,11 @@ export class World {
       return;
     }
 
-    const rotation = this.movement.rotateHeld();
-    if (rotation !== null) {
-      this.heldRotationIndex = Math.max(0, World.heldRotationOptions.findIndex(o => o.equals(rotation)));
+    if(this.heldRotationIndex === -1) {
+      const rotation = this.movement.rotateHeld();
+      if (rotation !== null) {
+        this.heldRotationIndex = Math.max(0, World.heldRotationOptions.findIndex(o => o.equals(rotation)));
+      }
     }
 
     this.movement.applyShift(this.seat!);

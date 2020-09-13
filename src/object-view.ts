@@ -156,6 +156,7 @@ export class ObjectView {
       }
 
       obj.renderOrder = 0;
+      material.depthTest = true;
 
       if (thing.hovered) {
         material.emissive.setHex(0x111111);
@@ -172,6 +173,7 @@ export class ObjectView {
       if (thing.held) {
         material.transparent = true;
         material.opacity = thing.temporary ? 0.7 : 1;
+        material.depthTest = false;
         obj.position.z += 1;
         obj.renderOrder = 2;
       }

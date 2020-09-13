@@ -113,6 +113,7 @@ export class Movement {
         return null;
       }
 
+
       const rotationIndex = thing.slot.group === slot.group ? thing.rotationIndex : 0;
       const rotation = slot.rotations[rotationIndex];
       if (thing.heldRotation.equals(rotation)) {
