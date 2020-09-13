@@ -34,6 +34,13 @@ export function tileMapToString(tileMap: Record<string, number>): string {
   return desc;
 }
 
+enum SeatWind {
+  East = 0,
+  South,
+  West,
+  North,
+}
+
 export class GameUi {
   private client: Client;
   private world: World;
@@ -88,6 +95,9 @@ export class GameUi {
 
     this.client.seats.on('update', this.updateSeats.bind(this));
     this.client.nicks.on('update', this.updateSeats.bind(this));
+    this.client.match.on('update', (this.updateSetup.bind(this)));
+    this.client.match.on('update', this.updateSeats.bind(this));
+
     for (let i = 0; i < 4; i++) {
       this.elements.takeSeat[i].onclick = () => {
         this.client.nicks.set(this.client.playerId(), this.elements.nick.value);
@@ -98,7 +108,6 @@ export class GameUi {
       this.client.seats.set(this.client.playerId(), { seat: null });
     };
 
-    this.client.match.on('update', this.updateSetup.bind(this));
     this.elements.gameType.onchange = () => {
       this.updateVisibility();
       this.resetPoints();
@@ -194,30 +203,27 @@ export class GameUi {
       this.elements.leaveSeat,
       this.elements.toggleSetup,
     ];
-    if (this.client.seat === null) {
-      (document.querySelector('.seat-buttons')! as HTMLElement).style.display = 'block';
-      for (let i = 0; i < 4; i++) {
-        const playerId = this.client.seatPlayers[i];
-        const button = document.querySelector(`.seat-button-${i} button`) as HTMLButtonElement;
-        if (playerId !== null) {
-          const nick = this.client.nicks.get(playerId) || 'Jyanshi';
-          button.disabled = true;
-          button.className = 'btn btn-secondary';
-          button.textContent = nick;
-        } else {
-          button.className = 'btn btn-primary';
-          button.disabled = false;
-          button.textContent = 'Take seat';
-        }
-      }
-      for (const button of toDisable) {
+    (document.querySelector('.seat-buttons')! as HTMLElement).style.display = 'block';
+    for (let i = 0; i < 4; i++) {
+      const playerId = this.client.seatPlayers[i];
+      const dealer = this.client.match.get(0)?.dealer ?? 0;
+      const seatWind = SeatWind[(dealer + i)  % 4];
+
+      const button = document.querySelector(`.seat-button-${i} button`) as HTMLButtonElement;
+      if (playerId !== null) {
+        const nick = this.client.nicks.get(playerId) || 'Jyanshi';
         button.disabled = true;
-      }
-    } else {
-      (document.querySelector('.seat-buttons')! as HTMLElement).style.display = 'none';
-      for (const button of toDisable) {
+        button.className = 'btn-sm btn-secondary';
+        button.textContent = `${seatWind}: ${nick}`;
+      } else {
+        button.className = 'btn-sm btn-primary';
         button.disabled = false;
+        button.textContent = `Take ${seatWind} Seat`;
       }
+    }
+
+    for (const button of toDisable) {
+      button.disabled = this.client.seat === null;
     }
   }
 
