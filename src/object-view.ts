@@ -173,7 +173,7 @@ export class ObjectView {
         material.transparent = true;
         material.opacity = thing.temporary ? 0.7 : 1;
         obj.position.z += 1;
-        obj.renderOrder = 1;
+        obj.renderOrder = 2;
       }
 
       obj.updateMatrix();

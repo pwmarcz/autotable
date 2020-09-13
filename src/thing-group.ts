@@ -201,11 +201,12 @@ attribute vec4 offset;
 export class TileThingGroup extends InstancedThingGroup {
   createInstanceMeshGroups(params: ThingParams[]): Record<number, InstancedMesh> {
     const mesh = this.createInstancedMesh(params);
+    mesh.renderOrder = 1;
     const washizuMesh = this.createInstancedMesh(params);
     const material = this.createMaterial();
     material.map = this.assetLoader.textures["tiles.washizu.auto"];
     material.transparent = true;
-    material.depthTest = false;
+    material.depthWrite = false;
     material.side = DoubleSide;
     washizuMesh.material = material;
     return {
@@ -269,7 +270,9 @@ if (vUv.x <= ${TILE_DU}) {
       material.map = this.assetLoader.textures['tiles.washizu.auto'];
       material.side = DoubleSide;
       material.transparent = true;
-      material.depthTest = false;
+      material.depthWrite = false;
+    } else {
+      mesh.renderOrder = 1;
     }
 
     return mesh;

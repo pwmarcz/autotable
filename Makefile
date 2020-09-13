@@ -25,7 +25,7 @@ img/tiles.auto.png: img/tiles.svg
 	inkscape $< --export-filename=$@ --export-width=1024 --export-background=#ffffff --export-background-opacity=1
 
 img/tiles.washizu.auto.png: img/tiles.washizu.svg
-	inkscape $< --export-filename=$@ --export-width=1024 --export-background=#ffffff --export-background-opacity=0.1
+	inkscape $< --export-filename=$@ --export-width=1024 --export-background=#eeeeee --export-background-opacity=0.1
 
 img/sticks.auto.png: img/sticks.svg
 	inkscape $< --export-filename=$@ --export-width=256 --export-height=512
