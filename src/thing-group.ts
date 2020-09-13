@@ -97,6 +97,7 @@ attribute vec4 offset;
     // Fix cache conflict: https://github.com/mrdoob/three.js/issues/19377
     material.defines = material.defines ?? {};
     material.defines.THING_TYPE = origMesh.name;
+    material.transparent = true;
 
     const data = new Float32Array(params.length * 4);
     for (let i = 0; i < params.length; i++) {
@@ -131,6 +132,7 @@ attribute vec4 offset;
     if (!mesh.visible && mesh.position.equals(position) && mesh.rotation.equals(rotation)) {
       return;
     }
+    console.log("update");
     mesh.position.copy(position);
     mesh.rotation.copy(rotation);
     mesh.updateMatrix();
