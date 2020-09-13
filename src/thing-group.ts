@@ -70,7 +70,7 @@ abstract class InstancedThingGroup extends ThingGroup {
 
   abstract getOriginalMesh(): Mesh;
   abstract getUvChunk(): string;
-  abstract getOffset(typeIndex: number): Vector4;
+  abstract getOffset(typeIndex: number): Vector3;
 
   canSetSimple(): boolean {
     return true;
@@ -104,18 +104,17 @@ attribute vec4 offset;
 
   protected createInstancedMesh(params: Array<ThingParams>): InstancedMesh {
     const material = this.createMaterial();
-    const data = new Float32Array(params.length * 4);
+    const data = new Float32Array(params.length * 3);
     for (let i = 0; i < params.length; i++) {
       const v = this.getOffset(params[i].typeIndex);
-      data[4 * i] = v.x;
-      data[4 * i + 1] = v.y;
-      data[4 * i + 2] = v.z;
-      data[4 * i + 3] = v.w;
+      data[3 * i] = v.x;
+      data[3 * i + 1] = v.y;
+      data[3 * i + 2] = v.z;
     }
 
     const origMesh = this.getOriginalMesh();
     const geometry = new InstancedBufferGeometry().copy(origMesh.geometry as BufferGeometry);
-    geometry.setAttribute('offset', new InstancedBufferAttribute(data, 4));
+    geometry.setAttribute('offset', new InstancedBufferAttribute(data, 3));
     const instancedMesh = new InstancedMesh(geometry, material, params.length);
     return instancedMesh;
   }
@@ -237,14 +236,13 @@ if (vUv.x <= ${TILE_DU}) {
 `;
   }
 
-  getOffset(typeIndex: number): Vector4 {
+  getOffset(typeIndex: number): Vector3 {
     const back = (typeIndex & (1 << 8)) >> 8;
     const dora = (typeIndex & (1 << 9)) >> 9;
-    const washizu = (typeIndex & (1 << 10)) >> 10;
     typeIndex &= 0xff;
     const x = typeIndex % 40 % 9;
     const  y = Math.floor(typeIndex % 40 / 9) + dora * 4;
-    return new Vector4(x * TILE_DU, y * TILE_DV, back * TILE_DV * 4, washizu);
+    return new Vector3(x * TILE_DU, y * TILE_DV, back * TILE_DV * 4);
   }
 
   createMesh(typeIndex: number): Mesh {
@@ -291,8 +289,8 @@ vUv += offset.xy;
 `;
   }
 
-  getOffset(typeIndex: number): Vector4 {
-    return new Vector4(0, typeIndex * STICK_DV, 0, 0);
+  getOffset(typeIndex: number): Vector3 {
+    return new Vector3(0, typeIndex * STICK_DV, 0);
   }
 
   createMesh(typeIndex: number): Mesh {
