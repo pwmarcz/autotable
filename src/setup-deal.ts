@@ -69,7 +69,8 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
       {
         ranges: [
           ['washizu.bag.0', 0, 136],
-        ]
+        ],
+        absolute: true
       },
     ],
     WINDS: [
@@ -82,6 +83,7 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
         ranges: [
           ['washizu.bag.0', 0, 132],
         ],
+        absolute: true
       },
     ],
     HANDS: [

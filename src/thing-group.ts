@@ -1,6 +1,7 @@
-import { Vector3, Euler, Mesh, Group, Material, InstancedMesh, Matrix4, BufferGeometry, MeshLambertMaterial, InstancedBufferGeometry, InstancedBufferAttribute, Vector4 } from "three";
+import { Vector3, Euler, Mesh, Group, Material, InstancedMesh, Matrix4, BufferGeometry, MeshLambertMaterial, InstancedBufferGeometry, InstancedBufferAttribute, Vector4, Color, DoubleSide, MeshLambertMaterialParameters } from "three";
 import { AssetLoader } from "./asset-loader";
 import { ThingType } from "./types";
+import { type } from "jquery";
 
 const TILE_DU = 1 / 10;
 const TILE_DV = 1 / 8;
@@ -63,7 +64,8 @@ export class MarkerThingGroup extends ThingGroup {
 }
 
 abstract class InstancedThingGroup extends ThingGroup {
-  protected instancedMesh: InstancedMesh = null!;
+  protected instancedMeshGroups: Record<number, InstancedMesh> | null = null;
+  protected indexToGroupMap: number[] | null = null;
   private zero: Matrix4 = new Matrix4().makeScale(0, 0, 0);
 
   abstract getOriginalMesh(): Mesh;
@@ -74,10 +76,10 @@ abstract class InstancedThingGroup extends ThingGroup {
     return true;
   }
 
-  createInstancedMesh(params: Array<ThingParams>): InstancedMesh {
+  protected createMaterial(): MeshLambertMaterial {
     const origMesh = this.getOriginalMesh();
-
     const origMaterial = origMesh.material as MeshLambertMaterial;
+
     const material = new MeshLambertMaterial({
       map: origMaterial.map,
       color: origMaterial.color,
@@ -97,8 +99,11 @@ attribute vec4 offset;
     // Fix cache conflict: https://github.com/mrdoob/three.js/issues/19377
     material.defines = material.defines ?? {};
     material.defines.THING_TYPE = origMesh.name;
-    material.transparent = true;
+    return material;
+  }
 
+  protected createInstancedMesh(params: Array<ThingParams>): InstancedMesh {
+    const material = this.createMaterial();
     const data = new Float32Array(params.length * 4);
     for (let i = 0; i < params.length; i++) {
       const v = this.getOffset(params[i].typeIndex);
@@ -108,6 +113,7 @@ attribute vec4 offset;
       data[4 * i + 3] = v.w;
     }
 
+    const origMesh = this.getOriginalMesh();
     const geometry = new InstancedBufferGeometry().copy(origMesh.geometry as BufferGeometry);
     geometry.setAttribute('offset', new InstancedBufferAttribute(data, 4));
     const instancedMesh = new InstancedMesh(geometry, material, params.length);
@@ -117,13 +123,32 @@ attribute vec4 offset;
   replace(startIndex: number, params: Array<ThingParams>): void {
     super.replace(startIndex, params);
 
-    if (this.instancedMesh !== null) {
-      (this.instancedMesh.material as Material).dispose();
-      this.instancedMesh.geometry.dispose();
-      this.group.remove(this.instancedMesh);
+    if (this.instancedMeshGroups !== null) {
+      for(const meshType of (Object.values(this.instancedMeshGroups))) {
+        (meshType.material as Material).dispose();
+        meshType.geometry.dispose();
+        this.group.remove(meshType);
+      }
     }
-    this.instancedMesh = this.createInstancedMesh(params);
-    this.group.add(this.instancedMesh);
+
+    this.instancedMeshGroups = this.createInstanceMeshGroups(params);
+    for(const meshType of Object.values(this.instancedMeshGroups)) {
+      this.group.add(meshType);
+    }
+
+    this.indexToGroupMap = [];
+    for (const p of params) {
+      this.indexToGroupMap.push(this.getGroupIndex(p.typeIndex));
+    }
+  }
+
+  protected createInstanceMeshGroups(params: ThingParams[]): Record<number, InstancedMesh> {
+    const mesh = this.createInstancedMesh(params);
+    return { 0: mesh };
+  }
+
+  protected getGroupIndex(index: number): number {
+    return 0;
   }
 
   setSimple(index: number, position: Vector3, rotation: Euler): void {
@@ -132,13 +157,25 @@ attribute vec4 offset;
     if (!mesh.visible && mesh.position.equals(position) && mesh.rotation.equals(rotation)) {
       return;
     }
-    console.log("update");
     mesh.position.copy(position);
     mesh.rotation.copy(rotation);
     mesh.updateMatrix();
     mesh.visible = false;
-    this.instancedMesh.setMatrixAt(i, mesh.matrix);
-    this.instancedMesh.instanceMatrix.needsUpdate = true;
+
+    if (this.instancedMeshGroups === null || this.indexToGroupMap === null) {
+      return;
+    }
+
+    const activeGroupId = this.indexToGroupMap[i].toString();
+
+    for(const [groupId, groupMesh] of Object.entries(this.instancedMeshGroups)) {
+      if (activeGroupId === groupId) {
+        groupMesh.setMatrixAt(i, mesh.matrix);
+      } else {
+        groupMesh.setMatrixAt(i, this.zero);
+      }
+      groupMesh.instanceMatrix.needsUpdate = true;
+    }
   }
 
   setCustom(index: number, position: Vector3, rotation: Euler): Mesh {
@@ -147,13 +184,40 @@ attribute vec4 offset;
     mesh.position.copy(position);
     mesh.rotation.copy(rotation);
     mesh.visible = true;
-    this.instancedMesh.setMatrixAt(i, this.zero);
-    this.instancedMesh.instanceMatrix.needsUpdate = true;
+
+    if (this.instancedMeshGroups === null) {
+      return mesh;
+    }
+
+    for(const groupMesh of Object.values(this.instancedMeshGroups)) {
+      groupMesh.setMatrixAt(i, this.zero);
+      groupMesh.instanceMatrix.needsUpdate = true;
+    }
+
     return mesh;
   }
 }
 
 export class TileThingGroup extends InstancedThingGroup {
+  createInstanceMeshGroups(params: ThingParams[]): Record<number, InstancedMesh> {
+    const mesh = this.createInstancedMesh(params);
+    const washizuMesh = this.createInstancedMesh(params);
+    const material = this.createMaterial();
+    material.map = this.assetLoader.textures["tiles.washizu.auto"];
+    material.transparent = true;
+    material.depthTest = false;
+    material.side = DoubleSide;
+    washizuMesh.material = material;
+    return {
+      0: mesh,
+      1: washizuMesh
+    };
+  }
+
+  getGroupIndex(typeIndex: number): number {
+    return (typeIndex & (1 << 10)) >> 10;
+  }
+
   protected name: string = 'tile';
 
   getOriginalMesh(): Mesh {
@@ -166,17 +230,6 @@ export class TileThingGroup extends InstancedThingGroup {
 if (vUv.x <= ${TILE_DU}) {
   vUv.x += offset.x;
   vUv.y += offset.y;
-} else if (offset.w > 0.0) {
-  if (vUv.x >= ${TILE_DU * 9}) {
-    vUv.x = 1.0 - vUv.x + offset.x;
-    vUv.y = ${TILE_DV * 4} - vUv.y + offset.y;
-  } else {
-    if (vUv.x < ${TILE_DU * 8}) {
-      vUv.x += ${TILE_DU * 1};
-    }
-    vUv.x += ${TILE_DU * 1};
-    vUv.y -= ${TILE_DV};
-  }
 } else {
   vUv.y += offset.z;
 }
@@ -206,20 +259,17 @@ if (vUv.x <= ${TILE_DU}) {
       if (uvs[i] <= TILE_DU) {
         uvs[i] += offset.x;
         uvs[i+1] += offset.y;
-      } else if (offset.w > 0.0) {
-        if (uvs[i] >= TILE_DU * 9) {
-          uvs[i] = 1.0 - uvs[i] + offset.x;
-          uvs[i+1] = TILE_DV * 4 - uvs[i+1] + offset.y;
-        } else {
-          if (uvs[i] < TILE_DU * 8) {
-            uvs[i] += TILE_DU * 1;
-          }
-          uvs[i] += TILE_DU * 1;
-          uvs[i+1] -= TILE_DV;
-        }
       } else {
         uvs[i+1] += offset.z;
       }
+    }
+
+    if (this.getGroupIndex(typeIndex) === 1) {
+      const material = mesh.material as MeshLambertMaterial;
+      material.map = this.assetLoader.textures['tiles.washizu.auto'];
+      material.side = DoubleSide;
+      material.transparent = true;
+      material.depthTest = false;
     }
 
     return mesh;

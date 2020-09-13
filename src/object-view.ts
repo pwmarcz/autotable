@@ -100,7 +100,7 @@ export class ObjectView {
 
   private addStatic(): void {
     const tableMesh = this.assetLoader.makeTable();
-    tableMesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
+    tableMesh.position.set(World.WIDTH / 2, World.WIDTH / 2, -0.01);
     this.mainGroup.add(tableMesh);
     this.mainGroup.add(this.center.mesh);
 
@@ -155,7 +155,6 @@ export class ObjectView {
         material.opacity = 0.0;
       }
 
-      material.depthTest = true;
       obj.renderOrder = 0;
 
       if (thing.hovered) {
@@ -173,7 +172,6 @@ export class ObjectView {
       if (thing.held) {
         material.transparent = true;
         material.opacity = thing.temporary ? 0.7 : 1;
-        material.depthTest = false;
         obj.position.z += 1;
         obj.renderOrder = 1;
       }

@@ -1,6 +1,8 @@
 // @ts-ignore
 import jpg from '../img/*.jpg';
 // @ts-ignore
+import png from '../img/*.png';
+// @ts-ignore
 import glbModels from '../img/models.auto.glb';
 
 import { Texture, Mesh, TextureLoader, Material, LinearEncoding,
@@ -54,6 +56,7 @@ export class AssetLoader {
   loadAll(): Promise<void> {
     return Promise.all([
       this.loadTexture(jpg['table'], 'table'),
+      this.loadTexture(png['tiles.washizu.auto'], 'tiles.washizu.auto'),
       this.loadModels(glbModels),
       (document as any).fonts.load('40px "Segment7Standard"'),
     ]).then(() => {
@@ -97,7 +100,7 @@ export class AssetLoader {
     return texture;
   }
 
-  processMesh(mesh: Mesh): Mesh {
+  private processMesh(mesh: Mesh): Mesh {
     if (Array.isArray(mesh.material)) {
       mesh.material = mesh.material.map(this.processMaterial.bind(this));
     } else {
@@ -106,7 +109,7 @@ export class AssetLoader {
     return mesh;
   }
 
-  processMaterial(material: Material): Material {
+  private processMaterial(material: Material): Material {
     const standard = material as MeshStandardMaterial;
     const map = standard.map;
     if (map !== null) {
