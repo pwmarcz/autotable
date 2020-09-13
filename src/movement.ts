@@ -77,7 +77,7 @@ export class Movement {
     }
     for (const [thing, slot] of this.thingMap.entries()) {
       let rotationIndex = 0;
-      if (this.heldRotation !== null && slot.group !== thing.slot.group) {
+      if (this.heldRotation !== null && this.heldRotation !== undefined) {
         const matchingIndex = slot.rotationOptions.findIndex(o => o.equals(this.heldRotation!));
         if (matchingIndex >= 0) {
           rotationIndex = matchingIndex;
@@ -115,10 +115,12 @@ export class Movement {
 
       const rotationIndex = thing.slot.group === slot.group ? thing.rotationIndex : 0;
       const rotation = slot.rotations[rotationIndex];
-      if (!thing.heldRotation.equals(rotation)) {
-        thing.heldRotation.copy(rotation);
-        thing.sent = false;
+      if (thing.heldRotation.equals(rotation)) {
+        return null;
       }
+
+      thing.heldRotation.copy(rotation);
+      thing.sent = false;
       return slot.rotationOptions[rotationIndex];
     }
 

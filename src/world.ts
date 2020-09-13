@@ -306,15 +306,6 @@ export class World {
     held.sort((a, b) => compareZYX(a.slot.origin, b.slot.origin));
 
     for (let i = 0; i < held.length; i++) {
-      if (i === 0 && this.heldRotationIndex === -1) {
-        this.heldRotationIndex = Math.max(
-          0,
-          World.heldRotationOptions.findIndex(
-            o => o.equals(held[i].slot.rotationOptions[held[i].rotationIndex])
-          )
-        );
-      }
-
       const thing = held[i];
       const place = thing.place();
       const x = place.position.x + this.mouse.x - this.heldMouse.x;
