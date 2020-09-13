@@ -1,4 +1,4 @@
-import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneBufferGeometry } from 'three';
+import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneBufferGeometry, Quaternion } from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
@@ -7,6 +7,13 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { World } from './world';
 
 const RATIO = 1.5;
+
+enum CameraPosition {
+  TopDown,
+  PlayerView,
+  HandSpectator,
+  CallSpectator,
+}
 
 export class MainView {
   private main: HTMLElement;
@@ -21,6 +28,7 @@ export class MainView {
   camera: Camera = null!;
   private composer: EffectComposer = null!;
   private outlinePass: OutlinePass = null!;
+  private cameraPosition: CameraPosition = CameraPosition.TopDown;
 
   private width = 0;
   private height = 0;
@@ -96,6 +104,7 @@ export class MainView {
   private makeCamera(perspective: boolean): Camera {
     if (perspective) {
       const camera = new PerspectiveCamera(30, RATIO, 0.1, 1000);
+      camera.up = new Vector3(0, 0, 1);
       return camera;
     } else {
       const w = World.WIDTH * 1.2;
@@ -104,15 +113,17 @@ export class MainView {
         -w / 2, w / 2,
         h / 2, -h / 2,
         0.1, 1000);
+      camera.up = new Vector3(0, 0, 1);
       return camera;
     }
   }
 
   updateCamera(seat: number | null, lookDown: number, zoom: number, mouse2: Vector2 | null): void {
+    const cameraPosition = seat === null ? this.cameraPosition : CameraPosition.PlayerView;
     if (this.perspective) {
-      this.updatePespectiveCamera(seat === null, lookDown, zoom, mouse2);
+      this.updatePespectiveCamera(cameraPosition, lookDown, zoom, mouse2);
     } else {
-      this.updateOrthographicCamera(seat === null, lookDown, zoom, mouse2);
+      this.updateOrthographicCamera(cameraPosition, lookDown, zoom, mouse2);
     }
 
     const angle = (seat ?? 0) * Math.PI * 0.5;
@@ -121,49 +132,67 @@ export class MainView {
   }
 
   private updatePespectiveCamera(
-    fromTop: boolean,
+    cameraPosition: CameraPosition,
     lookDown: number,
     zoom: number,
     mouse2: Vector2 | null): void
   {
-    if (fromTop) {
-      this.camera.position.set(0, 0, 400);
-      this.camera.rotation.set(0, 0, 0);
-    } else {
-      this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 1.05);
-      this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2, 0, 0);
-      if (zoom !== 0) {
-        const dist = new Vector3(0, 1.37, -1).multiplyScalar(zoom * 55);
-        this.camera.position.add(dist);
+    switch (cameraPosition) {
+      case CameraPosition.TopDown: {
+        this.camera.position.set(0, 0, 400);
+        this.camera.lookAt(new Vector3(World.WIDTH / 2, World.WIDTH / 2, 0));
+        break;
       }
-      if (zoom > 0 && mouse2) {
-        this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.6;
-        this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
+      case CameraPosition.PlayerView: {
+        this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 1.05);
+        this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2, 0, 0);
+        if (zoom !== 0) {
+          const dist = new Vector3(0, 1.37, -1).multiplyScalar(zoom * 55);
+          this.camera.position.add(dist);
+        }
+        if (zoom > 0 && mouse2) {
+          this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.6;
+          this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
+        }
+        break;
+      }
+      case CameraPosition.HandSpectator: {
+        this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH / 2);
+        this.camera.position.applyAxisAngle(new Vector3(0, 0, -1), Math.PI * 0.15);
+        this.camera.lookAt(new Vector3(World.WIDTH * 2.5 / 4, World.WIDTH / 4, 0));
+        break;
+      }
+      case CameraPosition.CallSpectator: {
+        break;
       }
     }
   }
 
   private updateOrthographicCamera(
-    fromTop: boolean,
+    cameraPosition: CameraPosition,
     lookDown: number,
     zoom: number,
     mouse2: Vector2 | null): void
   {
-    if (fromTop) {
-      this.camera.position.set(0, 0, 100);
-      this.camera.rotation.set(0, 0, 0);
-      this.camera.scale.setScalar(1.55);
-    } else {
-      this.camera.position.set(
-        0,
-        -53 * lookDown - World.WIDTH,
-        174);
-      this.camera.rotation.set(Math.PI * 0.25, 0, 0);
-      this.camera.scale.setScalar(1 - 0.45 * zoom);
+    switch (cameraPosition) {
+      case CameraPosition.PlayerView: {
+        this.camera.position.set(
+          0,
+          -53 * lookDown - World.WIDTH,
+          174);
+        this.camera.rotation.set(Math.PI * 0.25, 0, 0);
+        this.camera.scale.setScalar(1 - 0.45 * zoom);
 
-      if (zoom > 0 && mouse2) {
-        this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.6;
-        this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
+        if (zoom > 0 && mouse2) {
+          this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.6;
+          this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
+        }
+        break;
+      }
+      default: {
+        this.camera.position.set(0, 0, 100);
+        this.camera.lookAt(new Vector3(World.WIDTH / 2, World.WIDTH / 2, 0));
+        this.camera.scale.setScalar(1.55);
       }
     }
   }
