@@ -44,7 +44,6 @@ export class Client extends BaseClient {
         this.seatPlayers[seatInfo.seat] = playerId;
       }
     }
-    console.log(this.seatPlayers);
   }
 }
 

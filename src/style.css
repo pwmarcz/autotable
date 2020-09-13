@@ -109,10 +109,10 @@
     background-color: rgba(30, 30, 30, 0.4);
     display: none;
 }
-/* .seat-button {
+.seat-button {
     position: absolute;
-} */
-/* .seat-button-0 {
+}
+.seat-button-0 {
     bottom: 20px;
     left: 50%;
     transform: translate(-50%, 0);
@@ -131,7 +131,7 @@
     top: 50%;
     left: 20%;
     transform: translate(0, -50%);
-} */
+}
 
 /* https://fontlibrary.org/en/font/segment7 */
 @font-face {
