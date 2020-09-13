@@ -123,7 +123,7 @@ export class Center {
     if (nick === null) {
       text = '';
     } else if (nick === '') {
-      text = 'Player';
+      text = 'Jyanshi';
     } else {
       text = nick.substr(0, 10);
     }
