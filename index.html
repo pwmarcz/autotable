@@ -120,41 +120,68 @@
             </div>
 
             <div class="d-flex mt-2">
-                <button class="btn btn-dark btn-sm mr-2 w-100" id="leave-seat">Leave seat</button>
-                <div class="dropdown">
-                    <button class="btn btn-dark btn-sm btn-block dropdown-toggle" data-toggle="dropdown">
-                        More
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-right p-3 text-light" style="width: 300px;">
-                        <h4>Instructions</h4>
-                        <p>
-                        <b>Drag mouse</b> to move or select<br>
-                        Press <b>F</b> or <b>right-click</b> to flip or rotate<br>
-                        Press <b>R</b> to rotate backwards; for example hide your hand<br>
-                        Hold <b>SPACE</b> (or press <b>Q</b>) to look down<br>
-                        Hold <b>Z</b> to zoom in<br>
-                        Hold <b>X</b> to zoom out<br>
-                        Press <b>P</b> to toggle perspective mode
-                        </p>
-                        <h4>Settings</h4>
-                        <label class="dropdown-menu-item">
-                            <input type="checkbox" id="perspective">
-                            Perspective mode
-                        </label>
-                        <label>
-                            <input type="checkbox" id="benchmark">
-                            Benchmark mode (don't limit FPS)
-                        </label>
-                        <label>
-                            <input type="checkbox" id="muted">
-                            Mute sound
-                        </label>
-                        <label>
-                            <input type="checkbox" id="sticky">
-                            Sticky mouse (click to grab)
-                        </label>
-                        <button class="btn btn-secondary btn-sm btn-block mt-2" id="new-game">New game</button>
-                    </div>
+                <button class="btn btn-dark btn-sm w-100" id="leave-seat">Leave seat</button>
+            </div>
+
+            <div class="d-flex mt-2">
+                <button class="btn btn-dark btn-sm w-100" id="spectate">Spectate</button>
+            </div>
+
+            <div class="mt-2" id="spectate-options">
+                <div class="d-flex w-100">
+                    <button class="btn btn-dark btn-sm w-100" id="view-top">Top</button>
+                </div>
+                <div class="d-flex w-100 mt-2">
+                    <button class="btn btn-dark btn-sm w-100 mr-2 view-hand" data-seat="0">Hand</button>
+                    <button class="btn btn-dark btn-sm w-100 view-calls" data-seat="0">Calls</button>
+                </div>
+                <div class="d-flex w-100 mt-2">
+                    <button class="btn btn-dark btn-sm w-100 mr-2 view-hand" data-seat="1">Hand</button>
+                    <button class="btn btn-dark btn-sm w-100 view-calls" data-seat="1">Calls</button>
+                </div>
+                <div class="d-flex w-100 mt-2">
+                    <button class="btn btn-dark btn-sm w-100 mr-2 view-hand" data-seat="2">Hand</button>
+                    <button class="btn btn-dark btn-sm w-100 view-calls" data-seat="2">Calls</button>
+                </div>
+                <div class="d-flex w-100 mt-2">
+                    <button class="btn btn-dark btn-sm w-100 mr-2 view-hand" data-seat="3">Hand</button>
+                    <button class="btn btn-dark btn-sm w-100 view-calls" data-seat="3">Calls</button>
+                </div>
+            </div>
+
+            <div class="dropdown mt-2 w-100">
+                <button class="btn btn-dark btn-sm btn-block dropdown-toggle" data-toggle="dropdown">
+                    More
+                </button>
+                <div class="dropdown-menu dropdown-menu-right p-3 text-light" style="width: 300px;">
+                    <h4>Instructions</h4>
+                    <p>
+                    <b>Drag mouse</b> to move or select<br>
+                    Press <b>F</b> or <b>right-click</b> to flip or rotate<br>
+                    Press <b>R</b> to rotate backwards; for example hide your hand<br>
+                    Hold <b>SPACE</b> (or press <b>Q</b>) to look down<br>
+                    Hold <b>Z</b> to zoom in<br>
+                    Hold <b>X</b> to zoom out<br>
+                    Press <b>P</b> to toggle perspective mode
+                    </p>
+                    <h4>Settings</h4>
+                    <label class="dropdown-menu-item">
+                        <input type="checkbox" id="perspective">
+                        Perspective mode
+                    </label>
+                    <label>
+                        <input type="checkbox" id="benchmark">
+                        Benchmark mode (don't limit FPS)
+                    </label>
+                    <label>
+                        <input type="checkbox" id="muted">
+                        Mute sound
+                    </label>
+                    <label>
+                        <input type="checkbox" id="sticky">
+                        Sticky mouse (click to grab)
+                    </label>
+                    <button class="btn btn-secondary btn-sm btn-block mt-2" id="new-game">New game</button>
                 </div>
             </div>
 

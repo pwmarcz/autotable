@@ -3,6 +3,7 @@ import { Client } from "./client";
 import { World } from "./world";
 import { DealType, GameType, Conditions, Points, GAME_TYPES } from './types';
 import { DEALS } from './setup-deal';
+import { MainView } from './main-view';
 
 export function parseTileString(tiles: string): Record<string, number> {
   const tileMap: Record<string, number> = {};
@@ -34,10 +35,14 @@ export function tileMapToString(tileMap: Record<string, number>): string {
   return desc;
 }
 
-export class GameUi {
-  private client: Client;
-  private world: World;
+enum SeatWind {
+  East = 0,
+  South,
+  West,
+  North,
+}
 
+export class GameUi {
   elements: {
     deal: HTMLButtonElement;
     toggleDealer: HTMLButtonElement;
@@ -52,11 +57,16 @@ export class GameUi {
     akaText: HTMLInputElement;
     points: HTMLSelectElement;
     nick: HTMLInputElement;
+    spectate: HTMLButtonElement;
+    viewTop: HTMLButtonElement;
+    viewHand: Array<HTMLButtonElement>;
+    viewCalls: Array<HTMLButtonElement>;
   }
 
-  constructor(client: Client, world: World) {
-    this.client = client;
-    this.world = world;
+  constructor(
+    private readonly client: Client,
+    private readonly world: World,
+    private readonly mainView: MainView) {
 
     this.elements = {
       deal: document.getElementById('deal') as HTMLButtonElement,
@@ -72,10 +82,17 @@ export class GameUi {
       akaText: document.getElementById('aka-text') as HTMLInputElement,
       points: document.getElementById('points') as HTMLSelectElement,
       nick: document.getElementById('nick')! as HTMLInputElement,
+
+      spectate: document.getElementById('spectate')! as HTMLButtonElement,
+      viewTop: document.getElementById('view-top')! as HTMLButtonElement,
+      viewHand: [],
+      viewCalls: [],
     };
+
     for (let i = 0; i < 4; i++) {
-      this.elements.takeSeat[i] = document.querySelector(
-        `.seat-button-${i} button`) as HTMLButtonElement;
+      this.elements.takeSeat.push(document.querySelector(`.seat-button-${i} button`) as HTMLButtonElement);
+      this.elements.viewHand.push(document.querySelector(`.view-hand[data-seat="${i}"]`) as HTMLButtonElement);
+      this.elements.viewCalls.push(document.querySelector(`.view-calls[data-seat="${i}"]`) as HTMLButtonElement);
     }
 
     this.setupEvents();
@@ -93,7 +110,12 @@ export class GameUi {
         this.client.nicks.set(this.client.playerId(), this.elements.nick.value);
         this.client.seats.set(this.client.playerId(), { seat: i });
       };
+
+      this.elements.viewHand[i].onclick = () => {
+        this.mainView.spectateHand(i);
+      };
     }
+
     this.elements.leaveSeat.onclick = () => {
       this.client.seats.set(this.client.playerId(), { seat: null });
     };

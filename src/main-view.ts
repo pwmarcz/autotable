@@ -1,4 +1,4 @@
-import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneBufferGeometry, Quaternion } from 'three';
+import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneBufferGeometry } from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
@@ -29,6 +29,7 @@ export class MainView {
   private composer: EffectComposer = null!;
   private outlinePass: OutlinePass = null!;
   private cameraPosition: CameraPosition = CameraPosition.TopDown;
+  private activeSeat: number = 0;
 
   private width = 0;
   private height = 0;
@@ -126,8 +127,11 @@ export class MainView {
       this.updateOrthographicCamera(cameraPosition, lookDown, zoom, mouse2);
     }
 
-    const angle = (seat ?? 0) * Math.PI * 0.5;
-    this.viewGroup.rotation.set(0, 0, angle);
+    if(cameraPosition !== CameraPosition.TopDown) {
+      const angle = (seat ?? this.activeSeat) * Math.PI * 0.5;
+      this.viewGroup.setRotationFromAxisAngle(new Vector3(0, 0, 1), angle);
+    }
+
     this.viewGroup.updateMatrixWorld();
   }
 
@@ -140,7 +144,8 @@ export class MainView {
     switch (cameraPosition) {
       case CameraPosition.TopDown: {
         this.camera.position.set(0, 0, 400);
-        this.camera.lookAt(new Vector3(World.WIDTH / 2, World.WIDTH / 2, 0));
+        const center = this.camera.parent?.localToWorld(new Vector3());
+        this.camera.lookAt(center!);
         break;
       }
       case CameraPosition.PlayerView: {
@@ -159,7 +164,8 @@ export class MainView {
       case CameraPosition.HandSpectator: {
         this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH / 2);
         this.camera.position.applyAxisAngle(new Vector3(0, 0, -1), Math.PI * 0.15);
-        this.camera.lookAt(new Vector3(World.WIDTH * 2.5 / 4, World.WIDTH / 4, 0));
+        const offset = this.camera.parent?.localToWorld(new Vector3(World.WIDTH / 8, -World.WIDTH / 4, 0));
+        this.camera.lookAt(offset!);
         break;
       }
       case CameraPosition.CallSpectator: {
@@ -234,5 +240,10 @@ export class MainView {
 
       this.setupRendering();
     }
+  }
+
+  spectateHand(i: number): void {
+    this.cameraPosition = CameraPosition.HandSpectator;
+    this.activeSeat = i;
   }
 }
