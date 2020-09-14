@@ -114,6 +114,10 @@ export class GameUi {
       this.elements.viewHand[i].onclick = () => {
         this.mainView.spectateHand(i);
       };
+
+      this.elements.viewCalls[i].onclick = () => {
+        this.mainView.spectateCall(i);
+      };
     }
 
     this.elements.leaveSeat.onclick = () => {

@@ -105,7 +105,7 @@ export class MainView {
   private makeCamera(perspective: boolean): Camera {
     if (perspective) {
       const camera = new PerspectiveCamera(30, RATIO, 0.1, 1000);
-      camera.up = new Vector3(0, 0, 1);
+      camera.up = new Vector3(0, 0.001, 1).normalize();
       return camera;
     } else {
       const w = World.WIDTH * 1.2;
@@ -114,12 +114,15 @@ export class MainView {
         -w / 2, w / 2,
         h / 2, -h / 2,
         0.1, 1000);
-      camera.up = new Vector3(0, 0, 1);
       return camera;
     }
   }
+  readonly cameraUp = new Vector3(0, 0.001, 1).normalize();
 
   updateCamera(seat: number | null, lookDown: number, zoom: number, mouse2: Vector2 | null): void {
+    const angle = (seat ?? this.activeSeat) * Math.PI * 0.5;
+    this.camera.up.copy(this.cameraUp).applyAxisAngle(new Vector3(0, 0, 1), angle);
+
     const cameraPosition = seat === null ? this.cameraPosition : CameraPosition.PlayerView;
     if (this.perspective) {
       this.updatePespectiveCamera(cameraPosition, lookDown, zoom, mouse2);
@@ -128,11 +131,9 @@ export class MainView {
     }
 
     if(cameraPosition !== CameraPosition.TopDown) {
-      const angle = (seat ?? this.activeSeat) * Math.PI * 0.5;
       this.viewGroup.setRotationFromAxisAngle(new Vector3(0, 0, 1), angle);
+      this.viewGroup.updateMatrixWorld();
     }
-
-    this.viewGroup.updateMatrixWorld();
   }
 
   private updatePespectiveCamera(
@@ -143,8 +144,8 @@ export class MainView {
   {
     switch (cameraPosition) {
       case CameraPosition.TopDown: {
-        this.camera.position.set(0, 0, 400);
         const center = this.camera.parent?.localToWorld(new Vector3());
+        this.camera.position.set(0, 0, 400);
         this.camera.lookAt(center!);
         break;
       }
@@ -162,13 +163,17 @@ export class MainView {
         break;
       }
       case CameraPosition.HandSpectator: {
-        this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH / 2);
-        this.camera.position.applyAxisAngle(new Vector3(0, 0, -1), Math.PI * 0.15);
+        this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH / 2).applyAxisAngle(new Vector3(0, 0, -1), Math.PI * 0.15);
         const offset = this.camera.parent?.localToWorld(new Vector3(World.WIDTH / 8, -World.WIDTH / 4, 0));
         this.camera.lookAt(offset!);
         break;
       }
       case CameraPosition.CallSpectator: {
+        const callArea = new Vector3(World.WIDTH * 13 / 32, -World.WIDTH * 3 / 8, 0);
+        this.camera.position.copy(callArea);
+        this.camera.position.setZ(100);
+        const center = this.camera.parent?.localToWorld(callArea);
+        this.camera.lookAt(center!);
         break;
       }
     }
@@ -244,6 +249,11 @@ export class MainView {
 
   spectateHand(i: number): void {
     this.cameraPosition = CameraPosition.HandSpectator;
+    this.activeSeat = i;
+  }
+
+  spectateCall(i: number): void {
+    this.cameraPosition = CameraPosition.CallSpectator;
     this.activeSeat = i;
   }
 }
