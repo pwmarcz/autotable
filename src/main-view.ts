@@ -256,4 +256,9 @@ export class MainView {
     this.cameraPosition = CameraPosition.CallSpectator;
     this.activeSeat = i;
   }
+
+  spectateTop(): void {
+    this.cameraPosition = CameraPosition.TopDown;
+    this.activeSeat = 0;
+  }
 }

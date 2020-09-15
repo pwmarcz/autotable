@@ -107,7 +107,7 @@
     left: 0;
     right: 0;
     background-color: rgba(30, 30, 30, 0.4);
-    display: none;
+    display: block;
 }
 .seat-button {
     position: absolute;

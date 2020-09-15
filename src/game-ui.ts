@@ -58,10 +58,15 @@ export class GameUi {
     points: HTMLSelectElement;
     nick: HTMLInputElement;
     spectate: HTMLButtonElement;
+    stopSpectate: HTMLButtonElement;
+    spectateOptions: HTMLDivElement;
     viewTop: HTMLButtonElement;
+    viewAuto: HTMLButtonElement;
     viewHand: Array<HTMLButtonElement>;
     viewCalls: Array<HTMLButtonElement>;
   }
+
+  private isSpectating: boolean = false;
 
   constructor(
     private readonly client: Client,
@@ -84,7 +89,10 @@ export class GameUi {
       nick: document.getElementById('nick')! as HTMLInputElement,
 
       spectate: document.getElementById('spectate')! as HTMLButtonElement,
+      stopSpectate: document.getElementById('stop-spectate')! as HTMLButtonElement,
+      spectateOptions: document.getElementById('spectate-options')! as HTMLDivElement,
       viewTop: document.getElementById('view-top')! as HTMLButtonElement,
+      viewAuto: document.getElementById('view-auto')! as HTMLButtonElement,
       viewHand: [],
       viewCalls: [],
     };
@@ -122,6 +130,22 @@ export class GameUi {
 
     this.elements.leaveSeat.onclick = () => {
       this.client.seats.set(this.client.playerId(), { seat: null });
+    };
+
+    this.elements.viewTop.onclick = () => {
+      this.mainView.spectateTop();
+    };
+
+    this.elements.spectate.onclick = () => {
+      this.mainView.setPerspective(true);
+      this.isSpectating = true;
+      this.updateSeats();
+    };
+
+    this.elements.stopSpectate.onclick = () => {
+      this.mainView.spectateTop();
+      this.isSpectating = false;
+      this.updateSeats();
     };
 
     this.client.match.on('update', this.updateSetup.bind(this));
@@ -212,16 +236,32 @@ export class GameUi {
     this.elements.akaText.value = tileMapToString(parseTileString(this.elements.akaText.value));
   }
 
+  private setVisibility(element: HTMLElement, isVisible: boolean): void {
+    if (isVisible) {
+      element.setAttribute('style', '');
+      return;
+    }
+    element.setAttribute('style', 'display:none !important');
+  }
+
   private updateSeats(): void {
     const toDisable = [
       this.elements.deal,
       this.elements.toggleDealer,
       this.elements.toggleHonba,
-      this.elements.leaveSeat,
       this.elements.toggleSetup,
     ];
+
+    this.setVisibility(this.elements.spectate.parentElement!, !this.isSpectating && this.client.seat === null);
+    this.setVisibility(this.elements.stopSpectate.parentElement!, this.isSpectating);
+    this.setVisibility(this.elements.spectateOptions, this.isSpectating);
+    this.setVisibility(this.elements.leaveSeat.parentElement!, this.client.seat !== null);
+    for (const button of toDisable) {
+      button.disabled = this.client.seat === null;
+    }
+    this.setVisibility(document.querySelector('.seat-buttons')! as HTMLElement, this.client.seat === null && !this.isSpectating);
+
     if (this.client.seat === null) {
-      (document.querySelector('.seat-buttons')! as HTMLElement).style.display = 'block';
       for (let i = 0; i < 4; i++) {
         const playerId = this.client.seatPlayers[i];
         const button = document.querySelector(`.seat-button-${i} button`) as HTMLButtonElement;
@@ -235,14 +275,6 @@ export class GameUi {
           button.disabled = false;
           button.textContent = 'Take seat';
         }
-      }
-      for (const button of toDisable) {
-        button.disabled = true;
-      }
-    } else {
-      (document.querySelector('.seat-buttons')! as HTMLElement).style.display = 'none';
-      for (const button of toDisable) {
-        button.disabled = false;
       }
     }
   }
