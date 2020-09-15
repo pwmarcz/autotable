@@ -182,6 +182,23 @@ const START: Record<string, Slot> = {
     rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN, Rotation.FACE_DOWN_SIDEWAYS],
   }),
 
+  'discard.washizu': new Slot({
+    name: `discard`,
+    group: `discard`,
+    origin: new Vector3(69, 60, 0),
+    direction: new Vector2(1, 1),
+    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
+    drawShadow: true,
+  }),
+
+  'discard.washizu.extra': new Slot({
+    name: `discard.extra`,
+    group: `discard`,
+    origin: new Vector3(69 + 6 * Size.TILE.x, 60 - 2 * Size.TILE.y, 0),
+    direction: new Vector2(1, 1),
+    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
+  }),
+
   'washizu.bag': new Slot({
     name: 'washizu.bag',
     group: 'washizu.bag',
@@ -294,8 +311,8 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('meld'), column(4), row(4, -Size.TILE.x, {push: true, shift: true}), seats()],
     [start('wall'), row(19), stack(), seats()],
     [start('washizu.bag'), stack(136), seats([0])],
-    [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats()],
-    [start('discard.extra'), row(4, undefined, {push: true}), seats()],
+    [start('discard.washizu'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats()],
+    [start('discard.washizu.extra'), row(4, undefined, {push: true}), seats()],
 
     [start('tray'), row(6, 24), column(10, -3), seats()],
     [start('payment'), row(8, 3), seats()],
