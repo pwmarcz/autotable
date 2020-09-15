@@ -465,6 +465,7 @@ export class World {
         q.premultiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), this.seat * Math.PI / 2));
         for (const thing of this.getHeld()) {
             thing.heldRotation.setFromQuaternion(q);
+            thing.sent = false;
         }
       }
     } else if (this.selected.length > 0) {

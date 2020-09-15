@@ -5,6 +5,8 @@ import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import { World } from './world';
+import { Client } from './client';
+import { ThingInfo } from './types';
 
 const RATIO = 1.5;
 
@@ -15,13 +17,18 @@ enum CameraPosition {
   CallSpectator,
 }
 
+interface AutoQueueItem {
+  seat: number;
+  view: CameraPosition;
+  delay: number;
+}
+
 export class MainView {
   private main: HTMLElement;
   private stats: Stats;
   private perspective = false;
 
   private scene: Scene;
-  private mainGroup: Group;
   private viewGroup: Group;
   private renderer: WebGLRenderer;
 
@@ -29,15 +36,20 @@ export class MainView {
   private composer: EffectComposer = null!;
   private outlinePass: OutlinePass = null!;
   private cameraPosition: CameraPosition = CameraPosition.TopDown;
+  private autoCameraPosition: CameraPosition = CameraPosition.TopDown;
   private activeSeat: number = 0;
+  private autoActiveSeat: number = 0;
 
   private width = 0;
   private height = 0;
 
   private dummyObject: Object3D;
+  private autoSpectate: boolean = false;
 
-  constructor(mainGroup: Group) {
-    this.mainGroup = mainGroup;
+  private readonly autoQueue: Array<AutoQueueItem> = [];
+  private queueTaskId: NodeJS.Timeout | null = null;
+
+  constructor(private readonly mainGroup: Group, private readonly client: Client) {
     this.main = document.getElementById('main')!;
 
     this.scene = new Scene();
@@ -55,11 +67,63 @@ export class MainView {
     this.setupLights();
     this.setupRendering();
 
+    this.client.things.on('update', (update) => {
+      if (this.queueAutoItem(update) && this.autoQueue.length === 1) {
+        if (this.queueTaskId !== null) {
+          return;
+        }
+
+        this.queueTaskId = setTimeout(() => {
+          this.applyQueueItem();
+        }, 0);
+      }
+    });
+
     this.stats = Stats();
     this.stats.dom.style.left = 'auto';
     this.stats.dom.style.right = '0';
     const full = document.getElementById('full')!;
     full.appendChild(this.stats.dom);
+  }
+
+  private applyQueueItem(previous?: AutoQueueItem): void {
+    const change = this.autoQueue.shift();
+    if (!change) {
+      this.queueTaskId = null;
+      return;
+    }
+
+    const duplicate = previous && change.view === previous.view && change.seat === previous.seat;
+
+    if (!duplicate) {
+      this.autoActiveSeat = change.seat;
+      this.autoCameraPosition = change.view;
+    }
+
+    this.queueTaskId = setTimeout(() => this.applyQueueItem(change), duplicate ? 0 : change.delay);
+  }
+
+  private queueAutoItem(update: Array<[number, ThingInfo | null]>): boolean {
+    for(const [id, info] of update) {
+      if (info?.slotName.startsWith('wall') && info.claimedBy !== null) {
+        this.autoQueue.push({
+          seat: info.claimedBy,
+          view: CameraPosition.HandSpectator,
+          delay: 0,
+        });
+        return true;
+      }
+
+      if (info?.slotName.startsWith('meld') && info.claimedBy === null) {
+        this.autoQueue.push({
+          seat: parseInt(info.slotName.substring(info.slotName.indexOf('@') + 1)),
+          view: CameraPosition.CallSpectator,
+          delay: 4000,
+        });
+        return true;
+      }
+    }
+    return false;
   }
 
   private setupLights(): void {
@@ -120,10 +184,16 @@ export class MainView {
   readonly cameraUp = new Vector3(0, 0.001, 1).normalize();
 
   updateCamera(seat: number | null, lookDown: number, zoom: number, mouse2: Vector2 | null): void {
-    const angle = (seat ?? this.activeSeat) * Math.PI * 0.5;
+    const realSeat = seat ?? this.autoSpectate ? this.autoActiveSeat : this.activeSeat;
+    const angle = (realSeat) * Math.PI * 0.5;
     this.camera.up.copy(this.cameraUp).applyAxisAngle(new Vector3(0, 0, 1), angle);
 
-    const cameraPosition = seat === null ? this.cameraPosition : CameraPosition.PlayerView;
+    const cameraPosition = seat !== null
+      ? CameraPosition.PlayerView
+      : (this.autoSpectate
+        ? this.autoCameraPosition
+        : this.cameraPosition);
+
     if (this.perspective) {
       this.updatePespectiveCamera(cameraPosition, lookDown, zoom, mouse2);
     } else {
@@ -248,17 +318,24 @@ export class MainView {
   }
 
   spectateHand(i: number): void {
+    this.autoSpectate = false;
     this.cameraPosition = CameraPosition.HandSpectator;
     this.activeSeat = i;
   }
 
   spectateCall(i: number): void {
+    this.autoSpectate = false;
     this.cameraPosition = CameraPosition.CallSpectator;
     this.activeSeat = i;
   }
 
   spectateTop(): void {
+    this.autoSpectate = false;
     this.cameraPosition = CameraPosition.TopDown;
     this.activeSeat = 0;
+  }
+
+  spectateAuto(): void {
+    this.autoSpectate = true;
   }
 }

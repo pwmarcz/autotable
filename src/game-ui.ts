@@ -136,6 +136,11 @@ export class GameUi {
       this.mainView.spectateTop();
     };
 
+    this.elements.viewAuto.onclick = () => {
+      this.mainView.spectateAuto();
+      this.updateSeats();
+    };
+
     this.elements.spectate.onclick = () => {
       this.mainView.setPerspective(true);
       this.isSpectating = true;
