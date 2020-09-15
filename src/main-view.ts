@@ -184,7 +184,7 @@ export class MainView {
   readonly cameraUp = new Vector3(0, 0.001, 1).normalize();
 
   updateCamera(seat: number | null, lookDown: number, zoom: number, mouse2: Vector2 | null): void {
-    const realSeat = seat ?? this.autoSpectate ? this.autoActiveSeat : this.activeSeat;
+    const realSeat = seat ?? (this.autoSpectate ? this.autoActiveSeat : this.activeSeat);
     const angle = (realSeat) * Math.PI * 0.5;
     this.camera.up.copy(this.cameraUp).applyAxisAngle(new Vector3(0, 0, 1), angle);
 
@@ -337,5 +337,7 @@ export class MainView {
 
   spectateAuto(): void {
     this.autoSpectate = true;
+    this.autoCameraPosition = CameraPosition.TopDown;
+    this.autoActiveSeat = 0;
   }
 }

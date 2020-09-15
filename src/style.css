@@ -113,24 +113,24 @@
     position: absolute;
 }
 .seat-button-0 {
-    top: 50%;
-    left: 20%;
-    transform: translate(0, -50%);
-}
-.seat-button-1 {
     bottom: 20px;
     left: 50%;
     transform: translate(-50%, 0);
 }
-.seat-button-2 {
+.seat-button-1 {
     top: 50%;
     right: 20%;
     transform: translate(0, -50%);
 }
-.seat-button-3 {
+.seat-button-2 {
     top: 20px;
     left: 50%;
     transform: translate(-50%, 0);
+}
+.seat-button-3 {
+    top: 50%;
+    left: 20%;
+    transform: translate(0, -50%);
 }
 /* https://fontlibrary.org/en/font/segment7 */
 @font-face {
