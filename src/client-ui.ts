@@ -75,15 +75,16 @@ export class ClientUi {
     // @ts-ignore
     const env = process.env.NODE_ENV;
 
-    if (env !== 'production') {
-      return 'ws://localhost:1235';
-    }
-
     let path = window.location.pathname;
     path = path.substring(1, path.lastIndexOf('/')+1);
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsHost = window.location.host;
     const wsPath = path + 'ws';
+
+    if (env !== 'production') {
+      return `${wsProtocol}//${window.location.hostname}:1235/${wsPath}`;
+    }
+
     return `${wsProtocol}//${wsHost}/${wsPath}`;
   }
 

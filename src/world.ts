@@ -109,7 +109,15 @@ export class World {
       thing.moveTo(slot, thingInfo.rotationIndex);
       thing.sent = true;
 
-      thing.claimedBy = thingInfo.claimedBy;
+      if (thing.claimedBy !== thingInfo.claimedBy) {
+        if (thing.claimedBy !== null) {
+          thing.release();
+        } else {
+          thing.claimedBy = thingInfo.claimedBy;
+        }
+      }
+
+
       thing.heldRotation.set(
         thingInfo.heldRotation.x,
         thingInfo.heldRotation.y,
@@ -271,14 +279,17 @@ export class World {
   private getHeld(): Array<Thing> {
     const held: Array<Thing> = [];
     for (const thing of this.things.values()) {
-      if (thing.claimedBy === this.seat) {
-        if (thing.shiftSlot !== null) {
-          thing.release();
-        } else {
-          held.push(thing);
-        }
+      if (thing.claimedBy !== this.seat) {
+        continue;
+      }
+
+      if (thing.shiftSlot !== null) {
+        thing.release();
+      } else {
+        held.push(thing);
       }
     }
+
     return held;
   }
 
@@ -303,6 +314,10 @@ export class World {
     this.movement = new Movement();
 
     const held = this.getHeld();
+    if (held.length === 0) {
+      return;
+    }
+
     held.sort((a, b) => compareZYX(a.slot.origin, b.slot.origin));
 
     for (let i = 0; i < held.length; i++) {
@@ -419,6 +434,7 @@ export class World {
     for (const thing of toHold) {
       thing.hold(this.seat);
     }
+
     this.hovered = null;
     this.heldMouse = this.mouse;
 
