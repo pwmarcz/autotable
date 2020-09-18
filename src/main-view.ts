@@ -110,6 +110,12 @@ export class MainView {
         continue;
       }
 
+      if (!info) {
+        continue;
+      }
+
+      const seat = parseInt(info.slotName.substring(info.slotName.indexOf('@') + 1));
+
       if (info?.slotName.startsWith('wall') && info.claimedBy !== null) {
         this.autoQueue.push({
           seat: info.claimedBy,
@@ -119,8 +125,16 @@ export class MainView {
         return true;
       }
 
+      if (info?.slotName.startsWith('hand') && info.rotationIndex !== thing.rotationIndex && info.rotationIndex === 1) {
+        this.autoQueue.push({
+          seat,
+          view: CameraPosition.HandSpectator,
+          delay: 0,
+        });
+        return true;
+      }
+
       if (info?.slotName.startsWith('meld') && info.claimedBy === null) {
-        const seat = parseInt(info.slotName.substring(info.slotName.indexOf('@') + 1));
         if(thing.slot.name.startsWith('meld') && thing.slot.seat === seat) {
           continue;
         }
