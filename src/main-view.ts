@@ -49,7 +49,7 @@ export class MainView {
   private readonly autoQueue: Array<AutoQueueItem> = [];
   private queueTaskId: NodeJS.Timeout | null = null;
 
-  constructor(private readonly mainGroup: Group, private readonly client: Client) {
+  constructor(private readonly mainGroup: Group, private readonly client: Client, private readonly world: World) {
     this.main = document.getElementById('main')!;
 
     this.scene = new Scene();
@@ -68,7 +68,7 @@ export class MainView {
     this.setupRendering();
 
     this.client.things.on('update', (update) => {
-      if (this.queueAutoItem(update) && this.autoQueue.length === 1) {
+      if (this.queueAutoItem(update) && this.autoQueue.length > 0) {
         if (this.queueTaskId !== null) {
           return;
         }
@@ -105,6 +105,11 @@ export class MainView {
 
   private queueAutoItem(update: Array<[number, ThingInfo | null]>): boolean {
     for(const [id, info] of update) {
+      const thing = this.world.things.get(id);
+      if (!thing) {
+        continue;
+      }
+
       if (info?.slotName.startsWith('wall') && info.claimedBy !== null) {
         this.autoQueue.push({
           seat: info.claimedBy,
@@ -115,10 +120,21 @@ export class MainView {
       }
 
       if (info?.slotName.startsWith('meld') && info.claimedBy === null) {
+        const seat = parseInt(info.slotName.substring(info.slotName.indexOf('@') + 1));
+        if(thing.slot.name.startsWith('meld') && thing.slot.seat === seat) {
+          continue;
+        }
+
         this.autoQueue.push({
-          seat: parseInt(info.slotName.substring(info.slotName.indexOf('@') + 1)),
+          seat,
           view: CameraPosition.CallSpectator,
           delay: 4000,
+        });
+
+        this.autoQueue.push({
+          seat,
+          view: CameraPosition.HandSpectator,
+          delay: 0,
         });
         return true;
       }

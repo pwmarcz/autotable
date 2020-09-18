@@ -64,11 +64,13 @@ export class World {
     this.mouseTracker = new MouseTracker(this.client);
 
     this.soundPlayer = soundPlayer;
+    this.sendUpdate();
+  }
 
+  registerEvents(): void {
     this.client.seats.on('update', this.onSeat.bind(this));
     this.client.things.on('update', this.onThings.bind(this));
     this.client.match.on('update', this.onMatch.bind(this));
-    this.sendUpdate();
   }
 
   toggleDealer(): void {

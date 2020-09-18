@@ -44,7 +44,8 @@ export class Game {
     this.objectView = new ObjectView(this.mainGroup, assetLoader, this.client);
     this.soundPlayer = new SoundPlayer(this.client);
     this.world = new World(this.objectView, this.soundPlayer, this.client);
-    this.mainView = new MainView(this.mainGroup, this.client);
+    this.mainView = new MainView(this.mainGroup, this.client, this.world);
+    this.world.registerEvents();
     this.mouseUi = new MouseUi(this.world, this.mainGroup);
     this.clientUi = new ClientUi(this.client);
     this.gameUi = new GameUi(this.client, this.world, this.mainView);
