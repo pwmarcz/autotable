@@ -72,18 +72,17 @@ export class MainView {
     this.setupRendering();
 
     this.client.match.on('update', () => {
+      this.autoQueue.push({
+        seat: 0,
+        view: CameraPosition.TopDown
+      });
+      this.startAutoQueue();
       this.doraIndicatorLocation = null;
     });
 
     this.client.things.on('update', (update) => {
-      if (this.queueAutoItem(update) && this.autoQueue.length > 0) {
-        if (this.queueTaskId !== null) {
-          return;
-        }
-
-        this.queueTaskId = setTimeout(() => {
-          this.applyQueueItem();
-        }, 0);
+      if (this.queueAutoItem(update)) {
+        this.startAutoQueue();
       }
     });
 
@@ -92,6 +91,20 @@ export class MainView {
     this.stats.dom.style.right = '0';
     const full = document.getElementById('full')!;
     full.appendChild(this.stats.dom);
+  }
+
+  private startAutoQueue(): void {
+    if (this.autoQueue.length === 0) {
+      return;
+    }
+
+    if (this.queueTaskId !== null) {
+      return;
+    }
+
+    this.queueTaskId = setTimeout(() => {
+      this.applyQueueItem();
+    }, 0);
   }
 
   private applyQueueItem(previous?: AutoQueueItem): void {
@@ -298,7 +311,7 @@ export class MainView {
         this.camera.lookAt(center!);
         break;
       } case CameraPosition.PlayerView: {
-        this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 1.05);
+        this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 0.95);
         this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2, 0, 0);
         if (zoom !== 0) {
           const dist = new Vector3(0, 1.37, -1).multiplyScalar(zoom * 55);
@@ -323,7 +336,7 @@ export class MainView {
         break;
       } case CameraPosition.DoraSpectator: {
         this.camera.position.copy(new Vector3(0, 0, 100));
-        this.camera.lookAt(this.doraIndicatorLocation);
+        this.camera.lookAt(this.doraIndicatorLocation ?? new Vector3());
       }
     }
   }
