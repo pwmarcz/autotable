@@ -87,6 +87,7 @@ export class Server {
         game.join(client);
         break;
       }
+
       default:
         throw `unknown message: ${message.type}`;
     }

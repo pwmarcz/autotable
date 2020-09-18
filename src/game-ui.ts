@@ -57,6 +57,7 @@ export class GameUi {
     akaText: HTMLInputElement;
     points: HTMLSelectElement;
     nick: HTMLInputElement;
+    spectatorPassword: HTMLInputElement;
     spectate: HTMLButtonElement;
     stopSpectate: HTMLButtonElement;
     spectateOptions: HTMLDivElement;
@@ -87,7 +88,7 @@ export class GameUi {
       akaText: document.getElementById('aka-text') as HTMLInputElement,
       points: document.getElementById('points') as HTMLSelectElement,
       nick: document.getElementById('nick')! as HTMLInputElement,
-
+      spectatorPassword: document.getElementById('spectator-password') as HTMLInputElement,
       spectate: document.getElementById('spectate')! as HTMLButtonElement,
       stopSpectate: document.getElementById('stop-spectate')! as HTMLButtonElement,
       spectateOptions: document.getElementById('spectate-options')! as HTMLDivElement,
@@ -113,6 +114,12 @@ export class GameUi {
 
     this.client.seats.on('update', this.updateSeats.bind(this));
     this.client.nicks.on('update', this.updateSeats.bind(this));
+    this.client.on('connect', (_, __, password) => {
+      if (!password) {
+        return;
+      }
+      this.elements.spectatorPassword.value = password;
+    });
     for (let i = 0; i < 4; i++) {
       this.elements.takeSeat[i].onclick = () => {
         this.client.nicks.set(this.client.playerId(), this.elements.nick.value);
@@ -142,6 +149,8 @@ export class GameUi {
     };
 
     this.elements.spectate.onclick = () => {
+      this.client.auth(this.elements.spectatorPassword.value).then(isAuthed => console.log(isAuthed));
+      return;
       this.mainView.setPerspective(true);
       this.isSpectating = true;
       this.mainView.spectateAuto();

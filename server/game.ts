@@ -4,6 +4,7 @@ import { Message, Entry } from './protocol';
 
 export type Client = {
   game: Game | null;
+  isAuthed: boolean;
   playerId: string | null;
   send(data: string): void;
 }
@@ -14,7 +15,7 @@ const EXPIRY_HOURS = 2;
 const EXPIRY_TIME = EXPIRY_HOURS * 60 * 60 * 1000;
 
 export class Game {
-  gameId: string;
+  password: string;
   expiryTime: number | null;
   private starting: boolean = true;
   private clients: Map<string, Client> = new Map();
@@ -25,9 +26,10 @@ export class Game {
 
   private collections: Map<string, Map<string | number, any>> = new Map();
 
-  constructor(gameId: string) {
-    console.log(`new game: ${gameId}`);
-    this.gameId = gameId;
+  constructor(public readonly gameId: string) {
+    console.log(`new game: ${this.gameId}`);
+    this.password = randomString();
+    console.log(this.password);
     this.expiryTime = new Date().getTime() + EXPIRY_TIME;
   }
 
@@ -43,6 +45,7 @@ export class Game {
     this.clients.set(playerId, client);
     client.playerId = playerId;
     client.game = this;
+    client.isAuthed = false;
 
     console.log(`${this.gameId}: join: ${playerId}`);
 
@@ -51,6 +54,7 @@ export class Game {
       gameId: this.gameId,
       playerId,
       isFirst: this.starting,
+      password: this.starting ? this.password : undefined,
     });
     this.starting = false;
     this.expiryTime = null;
@@ -76,7 +80,12 @@ export class Game {
 
     for (const [kind, key, value] of entries) {
       if (!this.ephemeral.get(kind)) {
+        if (kind === 'protected' && senderId && this.clients.get(senderId)?.isAuthed !== true) {
+          continue;
+        }
+
         let collection = this.collections.get(kind);
+
         if (!collection) {
           collection = new Map();
           this.collections.set(kind, collection);
@@ -193,6 +202,15 @@ export class Game {
       case 'UPDATE':
         this.update(message.entries, client.playerId);
         break;
+
+      case 'AUTH': {
+        client.isAuthed = message.password === client.game?.password;
+        this.send(client, {
+          type: 'AUTHED',
+          isAuthed: client.isAuthed,
+        });
+        break;
+      }
     }
   }
 }

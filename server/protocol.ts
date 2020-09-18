@@ -12,6 +12,7 @@ interface JoinedMessage {
   gameId: string;
   playerId: string;
   isFirst: boolean;
+  password?: string;
 }
 
 interface UpdateMessage {
@@ -21,9 +22,22 @@ interface UpdateMessage {
   full: boolean;
 }
 
+interface AuthMessage {
+  type: 'AUTH';
+  password: string;
+}
+
+interface AuthedMessage {
+  type: 'AUTHED';
+  isAuthed: boolean;
+}
+
+
 export type Entry = [string, string | number, any | null];
 
 export type Message = NewMessage
   | JoinMessage
   | JoinedMessage
-  | UpdateMessage;
+  | UpdateMessage
+  | AuthMessage
+  | AuthedMessage;

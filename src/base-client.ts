@@ -3,6 +3,7 @@
 import { EventEmitter } from 'events';
 
 import { Message, Entry } from '../server/protocol';
+import { resolve } from 'path';
 
 export interface Game {
   gameId: string;
@@ -10,6 +11,7 @@ export interface Game {
 }
 
 export class BaseClient {
+  isAuthed: boolean = false;
   private ws: WebSocket | null = null;
   private game: Game | null = null;
   private events: EventEmitter = new EventEmitter();
@@ -31,6 +33,15 @@ export class BaseClient {
     });
   }
 
+  private authWaits: Array<[(_: boolean) => void, (_: any) => void] > = [];
+
+  auth(password: string): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      this.authWaits.push([resolve, reject]);
+      this.send({ type: 'AUTH', password });
+    });
+  }
+
   disconnect(): void {
     this.ws?.close();
   }
@@ -49,7 +60,7 @@ export class BaseClient {
     };
   }
 
-  on(what: 'connect', handler: (game: Game, isFirst: boolean) => void): void;
+  on(what: 'connect', handler: (game: Game, isFirst: boolean, password: string) => void): void;
   on(what: 'disconnect', handler: (game: Game | null) => void): void;
   on(what: 'update', handler: (things: Array<Entry>, full: boolean) => void): void;
 
@@ -111,11 +122,19 @@ export class BaseClient {
           gameId: message.gameId,
           playerId: message.playerId,
         };
-        this.events.emit('connect', this.game, message.isFirst);
+        this.events.emit('connect', this.game, message.isFirst, message.password);
         break;
 
       case 'UPDATE':
         this.events.emit('update', message.entries, message.full);
+        break;
+
+      case 'AUTHED':
+        const wait = this.authWaits.shift();
+        if (!wait) {
+          break;
+        }
+        wait[0](message.isAuthed);
         break;
     }
   }

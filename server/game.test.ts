@@ -7,6 +7,7 @@ class TestClient {
   playerId: string | null = null;
   sent: Array<Message> = [];
 
+  isAuthed: boolean = false;
   send(msg: string): void {
     this.sent.push(JSON.parse(msg) as Message);
   }
