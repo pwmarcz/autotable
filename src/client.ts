@@ -134,17 +134,24 @@ export class Collection<K extends string | number, V> {
     this.events.on(what, handler);
   }
 
+  setOption(option: keyof CollectionOptions, value: any) {
+    this.options[option] = value;
+    this.client.update([[option, this.kind, value]]);
+  }
+
   private onUpdate(entries: Array<Entry>, full: boolean): void {
     if (full) {
       this.map.clear();
     }
 
     for (const [kind, key, value] of entries) {
+      console.log([kind, key, value]);
       if (key !== this.kind) {
         continue;
       }
 
       if (kind === "writeProtected") {
+        console.log(kind);
         this.options.writeProtected = value;
       }
     }

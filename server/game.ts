@@ -69,6 +69,11 @@ export class Game {
         entries.push([kind, key, value]);
       }
     }
+
+    for (const [kind, value] of this.writeProtected.entries()) {
+      entries.push(["writeProtected", kind, value]);
+    }
+
     return entries;
   }
 
@@ -82,17 +87,17 @@ export class Game {
       return;
     }
 
-    const writeProtected: Array<Entry> = [];
-    const otherEntries: Array<Entry> = [];
+    const sendToAll: Array<Entry> = [];
+    const sendToOthers: Array<Entry> = [];
 
     for (const [kind, key, value] of entries) {
       if (this.writeProtected.get(kind)){
         if (!this.isAuthed(senderId)) {
           continue;
         }
-        writeProtected.push([kind, key, value]);
+        sendToAll.push([kind, key, value]);
       } else {
-        otherEntries.push([kind, key, value]);
+        sendToOthers.push([kind, key, value]);
       }
 
       if (this.ephemeral.get(kind)) {
@@ -131,13 +136,13 @@ export class Game {
       }
     }
 
-    if (otherEntries.length > 0) {
-      const message: Message = {type: 'UPDATE', entries: otherEntries, full: false};
+    if (sendToOthers.length > 0) {
+      const message: Message = {type: 'UPDATE', entries: sendToOthers, full: false};
       this.sendAll(message, [senderId]);
     }
 
-    if (writeProtected.length > 0) {
-      const message: Message = {type: 'UPDATE', entries: writeProtected, full: false};
+    if (sendToAll.length > 0) {
+      const message: Message = {type: 'UPDATE', entries: sendToAll, full: false};
       this.sendAll(message);
     }
   }

@@ -57,6 +57,7 @@ export class GameUi {
     akaText: HTMLInputElement;
     points: HTMLSelectElement;
     nick: HTMLInputElement;
+    removeSpectatorPassword: HTMLButtonElement;
     spectatorPassword: HTMLInputElement;
     spectate: HTMLButtonElement;
     stopSpectate: HTMLButtonElement;
@@ -88,6 +89,7 @@ export class GameUi {
       akaText: document.getElementById('aka-text') as HTMLInputElement,
       points: document.getElementById('points') as HTMLSelectElement,
       nick: document.getElementById('nick')! as HTMLInputElement,
+      removeSpectatorPassword: document.getElementById('remove-spectator-password') as HTMLButtonElement,
       spectatorPassword: document.getElementById('spectator-password') as HTMLInputElement,
       spectate: document.getElementById('spectate')! as HTMLButtonElement,
       stopSpectate: document.getElementById('stop-spectate')! as HTMLButtonElement,
@@ -116,8 +118,6 @@ export class GameUi {
     this.client.nicks.on('update', this.updateSeats.bind(this));
     this.client.spectators.on('update', () => {
       this.isSpectating = this.client.spectators.get(this.client.playerId()) !== null;
-      console.log(...this.client.spectators.entries());
-      console.log(this.isSpectating);
 
       if (this.isSpectating) {
         this.mainView.setPerspective(true);
@@ -163,8 +163,20 @@ export class GameUi {
       this.updateSeats();
     };
 
+    this.elements.removeSpectatorPassword.onclick = () => {
+      this.client.auth(this.elements.spectatorPassword.value).then(isAuthed => {
+        if (!isAuthed && this.client.spectators.options.writeProtected) {
+          return;
+        }
+        this.client.spectators.setOption("writeProtected", false);
+      });
+    };
+
     this.elements.spectate.onclick = () => {
       this.client.auth(this.elements.spectatorPassword.value).then(isAuthed => {
+        console.log(this.client.spectators.options.writeProtected);
+
+
         if (!isAuthed && this.client.spectators.options.writeProtected) {
           return;
         }
