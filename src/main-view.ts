@@ -130,6 +130,14 @@ export class MainView {
 
       const seat = parseInt(info.slotName.substring(info.slotName.indexOf('@') + 1));
 
+      if (info.slotName.startsWith('payment')) {
+        this.autoQueue.push({
+          seat: 0,
+          view: CameraPosition.TopDown,
+        });
+        return true;
+      }
+
       if (info?.slotName.startsWith('wall')) {
         // Show hand of player who just drew tile from wall.
         if (info.claimedBy !== null && thing.rotationIndex !== 1) {
