@@ -130,13 +130,19 @@ export class Collection<K extends string | number, V> {
   }
 
   on(what: 'update', handler: (localEntries: Array<[K, V | null]>, full: boolean) => void): void;
+  on(what: 'optionsChanged', handler: (options: CollectionOptions) => void): void;
   on(what: string, handler: (...args: any[]) => void): void {
     this.events.on(what, handler);
   }
 
   setOption(option: keyof CollectionOptions, value: any) {
+    if (this.options[option] === value) {
+      return;
+    }
+
     this.options[option] = value;
     this.client.update([[option, this.kind, value]]);
+    this.events.emit("optionsChanged", this.options);
   }
 
   private onUpdate(entries: Array<Entry>, full: boolean): void {
@@ -145,14 +151,17 @@ export class Collection<K extends string | number, V> {
     }
 
     for (const [kind, key, value] of entries) {
-      console.log([kind, key, value]);
       if (key !== this.kind) {
         continue;
       }
 
       if (kind === "writeProtected") {
         console.log(kind);
+        if (this.options.writeProtected === value) {
+          continue;
+        }
         this.options.writeProtected = value;
+        this.events.emit("optionsChanged", this.options);
       }
     }
 

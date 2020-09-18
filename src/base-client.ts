@@ -63,6 +63,7 @@ export class BaseClient {
   on(what: 'connect', handler: (game: Game, isFirst: boolean, password: string) => void): void;
   on(what: 'disconnect', handler: (game: Game | null) => void): void;
   on(what: 'update', handler: (things: Array<Entry>, full: boolean) => void): void;
+  on(what: 'authed', handler: (isAuthed: boolean) => void): void;
 
   on(what: string, handler: (...args: any[]) => void): void {
     this.events.on(what, handler);
@@ -134,6 +135,8 @@ export class BaseClient {
         if (!wait) {
           break;
         }
+        this.isAuthed = message.isAuthed;
+        this.events.emit('authed', message.isAuthed);
         wait[0](message.isAuthed);
         break;
     }

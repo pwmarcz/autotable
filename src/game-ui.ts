@@ -110,9 +110,20 @@ export class GameUi {
     this.setupDealButton();
   }
 
+  private updateSpectatorView(): void {
+    this.setVisibility(this.elements.spectatorPassword.parentElement!, this.client.spectators.options.writeProtected === true);
+  }
+
   private setupEvents(): void {
     this.elements.toggleDealer.onclick = () => this.world.toggleDealer();
     this.elements.toggleHonba.onclick = () => this.world.toggleHonba();
+
+
+    this.client.spectators.on('optionsChanged', (options) => {
+      this.updateSpectatorView();
+      this.elements.removeSpectatorPassword.innerText = `${options.writeProtected ? "Remove" : "Add"} Spectator Password`;
+    });
+    this.updateSpectatorView();
 
     this.client.seats.on('update', this.updateSeats.bind(this));
     this.client.nicks.on('update', this.updateSeats.bind(this));
@@ -165,18 +176,15 @@ export class GameUi {
 
     this.elements.removeSpectatorPassword.onclick = () => {
       this.client.auth(this.elements.spectatorPassword.value).then(isAuthed => {
-        if (!isAuthed && this.client.spectators.options.writeProtected) {
+        if (!isAuthed) {
           return;
         }
-        this.client.spectators.setOption("writeProtected", false);
+        this.client.spectators.setOption("writeProtected", !(this.client.spectators.options.writeProtected ?? false));
       });
     };
 
     this.elements.spectate.onclick = () => {
       this.client.auth(this.elements.spectatorPassword.value).then(isAuthed => {
-        console.log(this.client.spectators.options.writeProtected);
-
-
         if (!isAuthed && this.client.spectators.options.writeProtected) {
           return;
         }
