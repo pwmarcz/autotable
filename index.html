@@ -38,174 +38,177 @@
             </div>
         </div>
 
-        <div id="sidebar" class="collapsed container text-light">
-            <div class="d-flex">
-                <button class="btn btn-warning btn-sm w-100" id="deal">
-                    <div class="btn-progress"></div>
-                    <span class="btn-progress-text">Deal</span>
-                </button>
-            </div>
-
-            <button disabled class="btn btn-sm btn-outline-secondary text-white w-100 mr-2 mt-2 text-break" id="setup-desc">
-            </button>
-            <button class="btn btn-dark btn-sm dropdown-toggle mt-2 w-100" id="toggle-setup"
-                data-toggle="collapse" data-target="#setup-group">Setup</button>
-
-            <div id="setup-group" class="collapse" data-toggle="true">
-                <select class="dark-select form-control form-control-sm mt-2" id="deal-type">
-                    <option disabled value="">Deal:</option>
-                    <option value="HANDS" selected>Hands</option>
-                    <option value="INITIAL">Only walls</option>
-                    <option value="WINDS">Wind tiles (for seats)</option>
-                </select>
-                <select class="dark-select form-control form-control-sm mt-2" id="game-type">
-                    <option disabled value="">Game type:</option>
-                    <option value="FOUR_PLAYER" selected>4-player</option>
-                    <option value="THREE_PLAYER">3-player</option>
-                    <option value="MINEFIELD">2-player Minefield</option>
-                    <option value="BAMBOO">2-player Bamboo</option>
-                    <option value="WASHIZU">Washizu</option>
-                </select>
-                <select class="dark-select form-control form-control-sm mt-2" id="aka">
-                    <option disabled value="">Aka dora:</option>
-                    <option value="">No aka</option>
-                    <option value="5m5p5s" selected>3 Red Fives</option>
-                    <option value="5m55p5s">4 Red Fives</option>
-                    <option value="5z">Red Dot</option>
-                    <option value="5m5p5s5z">Red Dot, 3 Red Fives</option>
-                    <option value="5m55p5s5z">Red Dot, 4 Red Fives</option>
-                    <option value="-">Custom</option>
-                </select>
-                <input class="form-control form-control-sm mt-2" id="aka-text" type="text"></input>
-                <select class="dark-select form-control form-control-sm mt-2" id="points">
-                    <option disabled value="">Starting points:</option>
-                    <option value="25" selected>25k</option>
-                    <option value="30">30k</option>
-                    <option value="35">35k</option>
-                    <option value="40">40k</option>
-                    <option value="100">100k</option>
-                </select>
-                <br>
-            </div>
-
-            <div class="mt-2 d-flex">
-                <button class="btn btn-secondary btn-sm mr-2 w-100" id="toggle-dealer">Dealer</button>
-                <button class="btn btn-secondary btn-sm w-100" id="toggle-honba">Honba</button>
-            </div>
-
-            <div class="mt-4 d-flex" id="server">
-                <button class="btn btn-warning btn-sm w-100 server-disconnected mr-2" id="connect">
-                    Connect
-                </button>
-                <button class="btn btn-secondary btn-sm w-100 server-connected mr-2" id="disconnect">
-                    Disconnect
-                </button>
-                <div class="dropdown">
-                    <button class="btn btn-secondary btn-sm btn-block dropdown-toggle" data-toggle="dropdown">
-                        Nick
+        <div class="d-flex align-items-center" id="sidebar">
+            <div class="collapsed container text-light py-3 pr-0" id="sidebar-body">
+                <div class="d-flex">
+                    <button class="btn btn-warning btn-sm w-100" id="deal">
+                        <div class="btn-progress"></div>
+                        <span class="btn-progress-text">Deal</span>
                     </button>
-                    <div class="dropdown-menu p-3 text-light">
-                        <input class="form-control form-control-sm" id="nick" type="text"></input>
+                </div>
+
+                <button disabled class="btn btn-sm btn-outline-secondary text-white w-100 mr-2 mt-2 text-break" id="setup-desc">
+                </button>
+                <button class="btn btn-dark btn-sm dropdown-toggle mt-2 w-100" id="toggle-setup"
+                    data-toggle="collapse" data-target="#setup-group">Setup</button>
+
+                <div id="setup-group" class="collapse" data-toggle="true">
+                    <select class="dark-select form-control form-control-sm mt-2" id="deal-type">
+                        <option disabled value="">Deal:</option>
+                        <option value="HANDS" selected>Hands</option>
+                        <option value="INITIAL">Only walls</option>
+                        <option value="WINDS">Wind tiles (for seats)</option>
+                    </select>
+                    <select class="dark-select form-control form-control-sm mt-2" id="game-type">
+                        <option disabled value="">Game type:</option>
+                        <option value="FOUR_PLAYER" selected>4-player</option>
+                        <option value="THREE_PLAYER">3-player</option>
+                        <option value="MINEFIELD">2-player Minefield</option>
+                        <option value="BAMBOO">2-player Bamboo</option>
+                        <option value="WASHIZU">Washizu</option>
+                    </select>
+                    <select class="dark-select form-control form-control-sm mt-2" id="aka">
+                        <option disabled value="">Aka dora:</option>
+                        <option value="">No aka</option>
+                        <option value="5m5p5s" selected>3 Red Fives</option>
+                        <option value="5m55p5s">4 Red Fives</option>
+                        <option value="5z">Red Dot</option>
+                        <option value="5m5p5s5z">Red Dot, 3 Red Fives</option>
+                        <option value="5m55p5s5z">Red Dot, 4 Red Fives</option>
+                        <option value="-">Custom</option>
+                    </select>
+                    <input class="form-control form-control-sm mt-2" id="aka-text" type="text"></input>
+                    <select class="dark-select form-control form-control-sm mt-2" id="points">
+                        <option disabled value="">Starting points:</option>
+                        <option value="25" selected>25k</option>
+                        <option value="30">30k</option>
+                        <option value="35">35k</option>
+                        <option value="40">40k</option>
+                        <option value="100">100k</option>
+                    </select>
+                    <br>
+                </div>
+
+                <div class="mt-2 d-flex">
+                    <button class="btn btn-secondary btn-sm mr-2 w-100" id="toggle-dealer">Dealer</button>
+                    <button class="btn btn-secondary btn-sm w-100" id="toggle-honba">Honba</button>
+                </div>
+
+                <div class="mt-4 d-flex" id="server">
+                    <button class="btn btn-warning btn-sm w-100 server-disconnected mr-2" id="connect">
+                        Connect
+                    </button>
+                    <button class="btn btn-secondary btn-sm w-100 server-connected mr-2" id="disconnect">
+                        Disconnect
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary btn-sm btn-block dropdown-toggle" data-toggle="dropdown">
+                            Nick
+                        </button>
+                        <div class="dropdown-menu p-3 text-light">
+                            <input class="form-control form-control-sm" id="nick" type="text"></input>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="d-flex mt-2">
-                <button class="btn btn-dark btn-sm w-100" id="leave-seat">Leave seat</button>
-            </div>
-
-            <div class="d-flex mt-2">
-                <button class="btn btn-dark btn-sm w-100" id="remove-spectator-password">Remove Spectator Password</button>
-            </div>
-
-            <div class="mt-2 text-light">
-                <input class="form-control form-control-sm" id="spectator-password" type="text"></input>
-            </div>
-
-            <div class="d-flex mt-2">
-                <button class="btn btn-dark btn-sm w-100" id="spectate">Spectate</button>
-            </div>
-
-            <div class="d-flex mt-2">
-                <button class="btn btn-dark btn-sm w-100" id="stop-spectate">Stop Spectating</button>
-            </div>
-
-            <div class="mt-2" id="spectate-options">
-                <div class="d-flex w-100">
-                    <button class="btn btn-dark btn-sm w-100 mr-2" id="view-auto">Auto</button>
-                    <button class="btn btn-dark btn-sm w-100" id="view-top">Top</button>
+                <div class="d-flex mt-2">
+                    <button class="btn btn-dark btn-sm w-100" id="leave-seat">Leave seat</button>
                 </div>
-                <div class="d-flex w-100 mt-2">
-                    <button class="btn btn-dark btn-sm w-100 mr-2 view-hand" data-seat="0">Hand</button>
-                    <button class="btn btn-dark btn-sm w-100 view-calls" data-seat="0">Calls</button>
-                </div>
-                <div class="d-flex w-100 mt-2">
-                    <button class="btn btn-dark btn-sm w-100 mr-2 view-hand" data-seat="1">Hand</button>
-                    <button class="btn btn-dark btn-sm w-100 view-calls" data-seat="1">Calls</button>
-                </div>
-                <div class="d-flex w-100 mt-2">
-                    <button class="btn btn-dark btn-sm w-100 mr-2 view-hand" data-seat="2">Hand</button>
-                    <button class="btn btn-dark btn-sm w-100 view-calls" data-seat="2">Calls</button>
-                </div>
-                <div class="d-flex w-100 mt-2">
-                    <button class="btn btn-dark btn-sm w-100 mr-2 view-hand" data-seat="3">Hand</button>
-                    <button class="btn btn-dark btn-sm w-100 view-calls" data-seat="3">Calls</button>
-                </div>
-            </div>
 
-            <div class="mt-2" id="spectators">
-                <u class="w-100 text-center d-block">
-                    Spectators
-                </u>
-            </div>
+                <div class="d-flex mt-2">
+                    <button class="btn btn-dark btn-sm w-100" id="remove-spectator-password">Remove Spectator Password</button>
+                </div>
 
-            <div class="dropdown mt-2 w-100">
-                <button class="btn btn-dark btn-sm btn-block dropdown-toggle" data-toggle="dropdown">
-                    More
-                </button>
-                <div class="dropdown-menu dropdown-menu-right p-3 text-light" style="width: 300px;">
-                    <h4>Instructions</h4>
-                    <p>
-                    <b>Drag mouse</b> to move or select<br>
-                    Press <b>F</b> or <b>right-click</b> to flip or rotate<br>
-                    Press <b>R</b> to rotate backwards; for example hide your hand<br>
-                    Hold <b>SPACE</b> (or press <b>Q</b>) to look down<br>
-                    Hold <b>Z</b> to zoom in<br>
-                    Hold <b>X</b> to zoom out<br>
-                    Press <b>P</b> to toggle perspective mode
-                    </p>
-                    <h4>Settings</h4>
-                    <label class="dropdown-menu-item">
-                        <input type="checkbox" id="perspective">
-                        Perspective mode
-                    </label>
-                    <label>
-                        <input type="checkbox" id="benchmark">
-                        Benchmark mode (don't limit FPS)
-                    </label>
-                    <label>
-                        <input type="checkbox" id="muted">
-                        Mute sound
-                    </label>
-                    <label>
-                        <input type="checkbox" id="sticky">
-                        Sticky mouse (click to grab)
-                    </label>
-                    <button class="btn btn-secondary btn-sm btn-block mt-2" id="new-game">New game</button>
+                <div class="mt-2 text-light">
+                    <input class="form-control form-control-sm" id="spectator-password" type="text"></input>
+                </div>
+
+                <div class="d-flex mt-2">
+                    <button class="btn btn-dark btn-sm w-100" id="spectate">Spectate</button>
+                </div>
+
+                <div class="d-flex mt-2">
+                    <button class="btn btn-dark btn-sm w-100" id="stop-spectate">Stop Spectating</button>
+                </div>
+
+                <div class="mt-2" id="spectate-options">
+                    <div class="d-flex w-100">
+                        <button class="btn btn-dark btn-sm w-100 mr-2" id="view-auto">Auto</button>
+                        <button class="btn btn-dark btn-sm w-100" id="view-top">Top</button>
+                    </div>
+                    <div class="d-flex w-100 mt-2">
+                        <button class="btn btn-dark btn-sm w-100 mr-2 view-hand" data-seat="0">Hand</button>
+                        <button class="btn btn-dark btn-sm w-100 view-calls" data-seat="0">Calls</button>
+                    </div>
+                    <div class="d-flex w-100 mt-2">
+                        <button class="btn btn-dark btn-sm w-100 mr-2 view-hand" data-seat="1">Hand</button>
+                        <button class="btn btn-dark btn-sm w-100 view-calls" data-seat="1">Calls</button>
+                    </div>
+                    <div class="d-flex w-100 mt-2">
+                        <button class="btn btn-dark btn-sm w-100 mr-2 view-hand" data-seat="2">Hand</button>
+                        <button class="btn btn-dark btn-sm w-100 view-calls" data-seat="2">Calls</button>
+                    </div>
+                    <div class="d-flex w-100 mt-2">
+                        <button class="btn btn-dark btn-sm w-100 mr-2 view-hand" data-seat="3">Hand</button>
+                        <button class="btn btn-dark btn-sm w-100 view-calls" data-seat="3">Calls</button>
+                    </div>
+                </div>
+
+                <div class="mt-2" id="spectators">
+                    <u class="w-100 text-center d-block">
+                        Spectators
+                    </u>
+                </div>
+
+                <div class="dropdown mt-2 w-100">
+                    <button class="btn btn-dark btn-sm btn-block dropdown-toggle" data-toggle="dropdown">
+                        More
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right p-3 text-light" style="width: 300px;">
+                        <h4>Instructions</h4>
+                        <p>
+                        <b>Drag mouse</b> to move or select<br>
+                        Press <b>F</b> or <b>right-click</b> to flip or rotate<br>
+                        Press <b>R</b> to rotate backwards; for example hide your hand<br>
+                        Hold <b>SPACE</b> (or press <b>Q</b>) to look down<br>
+                        Hold <b>Z</b> to zoom in<br>
+                        Hold <b>X</b> to zoom out<br>
+                        Press <b>P</b> to toggle perspective mode
+                        </p>
+                        <h4>Settings</h4>
+                        <label class="dropdown-menu-item">
+                            <input type="checkbox" id="perspective">
+                            Perspective mode
+                        </label>
+                        <label>
+                            <input type="checkbox" id="benchmark">
+                            Benchmark mode (don't limit FPS)
+                        </label>
+                        <label>
+                            <input type="checkbox" id="muted">
+                            Mute sound
+                        </label>
+                        <label>
+                            <input type="checkbox" id="sticky">
+                            Sticky mouse (click to grab)
+                        </label>
+                        <button class="btn btn-secondary btn-sm btn-block mt-2" id="new-game">New game</button>
+                    </div>
+                </div>
+
+                <div class="mt-2">
+                    <small>
+                        <a class="text-white-50" target="_blank" href="about.html">About the project</a>
+                    </small>
+                </div>
+
+                <div class="text-warning mt-2" id="status" style="display: none">
+                    <small class="mt-2" id="status-text">
+                        Status text
+                    </small>
                 </div>
             </div>
-
-            <div class="mt-2">
-                <small>
-                    <a class="text-white-50" target="_blank" href="about.html">About the project</a>
-                </small>
-            </div>
-
-            <div class="text-warning mt-2" id="status" style="display: none">
-                <small class="mt-2" id="status-text">
-                    Status text
-                </small>
-            </div>
+            <h2 class="text-light mx-2" id="toggle-sidebar">&lsaquo;</h2>
         </div>
     </div>
     <script src="./src/index.ts"></script>

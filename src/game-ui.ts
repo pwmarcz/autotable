@@ -44,6 +44,8 @@ enum SeatWind {
 
 export class GameUi {
   elements: {
+    sidebarBody: HTMLDivElement;
+    toggleSidebar: HTMLDivElement;
     deal: HTMLButtonElement;
     toggleDealer: HTMLButtonElement;
     toggleHonba: HTMLButtonElement;
@@ -77,6 +79,8 @@ export class GameUi {
     private readonly mainView: MainView) {
 
     this.elements = {
+      sidebarBody: document.getElementById('sidebar-body')! as HTMLDivElement,
+      toggleSidebar: document.getElementById('toggle-sidebar')! as HTMLDivElement,
       deal: document.getElementById('deal') as HTMLButtonElement,
       toggleDealer: document.getElementById('toggle-dealer') as HTMLButtonElement,
       toggleHonba: document.getElementById('toggle-honba') as HTMLButtonElement,
@@ -130,7 +134,6 @@ export class GameUi {
     this.client.seats.on('update', this.updateSeats.bind(this));
     this.client.nicks.on('update', this.updateSeats.bind(this));
     this.client.spectators.on('update', (entries) => {
-      console.log(...this.client.spectators.entries());
       const spectators = [...this.client.spectators.entries()].filter(([key, value]) => value !== null);
       this.setVisibility(this.elements.spectators, spectators.length > 0);
       for (const [key, value] of entries) {
@@ -183,6 +186,12 @@ export class GameUi {
         this.mainView.spectateCall(i);
       };
     }
+
+    this.elements.toggleSidebar.onclick = () => {
+      const isVisible = this.elements.sidebarBody.getAttribute("style")?.length! > 0;
+      this.setVisibility(this.elements.sidebarBody, isVisible);
+      this.elements.toggleSidebar.innerHTML = isVisible ? "&lsaquo;" : "&rsaquo;";
+    };
 
     this.elements.leaveSeat.onclick = () => {
       this.client.seats.set(this.client.playerId(), { seat: null });

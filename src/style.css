@@ -71,10 +71,17 @@
     top: 0;
     left: 0;
     width: 220px;
-    max-height: 100%;
-    padding: 1em;
+    height: 100%;
     background: rgba(30,30,30, 0.6);
     user-select: none;
+}
+
+#toggle-sidebar {
+    cursor: pointer;
+}
+
+#toggle-sidebar:hover {
+    color: grey !important;
 }
 
 .dropdown-menu {
