@@ -29,7 +29,7 @@ export class Game {
 
   constructor(public readonly gameId: string) {
     this.password = randomString();
-    console.log(`new game: ${this.gameId}, password: ${this.password}`);
+    console.log(`new game: ${this.gameId}`);
     this.expiryTime = new Date().getTime() + EXPIRY_TIME;
   }
 

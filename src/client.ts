@@ -156,7 +156,6 @@ export class Collection<K extends string | number, V> {
       }
 
       if (kind === "writeProtected") {
-        console.log(kind);
         if (this.options.writeProtected === value) {
           continue;
         }
