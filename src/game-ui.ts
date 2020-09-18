@@ -120,6 +120,16 @@ export class GameUi {
     this.setVisibility(this.elements.spectatorPassword.parentElement!, !this.client.isAuthed);
   }
 
+  private trySetSpectating(isSpectating: boolean): void {
+    this.client.auth(this.elements.spectatorPassword.value).then(isAuthed => {
+      if (!isAuthed && this.client.spectators.options.writeProtected) {
+        return;
+      }
+      const nick = this.elements.nick.value.length > 0 ? this.elements.nick.value : "不明";
+      this.client.spectators.set(this.client.playerId(), isSpectating ? nick : null);
+    });
+  }
+
   private setupEvents(): void {
     this.elements.toggleDealer.onclick = () => this.world.toggleDealer();
     this.elements.toggleHonba.onclick = () => this.world.toggleHonba();
@@ -206,6 +216,13 @@ export class GameUi {
       this.updateSeats();
     };
 
+    this.elements.nick.oninput = this.elements.nick.onchange = (event) => {
+      if (!this.isSpectating) {
+        return;
+      }
+      this.trySetSpectating(true);
+    };
+
     this.elements.removeSpectatorPassword.onclick = () => {
       this.client.auth(this.elements.spectatorPassword.value).then(isAuthed => {
         if (!isAuthed) {
@@ -215,23 +232,8 @@ export class GameUi {
       });
     };
 
-    this.elements.spectate.onclick = () => {
-      this.client.auth(this.elements.spectatorPassword.value).then(isAuthed => {
-        if (!isAuthed && this.client.spectators.options.writeProtected) {
-          return;
-        }
-        this.client.spectators.set(this.client.playerId(), this.elements.nick.value);
-      });
-    };
-
-    this.elements.stopSpectate.onclick = () => {
-      this.client.auth(this.elements.spectatorPassword.value).then(isAuthed => {
-        if (!isAuthed && this.client.spectators.options.writeProtected) {
-          return;
-        }
-        this.client.spectators.set(this.client.playerId(), null);
-      });
-    };
+    this.elements.spectate.onclick = this.trySetSpectating.bind(this, true);
+    this.elements.stopSpectate.onclick = this.trySetSpectating.bind(this, false);
 
     this.client.match.on('update', this.updateSetup.bind(this));
     this.elements.gameType.onchange = () => {
