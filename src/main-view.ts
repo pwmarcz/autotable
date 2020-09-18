@@ -7,6 +7,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { World } from './world';
 import { Client } from './client';
 import { ThingInfo } from './types';
+import { runInThisContext } from 'vm';
 
 const RATIO = 1.5;
 
@@ -15,12 +16,14 @@ enum CameraPosition {
   PlayerView,
   HandSpectator,
   CallSpectator,
+  DoraSpectator,
 }
 
 interface AutoQueueItem {
-  seat: number;
+  seat?: number;
   view: CameraPosition;
-  delay: number;
+  delay?: number;
+  squashable?: boolean;
 }
 
 export class MainView {
@@ -48,6 +51,7 @@ export class MainView {
 
   private readonly autoQueue: Array<AutoQueueItem> = [];
   private queueTaskId: NodeJS.Timeout | null = null;
+  private doraIndicatorLocation: Vector3 | null = null;
 
   constructor(private readonly mainGroup: Group, private readonly client: Client, private readonly world: World) {
     this.main = document.getElementById('main')!;
@@ -66,6 +70,10 @@ export class MainView {
 
     this.setupLights();
     this.setupRendering();
+
+    this.client.match.on('update', () => {
+      this.doraIndicatorLocation = null;
+    });
 
     this.client.things.on('update', (update) => {
       if (this.queueAutoItem(update) && this.autoQueue.length > 0) {
@@ -95,12 +103,18 @@ export class MainView {
 
     const duplicate = previous && change.view === previous.view && change.seat === previous.seat;
 
+    if(this.autoQueue.length > 0 && change.squashable) {
+      this.queueTaskId = setTimeout(() => this.applyQueueItem(previous), 0);
+    }
+
     if (!duplicate) {
-      this.autoActiveSeat = change.seat;
+      if (change.seat !== undefined) {
+        this.autoActiveSeat = change.seat;
+      }
       this.autoCameraPosition = change.view;
     }
 
-    this.queueTaskId = setTimeout(() => this.applyQueueItem(change), duplicate ? 0 : change.delay);
+    this.queueTaskId = setTimeout(() => this.applyQueueItem(change), duplicate ? 0 : change.delay ?? 0);
   }
 
   private queueAutoItem(update: Array<[number, ThingInfo | null]>): boolean {
@@ -116,24 +130,53 @@ export class MainView {
 
       const seat = parseInt(info.slotName.substring(info.slotName.indexOf('@') + 1));
 
-      if (info?.slotName.startsWith('wall') && info.claimedBy !== null) {
-        this.autoQueue.push({
-          seat: info.claimedBy,
-          view: CameraPosition.HandSpectator,
-          delay: 0,
-        });
-        return true;
+      if (info?.slotName.startsWith('wall')) {
+        // Show hand of player who just drew tile from wall.
+        if (info.claimedBy !== null && thing.rotationIndex !== 1) {
+          this.autoQueue.push({
+            seat: info.claimedBy,
+            view: CameraPosition.HandSpectator,
+          });
+          return true;
+        }
+
+        // Show dora if tile in wall was just flipped, then swap back to last hand
+        if (info.rotationIndex === 1 && thing.rotationIndex !== info.rotationIndex) {
+          // set the first tile flipped in the round as the dora indicator location
+          if (this.doraIndicatorLocation === null) {
+            this.doraIndicatorLocation = thing.slot.places[0].position.clone();
+            this.doraIndicatorLocation.setZ(0);
+          }
+
+          this.autoQueue.push({
+            seat: 0,
+            view: CameraPosition.DoraSpectator,
+            delay: 4000,
+          });
+
+          // swap to the top view if the ura dora were flipped
+          if (info.slotName.indexOf("0@") >= 0) {
+            this.autoQueue.push({
+              seat: 0,
+              view: CameraPosition.TopDown,
+              squashable: true,
+            });
+          }
+
+          return true;
+        }
       }
 
+      // Show hand of player who just revealed their tiles
       if (info?.slotName.startsWith('hand') && info.rotationIndex !== thing.rotationIndex && info.rotationIndex === 1) {
         this.autoQueue.push({
           seat,
           view: CameraPosition.HandSpectator,
-          delay: 0,
         });
         return true;
       }
 
+      // Show call area of player who just moved their tiles there, then swap to their hand
       if (info?.slotName.startsWith('meld') && info.claimedBy === null) {
         if(thing.slot.name.startsWith('meld') && thing.slot.seat === seat) {
           continue;
@@ -146,9 +189,7 @@ export class MainView {
         });
 
         this.autoQueue.push({
-          seat,
           view: CameraPosition.HandSpectator,
-          delay: 0,
         });
         return true;
       }
@@ -248,8 +289,7 @@ export class MainView {
         this.camera.position.set(0, 0, 400);
         this.camera.lookAt(center!);
         break;
-      }
-      case CameraPosition.PlayerView: {
+      } case CameraPosition.PlayerView: {
         this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 1.05);
         this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2, 0, 0);
         if (zoom !== 0) {
@@ -261,20 +301,21 @@ export class MainView {
           this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
         }
         break;
-      }
-      case CameraPosition.HandSpectator: {
+      } case CameraPosition.HandSpectator: {
         this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH / 2).applyAxisAngle(new Vector3(0, 0, -1), Math.PI * 0.15);
         const offset = this.camera.parent?.localToWorld(new Vector3(World.WIDTH / 8, -World.WIDTH / 4, 0));
         this.camera.lookAt(offset!);
         break;
-      }
-      case CameraPosition.CallSpectator: {
+      } case CameraPosition.CallSpectator: {
         const callArea = new Vector3(World.WIDTH * 13 / 32, -World.WIDTH * 3 / 8, 0);
         this.camera.position.copy(callArea);
         this.camera.position.setZ(100);
         const center = this.camera.parent?.localToWorld(callArea);
         this.camera.lookAt(center!);
         break;
+      } case CameraPosition.DoraSpectator: {
+        this.camera.position.copy(new Vector3(0, 0, 100));
+        this.camera.lookAt(this.doraIndicatorLocation);
       }
     }
   }
