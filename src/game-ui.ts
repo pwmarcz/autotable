@@ -62,6 +62,7 @@ export class GameUi {
     spectate: HTMLButtonElement;
     stopSpectate: HTMLButtonElement;
     spectateOptions: HTMLDivElement;
+    spectators: HTMLDivElement;
     viewTop: HTMLButtonElement;
     viewAuto: HTMLButtonElement;
     viewHand: Array<HTMLButtonElement>;
@@ -94,6 +95,7 @@ export class GameUi {
       spectate: document.getElementById('spectate')! as HTMLButtonElement,
       stopSpectate: document.getElementById('stop-spectate')! as HTMLButtonElement,
       spectateOptions: document.getElementById('spectate-options')! as HTMLDivElement,
+      spectators: document.getElementById('spectators')! as HTMLDivElement,
       viewTop: document.getElementById('view-top')! as HTMLButtonElement,
       viewAuto: document.getElementById('view-auto')! as HTMLButtonElement,
       viewHand: [],
@@ -127,7 +129,28 @@ export class GameUi {
 
     this.client.seats.on('update', this.updateSeats.bind(this));
     this.client.nicks.on('update', this.updateSeats.bind(this));
-    this.client.spectators.on('update', () => {
+    this.client.spectators.on('update', (entries) => {
+      console.log(...this.client.spectators.entries());
+      const spectators = [...this.client.spectators.entries()].filter(([key, value]) => value !== null);
+      this.setVisibility(this.elements.spectators, spectators.length > 0);
+      for (const [key, value] of entries) {
+        const element = document.querySelector(`[data-spectator-id='${key}']`)! as HTMLDivElement;
+        if (value === null) {
+          if (element) {
+            element.remove();
+          }
+          continue;
+        }
+
+        if (element) {
+          element.innerText = value;
+          continue;
+        }
+
+        this.elements.spectators.insertAdjacentHTML("beforeend", `
+          <div class="mt-2 badge badge-success w-100 py-2" data-spectator-id="${key}">${value}</div>
+        `);
+      }
       this.isSpectating = this.client.spectators.get(this.client.playerId()) !== null;
 
       if (this.isSpectating) {

@@ -92,7 +92,7 @@ export class Game {
 
     for (const [kind, key, value] of entries) {
       if (this.writeProtected.get(kind)){
-        if (!this.isAuthed(senderId)) {
+        if (!senderId || !this.isAuthed(senderId) && (!this.perPlayer.get(kind) || this.clients.get(senderId))) {
           continue;
         }
         sendToAll.push([kind, key, value]);

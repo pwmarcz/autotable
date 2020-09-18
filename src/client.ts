@@ -31,7 +31,7 @@ export class Client extends BaseClient {
     this.nicks = new Collection('nicks', this, { perPlayer: true });
     this.mouse = new Collection('mouse', this, { rateLimit: 100, perPlayer: true });
     this.sound = new Collection('sound', this, { ephemeral: true });
-    this.spectators = new Collection('spectators', this, { writeProtected: true });
+    this.spectators = new Collection('spectators', this, { writeProtected: true, perPlayer: true });
     this.seats.on('update', this.onSeats.bind(this));
   }
 
