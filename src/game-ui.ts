@@ -117,7 +117,9 @@ export class GameUi {
   }
 
   private updateSpectatorView(): void {
-    this.setVisibility(this.elements.spectatorPassword.parentElement!, this.client.spectators.options.writeProtected === true);
+    const passwordEntry = this.client.spectators.options.writeProtected === true;
+    this.setVisibility(this.elements.removeSpectatorPassword.parentElement!, this.client.isAuthed || passwordEntry);
+    this.setVisibility(this.elements.spectatorPassword.parentElement!, passwordEntry);
   }
 
   private setupEvents(): void {
