@@ -22,14 +22,14 @@ export class Game {
 
   private unique: Map<string, string> = new Map();
   private ephemeral: Map<string, boolean> = new Map();
+  private writeProtected: Map<string, boolean> = new Map();
   private perPlayer: Map<string, boolean> = new Map();
 
   private collections: Map<string, Map<string | number, any>> = new Map();
 
   constructor(public readonly gameId: string) {
-    console.log(`new game: ${this.gameId}`);
     this.password = randomString();
-    console.log(this.password);
+    console.log(`new game: ${this.gameId}, password: ${this.password}`);
     this.expiryTime = new Date().getTime() + EXPIRY_TIME;
   }
 
@@ -45,7 +45,7 @@ export class Game {
     this.clients.set(playerId, client);
     client.playerId = playerId;
     client.game = this;
-    client.isAuthed = false;
+    client.isAuthed = this.starting;
 
     console.log(`${this.gameId}: join: ${playerId}`);
 
@@ -72,44 +72,74 @@ export class Game {
     return entries;
   }
 
+  private isAuthed(playerId: string | null): boolean {
+    return playerId !== null && this.clients.get(playerId)?.isAuthed === true;
+  }
+
   private update(entries: Array<Entry>, senderId: string | null): void {
     if (!this.checkUnique(entries)) {
       this.sendAll({type: 'UPDATE', entries: this.allEntries(), full: true});
       return;
     }
 
+    const writeProtected: Array<Entry> = [];
+    const otherEntries: Array<Entry> = [];
+
     for (const [kind, key, value] of entries) {
-      if (!this.ephemeral.get(kind)) {
-        if (kind === 'protected' && senderId && this.clients.get(senderId)?.isAuthed !== true) {
+      if (this.writeProtected.get(kind)){
+        if (!this.isAuthed(senderId)) {
           continue;
         }
+        writeProtected.push([kind, key, value]);
+      } else {
+        otherEntries.push([kind, key, value]);
+      }
 
-        let collection = this.collections.get(kind);
-
-        if (!collection) {
-          collection = new Map();
-          this.collections.set(kind, collection);
-        }
-        if (value !== null) {
-          collection.set(key, value);
-        } else {
-          collection.delete(key);
-        }
+      if (this.ephemeral.get(kind)) {
+        continue;
       }
 
       if (kind === 'unique') {
         this.unique.set(key as string, value);
+        continue;
       }
+
       if (kind === 'ephemeral') {
         this.ephemeral.set(key as string, value);
+        continue;
       }
+
       if (kind === 'perPlayer') {
         this.perPlayer.set(key as string, value);
+        continue;
+      }
+
+      if (kind === 'writeProtected' && this.isAuthed(senderId)) {
+        this.writeProtected.set(key as string, value);
+        continue;
+      }
+
+      let collection = this.collections.get(kind);
+      if (!collection) {
+        collection = new Map();
+        this.collections.set(kind, collection);
+      }
+      if (value !== null) {
+        collection.set(key, value);
+      } else {
+        collection.delete(key);
       }
     }
 
-    const message: Message = {type: 'UPDATE', entries, full: false};
-    this.sendAll(message, [senderId]);
+    if (otherEntries.length > 0) {
+      const message: Message = {type: 'UPDATE', entries: otherEntries, full: false};
+      this.sendAll(message, [senderId]);
+    }
+
+    if (writeProtected.length > 0) {
+      const message: Message = {type: 'UPDATE', entries: writeProtected, full: false};
+      this.sendAll(message);
+    }
   }
 
   private checkUnique(entries: Array<Entry>): boolean {

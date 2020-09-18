@@ -15,6 +15,7 @@ export class Client extends BaseClient {
   nicks: Collection<string, string>;
   mouse: Collection<string, MouseInfo>;
   sound: Collection<number, SoundInfo>;
+  spectators: Collection<string, string>;
 
   seat: number | null = 0;
   seatPlayers: Array<string | null> = new Array(4).fill(null);
@@ -30,6 +31,7 @@ export class Client extends BaseClient {
     this.nicks = new Collection('nicks', this, { perPlayer: true });
     this.mouse = new Collection('mouse', this, { rateLimit: 100, perPlayer: true });
     this.sound = new Collection('sound', this, { ephemeral: true });
+    this.spectators = new Collection('spectators', this, { writeProtected: true });
     this.seats.on('update', this.onSeats.bind(this));
   }
 
@@ -65,18 +67,21 @@ interface CollectionOptions {
   // The server will not send all updates, but limit to N per second.
   rateLimit?: number;
 
+  // Only authenticated clients can write to this collection
+  writeProtected?: boolean;
+
   // If we are initializing the server (i.e. we're the first player), send
   // our value.
   sendOnConnect?: boolean;
 }
 
 export class Collection<K extends string | number, V> {
+  public options: CollectionOptions;
   private kind: string;
   private client: Client;
   private map: Map<K, V> = new Map();
   private pending: Map<K, V | null> = new Map();
   private events: EventEmitter = new EventEmitter();
-  private options: CollectionOptions;
   private intervalId: NodeJS.Timeout | null = null;
   private lastUpdate: number = 0;
 
@@ -103,7 +108,10 @@ export class Collection<K extends string | number, V> {
   }
 
   update(localEntries: Array<[K, V | null]>): void {
-    this.cacheEntries(localEntries, false);
+    if (!this.options.writeProtected)  {
+      this.cacheEntries(localEntries, false);
+    }
+
     if(!this.client.connected()) {
       return;
     }
@@ -130,6 +138,17 @@ export class Collection<K extends string | number, V> {
     if (full) {
       this.map.clear();
     }
+
+    for (const [kind, key, value] of entries) {
+      if (key !== this.kind) {
+        continue;
+      }
+
+      if (kind === "writeProtected") {
+        this.options.writeProtected = value;
+      }
+    }
+
     this.cacheEntries(
       entries.filter(([kind, _, __]) => kind === this.kind).map(([_, k, v]) => [k as K, v as V | null]),
       full,
@@ -155,6 +174,9 @@ export class Collection<K extends string | number, V> {
     if (isFirst) {
       if (this.options.unique) {
         this.client.update([['unique', this.kind, this.options.unique]]);
+      }
+      if (this.options.writeProtected) {
+        this.client.update([['writeProtected', this.kind, true]]);
       }
       if (this.options.ephemeral) {
         this.client.update([['ephemeral', this.kind, true]]);

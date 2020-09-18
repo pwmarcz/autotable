@@ -114,6 +114,21 @@ export class GameUi {
 
     this.client.seats.on('update', this.updateSeats.bind(this));
     this.client.nicks.on('update', this.updateSeats.bind(this));
+    this.client.spectators.on('update', () => {
+      this.isSpectating = this.client.spectators.get(this.client.playerId()) !== null;
+      console.log(...this.client.spectators.entries());
+      console.log(this.isSpectating);
+
+      if (this.isSpectating) {
+        this.mainView.setPerspective(true);
+        this.mainView.spectateAuto();
+      } else {
+        this.mainView.spectateTop();
+      }
+
+      this.updateSeats();
+    });
+
     this.client.on('connect', (_, __, password) => {
       if (!password) {
         return;
@@ -149,18 +164,21 @@ export class GameUi {
     };
 
     this.elements.spectate.onclick = () => {
-      this.client.auth(this.elements.spectatorPassword.value).then(isAuthed => console.log(isAuthed));
-      return;
-      this.mainView.setPerspective(true);
-      this.isSpectating = true;
-      this.mainView.spectateAuto();
-      this.updateSeats();
+      this.client.auth(this.elements.spectatorPassword.value).then(isAuthed => {
+        if (!isAuthed && this.client.spectators.options.writeProtected) {
+          return;
+        }
+        this.client.spectators.set(this.client.playerId(), this.elements.nick.value);
+      });
     };
 
     this.elements.stopSpectate.onclick = () => {
-      this.mainView.spectateTop();
-      this.isSpectating = false;
-      this.updateSeats();
+      this.client.auth(this.elements.spectatorPassword.value).then(isAuthed => {
+        if (!isAuthed && this.client.spectators.options.writeProtected) {
+          return;
+        }
+        this.client.spectators.set(this.client.playerId(), null);
+      });
     };
 
     this.client.match.on('update', this.updateSetup.bind(this));
