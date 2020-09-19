@@ -117,10 +117,6 @@ export class GameUi {
     this.setupDealButton();
   }
 
-  private updateSpectatorView(): void {
-    this.setVisibility(this.elements.spectatorPassword.parentElement!, !this.client.isAuthed);
-  }
-
   private trySetSpectating(isSpectating: boolean): void {
     this.client.auth(this.elements.spectatorPassword.value).then(isAuthed => {
       if (!isAuthed && this.client.spectators.options.writeProtected) {
@@ -141,12 +137,9 @@ export class GameUi {
     this.elements.toggleDealer.onclick = () => this.world.toggleDealer();
     this.elements.toggleHonba.onclick = () => this.world.toggleHonba();
 
-
     this.client.spectators.on('optionsChanged', (options) => {
-      this.updateSpectatorView();
       this.elements.removeSpectatorPassword.innerText = `${options.writeProtected ? "Remove" : "Add"} Spectator Password`;
     });
-    this.updateSpectatorView();
 
     this.client.seats.on('update', this.updateSeats.bind(this));
     this.client.nicks.on('update', this.updateSeats.bind(this));
