@@ -311,7 +311,7 @@ export class MainView {
         this.camera.lookAt(center!);
         break;
       } case CameraPosition.PlayerView: {
-        this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 0.95);
+        this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 1.05);
         this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2, 0, 0);
         if (zoom !== 0) {
           const dist = new Vector3(0, 1.37, -1).multiplyScalar(zoom * 55);
