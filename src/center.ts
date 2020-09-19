@@ -28,6 +28,12 @@ export class Center {
   private readonly namePlateTextures: Array<CanvasTexture> = [];
 
   dirty = true;
+  private readonly namePlateColors: Array<string> = [
+    '#ba7329',
+    '#956d5d',
+    '#fb78a2',
+    '#3581d5',
+  ];
 
   constructor(loader: AssetLoader, client: Client) {
     this.group = new Group();
@@ -119,7 +125,7 @@ export class Center {
     context.fillRect(0, 0, namePlateWidth * 10, this.namePlateSize.y * 10);
     const xOffset = (this.namePlateSize.x / 5 * 2 + (seat % 2) * this.namePlateSize.y) * 10  ;
 
-    context.fillStyle = '#ba7329';
+    context.fillStyle = this.namePlateColors[seat];
     context.fillRect(
       xOffset,
       this.namePlateSize.y * 10 / 6 ,
