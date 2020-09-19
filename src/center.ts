@@ -26,7 +26,7 @@ export class Center {
 
   dirty = true;
 
-  constructor(private readonly loader: AssetLoader, client: Client) {
+  constructor(loader: AssetLoader, client: Client) {
     this.group = new Group();
     this.mesh = loader.makeCenter();
     this.mesh.position.set(0, 0, 0.75);
@@ -62,11 +62,31 @@ export class Center {
     }
 
     for (let i = 0; i < 4; i++){
-      const namePlateMesh = this.createNamePlate();
-      namePlateMesh.rotation.set(Math.PI / 2, 0, 0);
-      namePlateMesh.position.set(0, -World.WIDTH / 2 -Size.TILE.y / 2, -this.namePlateSize.y / 2);
+      const group = new Group();
+      this.group.add(group);
+      group.rotateZ(Math.PI * i / 2);
 
-      const material = namePlateMesh.material as MeshLambertMaterial;
+      const wallMesh = new Mesh(
+        new PlaneGeometry(
+          this.namePlateSize.x,
+          Size.TILE.z,
+        ),
+        new MeshLambertMaterial({ color: 0xeeeeee })
+      );
+      wallMesh.rotation.set(-Math.PI / 2, 0, 0);
+      wallMesh.position.set(0, (-World.WIDTH - Size.TILE.y / 2 - Size.TILE.z) / 2, Size.TILE.z / 2 + 0.3);
+      group.add(wallMesh);
+
+      const namePlateGeometry = new PlaneGeometry(
+        this.namePlateSize.x,
+        this.namePlateSize.y
+      );
+
+      const material = new MeshLambertMaterial({ color: 0xeeeeee });
+      const namePlateMesh = new Mesh(namePlateGeometry, material);
+      group.add(namePlateMesh);
+      namePlateMesh.position.set(0, (-World.WIDTH - Size.TILE.y - this.namePlateSize.y) / 2, Size.TILE.z);
+
       const texture = new CanvasTexture(this.namePlateCanvases[i]);
       this.namePlateTextures.push(texture);
       texture.flipY = true;
@@ -75,35 +95,23 @@ export class Center {
       material.map = texture;
 
       this.updateNamePlate(i, this.nicks[i]);
-
-      const group = new Group();
-      group.add(namePlateMesh);
-      this.group.add(group);
-      // group.position.set(0, 0, 0);
-      group.rotateZ(Math.PI * i / 2);
     }
 
     client.on('disconnect', this.update.bind(this));
   }
 
-  private createNamePlate(): Mesh {
-    const tableGeometry = new PlaneGeometry(
-      this.namePlateSize.x,
-      this.namePlateSize.y
-    );
-
-    const tableMaterial = new MeshLambertMaterial({ color: 0xeeeeee, map: this.loader.textures.table });
-    const tableMesh = new Mesh(tableGeometry, tableMaterial);
-    return tableMesh;
-  }
-
   private updateNamePlate(seat: number, nick: string | null): void {
     this.namePlateContexts[seat].resetTransform();
-    this.namePlateContexts[seat].fillStyle = '#000';
+
+    this.namePlateContexts[seat].fillStyle = '#fefefe';
     this.namePlateContexts[seat].fillRect(0, 0, this.namePlateSize.x * 10, this.namePlateSize.y * 10);
+
+    this.namePlateContexts[seat].fillStyle = '#ba7329';
+    this.namePlateContexts[seat].fillRect(this.namePlateSize.x * 10 / 5 * 2, this.namePlateSize.y * 10 / 4 , this.namePlateSize.x * 10 / 5, this.namePlateSize.y * 10 / 2);
+
     this.namePlateContexts[seat].textAlign = 'center';
-    this.namePlateContexts[seat].font = `${this.namePlateSize.y * 5}px Koruri`;
-    this.namePlateContexts[seat].fillStyle = '#afa';
+    this.namePlateContexts[seat].font = `${this.namePlateSize.y * 5 / 2}px Koruri`;
+    this.namePlateContexts[seat].fillStyle = '#fff';
     this.namePlateContexts[seat].textBaseline = 'middle';
     this.namePlateContexts[seat].translate(this.namePlateSize.x * 5, this.namePlateSize.y * 5);
     this.namePlateContexts[seat].fillText(nick ?? "", 0, 0);
