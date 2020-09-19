@@ -1,9 +1,12 @@
 import { AssetLoader } from "./asset-loader";
-import { Mesh, CanvasTexture, Vector2, MeshLambertMaterial } from "three";
+import { Mesh, CanvasTexture, Vector2, MeshLambertMaterial, PlaneGeometry, Group } from "three";
 import { Client } from "./client";
+import { World } from "./world";
+import { Size } from "./types";
 
 export class Center {
-  mesh: Mesh;
+  private mesh: Mesh;
+  group: Group;
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   texture: CanvasTexture;
@@ -16,10 +19,18 @@ export class Center {
 
   client: Client;
 
+  private readonly namePlateSize = new Vector2(World.WIDTH + Size.TILE.y, World.WIDTH / 16);
+  private readonly namePlateContexts: Array<CanvasRenderingContext2D> = [];
+  private readonly namePlateCanvases: Array<HTMLCanvasElement> = [];
+  private readonly namePlateTextures: Array<CanvasTexture> = [];
+
   dirty = true;
 
-  constructor(loader: AssetLoader, client: Client) {
+  constructor(private readonly loader: AssetLoader, client: Client) {
+    this.group = new Group();
     this.mesh = loader.makeCenter();
+    this.mesh.position.set(0, 0, 0.75);
+    this.group.add(this.mesh);
     this.canvas = document.getElementById('center')! as HTMLCanvasElement;
     this.ctx = this.canvas.getContext('2d')!;
 
@@ -43,14 +54,78 @@ export class Center {
     this.client.seats.on('update', this.update.bind(this));
     this.client.things.on('update', this.update.bind(this));
 
+    for (let i = 0; i < 4; i++) {
+      this.namePlateCanvases[i] = document.getElementById(`name-plate-${i}`)! as HTMLCanvasElement;
+      this.namePlateCanvases[i].width = this.namePlateSize.x * 10;
+      this.namePlateCanvases[i].height = this.namePlateSize.y * 10;
+      this.namePlateContexts[i] = this.namePlateCanvases[i].getContext('2d')!;
+    }
+
+    for (let i = 0; i < 4; i++){
+      const namePlateMesh = this.createNamePlate();
+      namePlateMesh.rotation.set(Math.PI / 2, 0, 0);
+      namePlateMesh.position.set(0, -World.WIDTH / 2 -Size.TILE.y / 2, -this.namePlateSize.y / 2);
+
+      const material = namePlateMesh.material as MeshLambertMaterial;
+      const texture = new CanvasTexture(this.namePlateCanvases[i]);
+      this.namePlateTextures.push(texture);
+      texture.flipY = true;
+      texture.center = new Vector2(0.5, 0.5);
+      texture.anisotropy = 16;
+      material.map = texture;
+
+      this.updateNamePlate(i, this.nicks[i]);
+
+      const group = new Group();
+      group.add(namePlateMesh);
+      this.group.add(group);
+      // group.position.set(0, 0, 0);
+      group.rotateZ(Math.PI * i / 2);
+    }
+
     client.on('disconnect', this.update.bind(this));
+  }
+
+  private createNamePlate(): Mesh {
+    const tableGeometry = new PlaneGeometry(
+      this.namePlateSize.x,
+      this.namePlateSize.y
+    );
+
+    const tableMaterial = new MeshLambertMaterial({ color: 0xeeeeee, map: this.loader.textures.table });
+    const tableMesh = new Mesh(tableGeometry, tableMaterial);
+    return tableMesh;
+  }
+
+  private updateNamePlate(seat: number, nick: string | null): void {
+    this.namePlateContexts[seat].resetTransform();
+    this.namePlateContexts[seat].fillStyle = '#000';
+    this.namePlateContexts[seat].fillRect(0, 0, this.namePlateSize.x * 10, this.namePlateSize.y * 10);
+    this.namePlateContexts[seat].textAlign = 'center';
+    this.namePlateContexts[seat].font = `${this.namePlateSize.y * 5}px Koruri`;
+    this.namePlateContexts[seat].fillStyle = '#afa';
+    this.namePlateContexts[seat].textBaseline = 'middle';
+    this.namePlateContexts[seat].translate(this.namePlateSize.x * 5, this.namePlateSize.y * 5);
+    this.namePlateContexts[seat].fillText(nick ?? "", 0, 0);
+    this.namePlateTextures[seat].needsUpdate = true;
   }
 
   update(): void {
     for (let i = 0; i < 4; i++) {
       const playerId = this.client.seatPlayers[i];
       const nick = playerId !== null ? this.client.nicks.get(playerId) : null;
-      this.nicks[i] = nick ?? null;
+
+      if (nick === null) {
+        this.nicks[i] = '';
+        continue;
+      }
+
+      if (nick === '') {
+        this.nicks[i] = 'Jyanshi';
+        continue;
+      }
+
+      this.nicks[i] = nick;
     }
 
     this.dealer = this.client.match.get(0)?.dealer ?? null;
@@ -91,6 +166,7 @@ export class Center {
     for (let i = 0; i < 4; i++) {
       this.drawScore(this.scores[i]);
       this.drawNick(this.nicks[i]);
+      this.updateNamePlate(i, this.nicks[i]);
       if (this.dealer === i) {
         this.drawDealer();
       }
@@ -119,19 +195,11 @@ export class Center {
   }
 
   drawNick(nick: string | null): void {
-    let text;
-    if (nick === null) {
-      text = '';
-    } else if (nick === '') {
-      text = 'Jyanshi';
-    } else {
-      text = nick.substr(0, 10);
-    }
-
+    const text = (nick ?? "").substr(0, 10);
     this.ctx.textAlign = 'center';
     this.ctx.font = '20px Verdana, Arial';
     this.ctx.fillStyle = '#afa';
-    this.ctx.fillText(text, 0, 55);
+    this.ctx.fillText(text ?? "", 0, 55);
   }
 
   drawDealer(): void {
