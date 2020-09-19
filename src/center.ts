@@ -20,8 +20,8 @@ export class Center {
   client: Client;
 
   private readonly namePlateSize = new Vector2(
-    AssetLoader.worldSize + World.WIDTH / 8,
-    World.WIDTH / 16
+    AssetLoader.worldSize,
+    World.WIDTH / 12
   );
   private readonly namePlateContexts: Array<CanvasRenderingContext2D> = [];
   private readonly namePlateCanvases: Array<HTMLCanvasElement> = [];
@@ -58,13 +58,13 @@ export class Center {
     this.client.things.on('update', this.update.bind(this));
 
     for (let i = 0; i < 4; i++) {
+      const namePlateWidth = this.namePlateSize.x + (i % 2) * (2 * this.namePlateSize.y);
+
       this.namePlateCanvases[i] = document.getElementById(`name-plate-${i}`)! as HTMLCanvasElement;
-      this.namePlateCanvases[i].width = this.namePlateSize.x * 10;
+      this.namePlateCanvases[i].width = namePlateWidth * 10;
       this.namePlateCanvases[i].height = this.namePlateSize.y * 10;
       this.namePlateContexts[i] = this.namePlateCanvases[i].getContext('2d')!;
-    }
 
-    for (let i = 0; i < 4; i++){
       const group = new Group();
       this.group.add(group);
       group.rotateZ(Math.PI * i / 2);
@@ -74,19 +74,25 @@ export class Center {
           this.namePlateSize.x,
           Size.TILE.z * 2,
         ),
-        new MeshLambertMaterial({ color: 0xeeeeee })
+        new MeshLambertMaterial({ color: 0xeeeedd })
       );
       wallMesh.rotation.set(-Math.PI / 2, 0, 0);
       wallMesh.position.set(0, (-AssetLoader.worldSize) / 2, 0);
       group.add(wallMesh);
 
+
       const namePlateGeometry = new PlaneGeometry(
-        this.namePlateSize.x,
+        namePlateWidth,
         this.namePlateSize.y
       );
 
-      const material = new MeshLambertMaterial({ color: 0xeeeeee });
+      const material = new MeshLambertMaterial(
+        {
+          color: 0xffffff,
+        }
+      );
       const namePlateMesh = new Mesh(namePlateGeometry, material);
+      // namePlateMesh.rotation.set(Math.PI / 180 * 5, 0, 0);
       group.add(namePlateMesh);
       namePlateMesh.position.set(0, (-AssetLoader.worldSize - this.namePlateSize.y) / 2, Size.TILE.z - 0.3);
 
@@ -104,20 +110,41 @@ export class Center {
   }
 
   private updateNamePlate(seat: number, nick: string | null): void {
-    this.namePlateContexts[seat].resetTransform();
+    const namePlateWidth = this.namePlateSize.x + (seat % 2) * (2 * this.namePlateSize.y);
+    const context = this.namePlateContexts[seat];
 
-    this.namePlateContexts[seat].fillStyle = '#fefefe';
-    this.namePlateContexts[seat].fillRect(0, 0, this.namePlateSize.x * 10, this.namePlateSize.y * 10);
+    context.resetTransform();
 
-    this.namePlateContexts[seat].fillStyle = '#ba7329';
-    this.namePlateContexts[seat].fillRect(this.namePlateSize.x * 10 / 5 * 2, this.namePlateSize.y * 10 / 6 , this.namePlateSize.x * 10 / 5, this.namePlateSize.y * 10 / 3 * 2);
+    context.fillStyle = '#ddddd0';
+    context.fillRect(0, 0, namePlateWidth * 10, this.namePlateSize.y * 10);
+    const xOffset = (this.namePlateSize.x / 5 * 2 + (seat % 2) * this.namePlateSize.y) * 10  ;
 
-    this.namePlateContexts[seat].textAlign = 'center';
-    this.namePlateContexts[seat].font = `${this.namePlateSize.y * 5 / 2}px Koruri`;
-    this.namePlateContexts[seat].fillStyle = '#fff';
-    this.namePlateContexts[seat].textBaseline = 'middle';
-    this.namePlateContexts[seat].translate(this.namePlateSize.x * 5, this.namePlateSize.y * 5);
-    this.namePlateContexts[seat].fillText(nick ?? "", 0, 0);
+    context.fillStyle = '#ba7329';
+    context.fillRect(
+      xOffset,
+      this.namePlateSize.y * 10 / 6 ,
+      this.namePlateSize.x  * 10 / 5,
+      this.namePlateSize.y * 10 / 3 * 2
+    );
+
+    context.strokeStyle = '#888888';
+    context.lineWidth = 2;
+    context.strokeRect(
+      xOffset,
+      this.namePlateSize.y * 10 / 6 ,
+      this.namePlateSize.x * 10 / 5,
+      this.namePlateSize.y * 10 / 3 * 2
+    );
+
+    context.textAlign = 'center';
+    context.font = `${this.namePlateSize.y * 5 / 2}px Koruri`;
+    context.fillStyle = '#fff';
+    context.textBaseline = 'middle';
+    context.translate(
+      (this.namePlateSize.x / 2 + (seat % 2) * this.namePlateSize.y) * 10 ,
+      this.namePlateSize.y * 5
+    );
+    context.fillText(nick ?? "", 0, 0);
     this.namePlateTextures[seat].needsUpdate = true;
   }
 
