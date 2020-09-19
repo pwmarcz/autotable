@@ -172,17 +172,8 @@ export class MainView {
           this.autoQueue.push({
             seat: 0,
             view: CameraPosition.DoraSpectator,
-            delay: 4000,
+            delay: 3000,
           });
-
-          // swap to the top view if the ura dora were flipped
-          if (info.slotName.indexOf("0@") >= 0) {
-            this.autoQueue.push({
-              seat: 0,
-              view: CameraPosition.TopDown,
-              squashable: true,
-            });
-          }
 
           return true;
         }
@@ -193,6 +184,7 @@ export class MainView {
         this.autoQueue.push({
           seat,
           view: CameraPosition.HandSpectator,
+          delay: 1500,
         });
         return true;
       }
@@ -206,11 +198,12 @@ export class MainView {
         this.autoQueue.push({
           seat,
           view: CameraPosition.CallSpectator,
-          delay: 4000,
+          delay: 1500,
         });
 
         this.autoQueue.push({
           view: CameraPosition.HandSpectator,
+          delay: 1500,
         });
         return true;
       }
