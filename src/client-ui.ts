@@ -12,7 +12,6 @@ const RECONNECT_ATTEMPTS = 15;
 export class ClientUi {
   url: string;
   client: Client;
-  nickElement: HTMLInputElement;
   statusElement: HTMLElement;
   statusTextElement: HTMLElement;
 
@@ -24,15 +23,8 @@ export class ClientUi {
     this.url = this.getUrl();
     this.client = client;
 
-    this.nickElement = document.getElementById('nick')! as HTMLInputElement;
-    this.nickElement.value = localStorage.getItem('autotable.nick') ?? '';
-
-    this.nickElement.onchange = this.onNickChange.bind(this);
-    this.nickElement.oninput = this.onNickChange.bind(this);
-
     this.client.on('connect', this.onConnect.bind(this));
     this.client.on('disconnect', this.onDisconnect.bind(this));
-    this.onNickChange();
 
     const connectButton = document.getElementById('connect')!;
     connectButton.onclick = () => this.connect();
@@ -88,14 +80,9 @@ export class ClientUi {
     return `${wsProtocol}//${wsHost}/${wsPath}`;
   }
 
-  onNickChange(): void {
-    this.client.nicks.set(this.client.playerId(), this.nickElement.value);
-  }
-
   onConnect(game: Game): void {
     this.setStatus(null);
     document.getElementById('server')!.classList.add('connected');
-    this.onNickChange();
     this.setUrlState(game.gameId);
     document.getElementsByTagName('title')[0].innerText = TITLE_CONNECTED;
 

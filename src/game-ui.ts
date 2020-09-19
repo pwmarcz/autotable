@@ -112,6 +112,7 @@ export class GameUi {
       this.elements.viewCalls.push(document.querySelector(`.view-calls[data-seat="${i}"]`) as HTMLButtonElement);
     }
 
+    this.elements.nick.value = localStorage.getItem("nick") ?? "";
     this.setupEvents();
     this.setupDealButton();
   }
@@ -128,6 +129,12 @@ export class GameUi {
       const nick = this.elements.nick.value.length > 0 ? this.elements.nick.value : "不明";
       this.client.spectators.set(this.client.playerId(), isSpectating ? nick : null);
     });
+  }
+
+  private onNickChange(): void {
+    const nick = this.elements.nick.value;
+    localStorage.setItem("nick", nick);
+    this.client.nicks.set(this.client.playerId(), nick);
   }
 
   private setupEvents(): void {
@@ -217,6 +224,7 @@ export class GameUi {
     };
 
     this.elements.nick.oninput = this.elements.nick.onchange = (event) => {
+      this.onNickChange();
       if (!this.isSpectating) {
         return;
       }

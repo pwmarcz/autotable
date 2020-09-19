@@ -57,7 +57,6 @@ export class Game {
       sticky: document.getElementById('sticky') as HTMLInputElement,
     };
 
-
     this.setupEvents();
   }
 
