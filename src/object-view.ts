@@ -1,11 +1,11 @@
-import { Group, Mesh, Vector3, MeshBasicMaterial, MeshLambertMaterial, Object3D, PlaneBufferGeometry, InstancedMesh } from "three";
+import { Group, Mesh, Vector3, MeshBasicMaterial, MeshLambertMaterial, Object3D, PlaneBufferGeometry, InstancedMesh, PlaneGeometry, CanvasTexture, Vector2 } from "three";
 
 import { World } from "./world";
 import { Client } from "./client";
 import { AssetLoader } from "./asset-loader";
 import { Center } from "./center";
 import { ThingParams, ThingGroup, TileThingGroup, StickThingGroup, MarkerThingGroup } from "./thing-group";
-import { ThingType, Place } from "./types";
+import { ThingType, Place, Size } from "./types";
 
 export interface Render {
   type: ThingType;
@@ -33,7 +33,12 @@ export class ObjectView {
   private dropShadowProto: Mesh;
   private dropShadowObjects: Array<Mesh>;
 
+  private readonly namePlateSize = new Vector2(World.WIDTH + Size.TILE.y, World.WIDTH / 16);
+
   selectedObjects: Array<Mesh>;
+  private readonly namePlateContexts: Array<CanvasRenderingContext2D> = [];
+  private readonly namePlateCanvases: Array<HTMLCanvasElement> = [];
+  private readonly namePlateTextures: Array<CanvasTexture> = [];
 
   constructor(mainGroup: Group, assetLoader: AssetLoader, client: Client) {
     this.mainGroup = mainGroup;
@@ -65,6 +70,13 @@ export class ObjectView {
 
     this.dropShadowProto = new Mesh(plane, material);
     this.dropShadowProto.name = 'dropShadow';
+
+    for (let i = 0; i < 4; i++) {
+      this.namePlateCanvases[i] = document.getElementById(`name-plate-${i}`)! as HTMLCanvasElement;
+      this.namePlateCanvases[i].width = this.namePlateSize.x * 10;
+      this.namePlateCanvases[i].height = this.namePlateSize.y * 10;
+      this.namePlateContexts[i] = this.namePlateCanvases[i].getContext('2d')!;
+    }
 
     this.addStatic();
   }
@@ -98,9 +110,57 @@ export class ObjectView {
     this.shadowObject.instanceMatrix.needsUpdate = true;
   }
 
+  private createNamePlate(): Mesh {
+    const tableGeometry = new PlaneGeometry(
+      this.namePlateSize.x,
+      this.namePlateSize.y
+    );
+
+    const tableMaterial = new MeshLambertMaterial({ color: 0xeeeeee, map: this.assetLoader.textures.table });
+    const tableMesh = new Mesh(tableGeometry, tableMaterial);
+    return tableMesh;
+  }
+
+  private updateNamePlate(seat: number, nick: string) {
+    this.namePlateContexts[seat].resetTransform();
+    this.namePlateContexts[seat].fillStyle = '#000';
+    this.namePlateContexts[seat].fillRect(0, 0, this.namePlateSize.x * 10, this.namePlateSize.y * 10);
+    this.namePlateContexts[seat].textAlign = 'center';
+    this.namePlateContexts[seat].font = `${this.namePlateSize.y * 5}px Koruri`;
+    this.namePlateContexts[seat].fillStyle = '#afa';
+    this.namePlateContexts[seat].textBaseline = 'middle';
+    this.namePlateContexts[seat].translate(this.namePlateSize.x * 5, this.namePlateSize.y * 5);
+    this.namePlateContexts[seat].fillText(nick + seat, 0, 0);
+    this.namePlateTextures[seat].needsUpdate = true;
+  }
+
   private addStatic(): void {
     const tableMesh = this.assetLoader.makeTable();
     tableMesh.position.set(World.WIDTH / 2, World.WIDTH / 2, -0.01);
+
+    for (let i = 0; i < 4; i++){
+      const namePlateMesh = this.createNamePlate();
+      namePlateMesh.rotation.set(Math.PI / 2, 0, 0);
+      namePlateMesh.position.set(0, -World.WIDTH / 2 -Size.TILE.y / 2, -this.namePlateSize.y / 2);
+
+      const material = namePlateMesh.material as MeshLambertMaterial;
+      const texture = new CanvasTexture(this.namePlateCanvases[i]);
+      this.namePlateTextures.push(texture);
+      texture.flipY = true;
+      texture.center = new Vector2(0.5, 0.5);
+      texture.anisotropy = 16;
+      material.map = texture;
+
+      this.updateNamePlate(i, "hierarch");
+
+      const group = new Group();
+      group.add(namePlateMesh);
+      this.mainGroup.add(group);
+      group.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
+      group.rotateZ(Math.PI * i / 2);
+      group.updateMatrixWorld(true);
+    }
+
     this.mainGroup.add(tableMesh);
     this.mainGroup.add(this.center.mesh);
 

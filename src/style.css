@@ -56,6 +56,16 @@
 .cursor.rotate-2 { visibility: visible; top: 80%; left: 20%; }
 .cursor.rotate-3 { visibility: visible; top: 80%; left: 40%; }
 */
+@font-face {
+    font-family: 'Koruri';
+    src: url('//cdn.plusminus.io/font/webkoruri/20140628/WebKoruri.eot');
+    src: url('//cdn.plusminus.io/font/webkoruri/20140628/WebKoruri.eot?#iefix') format('embedded-opentype');
+    src: url('//cdn.plusminus.io/font/webkoruri/20140628/WebKoruri.woff') format('woff'),
+         url('//cdn.plusminus.io/font/webkoruri/20140628/WebKoruri.ttf') format('truetype');
+
+    /*  for fuck'n chrome  */
+    src: url(//cdn.plusminus.io/font/webkoruri/20140628/WebKoruri.woff) format('woff');
+}
 
 .mark {
     position: absolute;
