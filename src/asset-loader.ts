@@ -13,12 +13,15 @@ import { Size } from './types';
 
 
 export class AssetLoader {
+  static readonly worldSize = World.WIDTH + Size.TILE.y * 2;
   textures: Record<string, Texture> = {};
   meshes: Record<string, Mesh> = {};
 
   makeTable(): Mesh {
     const tableGeometry = new PlaneGeometry(
-      World.WIDTH + Size.TILE.y, World.WIDTH + Size.TILE.y);
+      AssetLoader.worldSize,
+      AssetLoader.worldSize
+    );
     const tableMaterial = new MeshLambertMaterial({ color: 0xeeeeee, map: this.textures.table });
     const tableMesh = new Mesh(tableGeometry, tableMaterial);
     return tableMesh;

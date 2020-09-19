@@ -19,7 +19,10 @@ export class Center {
 
   client: Client;
 
-  private readonly namePlateSize = new Vector2(World.WIDTH + Size.TILE.y, World.WIDTH / 16);
+  private readonly namePlateSize = new Vector2(
+    AssetLoader.worldSize + World.WIDTH / 8,
+    World.WIDTH / 16
+  );
   private readonly namePlateContexts: Array<CanvasRenderingContext2D> = [];
   private readonly namePlateCanvases: Array<HTMLCanvasElement> = [];
   private readonly namePlateTextures: Array<CanvasTexture> = [];
@@ -69,12 +72,12 @@ export class Center {
       const wallMesh = new Mesh(
         new PlaneGeometry(
           this.namePlateSize.x,
-          Size.TILE.z,
+          Size.TILE.z * 2,
         ),
         new MeshLambertMaterial({ color: 0xeeeeee })
       );
       wallMesh.rotation.set(-Math.PI / 2, 0, 0);
-      wallMesh.position.set(0, (-World.WIDTH - Size.TILE.y / 2 - Size.TILE.z) / 2, Size.TILE.z / 2 + 0.3);
+      wallMesh.position.set(0, (-AssetLoader.worldSize) / 2, 0);
       group.add(wallMesh);
 
       const namePlateGeometry = new PlaneGeometry(
@@ -85,7 +88,7 @@ export class Center {
       const material = new MeshLambertMaterial({ color: 0xeeeeee });
       const namePlateMesh = new Mesh(namePlateGeometry, material);
       group.add(namePlateMesh);
-      namePlateMesh.position.set(0, (-World.WIDTH - Size.TILE.y - this.namePlateSize.y) / 2, Size.TILE.z);
+      namePlateMesh.position.set(0, (-AssetLoader.worldSize - this.namePlateSize.y) / 2, Size.TILE.z - 0.3);
 
       const texture = new CanvasTexture(this.namePlateCanvases[i]);
       this.namePlateTextures.push(texture);
@@ -107,7 +110,7 @@ export class Center {
     this.namePlateContexts[seat].fillRect(0, 0, this.namePlateSize.x * 10, this.namePlateSize.y * 10);
 
     this.namePlateContexts[seat].fillStyle = '#ba7329';
-    this.namePlateContexts[seat].fillRect(this.namePlateSize.x * 10 / 5 * 2, this.namePlateSize.y * 10 / 4 , this.namePlateSize.x * 10 / 5, this.namePlateSize.y * 10 / 2);
+    this.namePlateContexts[seat].fillRect(this.namePlateSize.x * 10 / 5 * 2, this.namePlateSize.y * 10 / 6 , this.namePlateSize.x * 10 / 5, this.namePlateSize.y * 10 / 3 * 2);
 
     this.namePlateContexts[seat].textAlign = 'center';
     this.namePlateContexts[seat].font = `${this.namePlateSize.y * 5 / 2}px Koruri`;
