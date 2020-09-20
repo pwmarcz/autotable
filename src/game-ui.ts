@@ -402,6 +402,7 @@ export class SpectatorOverlay {
 export class GameUi {
   elements: {
     sidebarBody: HTMLDivElement;
+    selection: HTMLDivElement;
     toggleSidebar: HTMLDivElement;
     deal: HTMLButtonElement;
     toggleDealer: HTMLButtonElement;
@@ -441,6 +442,7 @@ export class GameUi {
 
     this.elements = {
       sidebarBody: document.getElementById('sidebar-body')! as HTMLDivElement,
+      selection: document.getElementById('selection')! as HTMLDivElement,
       toggleSidebar: document.getElementById('toggle-sidebar')! as HTMLDivElement,
       deal: document.getElementById('deal') as HTMLButtonElement,
       toggleDealer: document.getElementById('toggle-dealer') as HTMLButtonElement,
@@ -528,6 +530,8 @@ export class GameUi {
       }
       this.isSpectating = this.client.spectators.get(this.client.playerId()) !== null;
       this.spectatorOverlay.setEnabled(this.isSpectating);
+      this.spectatorOverlay.setEnabled(this.isSpectating);
+      setVisibility(this.elements.selection, !this.isSpectating);
 
       if (this.isSpectating) {
         this.mainView.setPerspective(true);
