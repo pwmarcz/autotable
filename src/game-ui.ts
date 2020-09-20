@@ -48,10 +48,41 @@ export class SpectatorOverlay {
   private isEnabled: boolean = false;
 
   private readonly spectatorOverlay: HTMLDivElement;
+  private readonly playerNames: Array<HTMLDivElement> = [];
 
   constructor(private readonly client: Client, private readonly world: World) {
     this.spectatorOverlay = document.getElementById('spectator-ui') as HTMLDivElement;
+    for (let i = 0; i < 4; i++) {
+      this.playerNames.push(document.querySelector(`.player-display [data-seat='${i}'] .name-display`) as HTMLDivElement);
+    }
+
+    this.client.nicks.on('update', () => {
+      this.updateNicks();
+    });
+
+    this.client.seats.on('update', () => {
+      this.updateNicks();
+    });
+
     setVisibility(this.spectatorOverlay, this.isEnabled);
+  }
+
+  private updateNicks(): void {
+    for (let i = 0; i < 4; i++) {
+      const playerId = this.client.seatPlayers[i];
+      const nick = playerId !== null ? this.client.nicks.get(playerId) : null;
+      if (nick === null) {
+        this.playerNames[i].innerText = '';
+        continue;
+      }
+
+      if (nick === '') {
+        this.playerNames[i].innerText = 'Jyanshi';
+        continue;
+      }
+
+      this.playerNames[i].innerText = nick;
+    }
   }
 
   setEnabled(isEnabled: boolean): void {
