@@ -270,7 +270,8 @@ export class Setup {
     this.pushes.push(...Slot.computePushes([...this.slots.values()]));
   }
 
-  getScores(): Array<number | null> {
+
+  getScores(): {seats: Array<number | null>, remaining: number} {
     const scores = new Array(4).fill(-20000);
     scores.push((25000 + 20000) * 4); // remaining
     const stickScores = [100, 500, 1000, 5000, 10000, 10000];
@@ -288,6 +289,9 @@ export class Setup {
       result[seat] = scores[seat];
     }
 
-    return result;
+    return {
+      seats: result,
+      remaining: scores[4]
+    }
   }
 }

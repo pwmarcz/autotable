@@ -590,7 +590,7 @@ export class World {
   updateView(): void {
     this.updateViewThings();
     this.updateViewDropShadows();
-    this.objectView.updateScores(this.setup.getScores());
+    this.objectView.updateScores(this.setup.getScores().seats);
   }
 
   private updateViewThings(): void {

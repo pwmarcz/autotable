@@ -65,9 +65,9 @@ export class SpectatorOverlay {
   private readonly spectatorOverlay: HTMLDivElement;
 
   private readonly roundDisplay: HTMLDivElement;
+  private readonly remainingSticksDisplay: HTMLDivElement;
   private readonly honbaDisplay: HTMLDivElement;
   private readonly matchStatusDisplay: HTMLDivElement;
-
   private readonly riichiNotification: HTMLDivElement;
 
   private readonly playerDisplays: Array<HTMLDivElement> = [];
@@ -78,6 +78,7 @@ export class SpectatorOverlay {
     this.spectatorOverlay = document.getElementById('spectator-ui') as HTMLDivElement;
 
     this.roundDisplay = document.getElementById('round-display') as HTMLDivElement;
+    this.remainingSticksDisplay = document.getElementById('remaining-sticks-display') as HTMLDivElement;
     this.honbaDisplay = document.getElementById('honba-display') as HTMLDivElement;
     this.matchStatusDisplay = document.getElementById('match-status-display') as HTMLDivElement;
 
@@ -194,11 +195,13 @@ export class SpectatorOverlay {
 
   private updateScores(skipAnimation: boolean): void {
     setTimeout(() => {
+      this.updateRemainingSticks();
+
       if (this.isAnimatingScore) {
         return;
       }
 
-      const scores = this.world.setup.getScores();
+      const scores = this.world.setup.getScores().seats;
       for (let i = 0; i < 4; i++) {
         if (scores[i] === null) {
           continue;
@@ -286,6 +289,15 @@ export class SpectatorOverlay {
 
     this.isAnimatingScore = false;
     this.updateScores(false);
+  }
+
+  private updateRemainingSticks(): void {
+    this.remainingSticksDisplay.innerText = (
+      (this.world.setup.getScores().remaining
+        - 1000 * [...this.world.things.values()].filter(t => t.slot.name.startsWith("riichi")).length
+      )
+      / 1000 | 0
+    ).toString();
   }
 
   private showRiichiNotification(seat: number): void {
