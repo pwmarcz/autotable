@@ -47,16 +47,23 @@ export function tileMapToString(tileMap: Record<string, number>): string {
 export class SpectatorOverlay {
   private isEnabled: boolean = false;
 
+  private dora: Array<number> = [];
+
   private readonly spectatorOverlay: HTMLDivElement;
-  private readonly honbaDisplay: HTMLDivElement;
+
   private readonly roundDisplay: HTMLDivElement;
+  private readonly honbaDisplay: HTMLDivElement;
+  private readonly matchStatusDisplay: HTMLDivElement;
+
   private readonly playerDisplays: Array<HTMLDivElement> = [];
   private readonly playerNames: Array<HTMLDivElement> = [];
 
   constructor(private readonly client: Client, private readonly world: World) {
     this.spectatorOverlay = document.getElementById('spectator-ui') as HTMLDivElement;
-    this.honbaDisplay = document.getElementById('honba-display') as HTMLDivElement;
+
     this.roundDisplay = document.getElementById('round-display') as HTMLDivElement;
+    this.honbaDisplay = document.getElementById('honba-display') as HTMLDivElement;
+    this.matchStatusDisplay = document.getElementById('match-status-display') as HTMLDivElement;
 
     for (let i = 0; i < 4; i++) {
       this.playerDisplays.push(document.querySelector(`.player-display [data-seat='${i}']`) as HTMLDivElement);
@@ -79,10 +86,46 @@ export class SpectatorOverlay {
 
     this.client.things.on('update', (entries) => {
       const things = entries.map(([k, v]) => this.world.things.get(k)!).filter(t => t !== undefined);
-      const markers = things.filter(t => t?.type === ThingType.MARKER);
+      const markers = things.filter(t => t.type === ThingType.MARKER);
       if (markers.length > 0) {
         this.updateRound();
         this.updateSeatings();
+      }
+
+      for (const [key, info] of entries) {
+        const thing = this.world.things.get(key);
+        if (!thing) {
+          continue;
+        }
+
+        if (info?.slotName.startsWith("wall") && info.rotationIndex === 1) {
+          const indicator = this.matchStatusDisplay.querySelector(`[data-dora-id='${key}']`);
+          if (indicator) {
+            continue;
+          }
+          const index = thing.getTypeIndexNoFlags();
+          console.log(index);
+          let x = index % 9;
+          const y = index % 40 / 9 | 0;
+          if (y < 3) {
+            x = (x + 1) % 9;
+          } else if (x < 4){
+            x = (x + 1) % 4;
+          } else {
+            x = 4 + (x - 3) % 3;
+          }
+          this.matchStatusDisplay.insertAdjacentHTML("beforeend", `
+            <div class="dora" data-dora-id="${key}">
+              <div style="background-position: ${100 / 9 * x}% ${100 / 7 * y}%"></div>
+            </div>
+          `);
+        } else if (thing.slot.name.startsWith("wall")) {
+          const indicator = this.matchStatusDisplay.querySelector(`[data-dora-id='${key}']`);
+          if (indicator) {
+            indicator.remove();
+            continue;
+          }
+        }
       }
     });
 

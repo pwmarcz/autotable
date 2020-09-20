@@ -115,7 +115,16 @@ export class Center {
     client.on('disconnect', this.update.bind(this));
   }
 
+  private readonly namePlates: Array<string> = [];
+
   private updateNamePlate(seat: number, nick: string | null): void {
+    const actualNick = nick ?? "";
+    if (this.namePlates[seat] === actualNick) {
+      return;
+    }
+
+    this.namePlates[seat] = actualNick;
+
     const namePlateWidth = this.namePlateSize.x + (seat % 2) * (2 * this.namePlateSize.y);
     const context = this.namePlateContexts[seat];
 
@@ -150,7 +159,7 @@ export class Center {
       (this.namePlateSize.x / 2 + (seat % 2) * this.namePlateSize.y) * 10 ,
       this.namePlateSize.y * 5
     );
-    context.fillText(nick ?? "", 0, 0);
+    context.fillText(actualNick, 0, 0);
     this.namePlateTextures[seat].needsUpdate = true;
   }
 

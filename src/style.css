@@ -353,6 +353,7 @@
 }
 
 .match-status-display .dora {
+    margin-left: 0.5vmin;
     background-color: white;
     position: relative;
     width: 3.2vmin;
@@ -360,13 +361,9 @@
     border-radius: 0.25vmin;
 }
 
-.match-status-display .dora:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
+.match-status-display .dora > div {
+    width: 100%;
+    height: 100%;
     background-image: url("/img/tiles.svg");
     background-size: 1000% 800%;
 }
