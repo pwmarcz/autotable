@@ -21,6 +21,50 @@
     <audio preload id="sound-stick" src="./sound/stick.wav"></audio>
     <div id="full">
         <div id="main">
+            <div id="spectator-ui">
+                <div class="header">
+                    <div class="match-status-display">
+                        <div class="round-display">南１局</div>
+                    </div>
+                    <div style="flex:1"></div>
+                    <div class="view-change-action">ドラ</div>
+                    <div class="view-change-action">上</div>
+                    <div class="view-change-action">自動</div>
+                </div>
+                <div style="flex:1"></div>
+                <div class="player-display">
+                    <div data-seat="0" class="dealer">
+                        <div class="name-display gain">+48,000</div>
+                        <div class="point-display">
+                            <div class="action">
+                                手
+                            </div>
+                            <div class="action">
+                                泣
+                            </div>
+                            <div class="points">
+                                37,600
+                            </div>
+                        </div>
+                        <div class="dealer-indicator"></div>
+                    </div>
+                    <div data-seat="1">
+                        <div class="name-display">近藤誠一</div>
+                        <div class="point-display">21,800</div>
+                        <div class="dealer-indicator"></div>
+                    </div>
+                    <div data-seat="2">
+                        <div class="name-display">多井隆晴</div>
+                        <div class="point-display">28,800</div>
+                        <div class="dealer-indicator"></div>
+                    </div>
+                    <div data-seat="3">
+                        <div class="name-display loss">-16,000</div>
+                        <div class="point-display">11,800</div>
+                        <div class="dealer-indicator"></div>
+                    </div>
+                </div>
+            </div>
             <div id="selection"></div>
             <div class="cursor rotate-0"></div>
             <div class="cursor rotate-1"></div>

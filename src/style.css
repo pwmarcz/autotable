@@ -105,6 +105,10 @@
 #server.connected .server-disconnected { display: none; }
 
 #center { display: none; }
+#name-plate-0 { display: none; }
+#name-plate-1 { display: none; }
+#name-plate-2 { display: none; }
+#name-plate-3 { display: none; }
 
 #deal { position: relative; }
 .btn-progress {
@@ -118,6 +122,106 @@
 }
 .btn-progress-text {
     position: relative;
+}
+
+#spectator-ui {
+    font-family: 'Koruri';
+    color: white;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+    padding: 3vmin 4vmin;
+}
+
+.player-display {
+    display: flex;
+    text-align: right;
+    padding: 0 7vmin;
+    align-items: flex-end;
+}
+
+.player-display > div:not(:first-child) {
+    margin-left: 2vmin;
+}
+
+.point-display {
+    font-size: 3vmin;
+    padding: 0vmin 1.5vmin;
+}
+
+.point-display > .points {
+    flex: 1;
+}
+
+.player-display .dealer-indicator {
+    padding-top: 1vmin;
+}
+
+.player-display .dealer .dealer-indicator {
+    padding-top: 0.5vmin;
+    border-bottom: 0.5vmin solid #be2011;
+}
+
+.name-display {
+    font-size: 2.5vmin;
+    padding-right: 1vmin;
+}
+
+.name-display.gain, .name-display.loss{
+    font-size: 3vmin;
+    padding-right: 1.5vmin;
+    color: #33d880;
+}
+
+.name-display.loss {
+    color: #a6101f;
+}
+
+[data-seat="0"] > .point-display {
+    background-image: linear-gradient(to right, #e98e1a, #e98e1a, #e98e1a, #261b18);
+}
+
+[data-seat="1"] > .point-display {
+    background-image: linear-gradient(to right, #b7a581, #b7a581, #b7a581, #1f1f1f);
+}
+
+[data-seat="2"] > .point-display {
+    background-image: linear-gradient(to right, #da89a0, #da89a0, #da89a0, #0d050c);
+}
+
+[data-seat="3"] > .point-display {
+    background-image: linear-gradient(to right, #1898d8, #1898d8, #1898d8, #1a1c1f);
+}
+
+#spectator-ui > .header {
+    display: flex;
+    align-items: center;
+    padding-right: 2.5vmin;
+}
+
+.header > .view-change-action {
+    border-radius: 5px;
+    background-color:rgba(200, 200, 200, 0.2);
+    margin-left: 0.75vmin;
+    font-size: 2vmin;
+    padding: 0.75vmin;
+}
+
+.round-display {
+    font-size: 3vmin;
+    line-height: 3vmin;
+    padding: 0.2vmin 1vmin;
+    border-radius: 1vmin;
+    border: 0.5vmin solid white;
+}
+
+.player-display > div {
+    flex: 1;
 }
 
 .seat-buttons {
