@@ -17,10 +17,6 @@
 
 #selection {
     position: absolute;
-    /* top: 100px;
-    left: 100px;
-    width: 200px;
-    height: 200px; */
     z-index: 1;
     border: 1px solid rgba(160, 85, 0, 0.8);
     background-color: rgba(160, 85, 0, 0.2);
@@ -150,8 +146,62 @@
 }
 
 .point-display {
+    position: relative;
     font-size: 3vmin;
     padding: 0vmin 1.5vmin;
+}
+
+.point-display .actions {
+    display: flex;
+    align-items: flex-end;
+    position: absolute;
+    z-index: 0;
+    bottom: 1vmin;
+}
+
+.point-display .action:first-child {
+    color: black;
+    border-radius: 2vmin;
+    width: 10vmin;
+    height: 10vmin;
+    text-align: center;
+    line-height: 10vmin;
+    font-size: 5vmin;
+}
+
+.player-display .riichi .action:first-child {
+    width: 9vmin;
+    height: 9vmin;
+    line-height: 9vmin;
+    margin: 0.5vmin 0vmin;
+    background-color: white;
+    background-clip: padding-box;
+}
+
+.player-display .riichi .action:first-child:before {
+    content: '';
+    z-index: -1;
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    margin: -0.5vmin;
+    border-radius: inherit;
+    background: linear-gradient(-45deg, #cbb364 0%, #cbb364 76%, #c81b20 76%, #c81b20 100%);
+}
+
+.point-display .action:not(:first-child) {
+    margin-left: 1vmin;
+}
+
+.point-display .action {
+    position: relative;
+    color: black;
+    background-color: white;
+    border-radius: 1vmin;
+    line-height: 5vmin;
+    text-align: center;
+    width: 5vmin;
+    height: 5vmin;
+    font-size: 2.5vmin;
 }
 
 .point-display > .points {
@@ -182,20 +232,56 @@
     color: #a6101f;
 }
 
+#riichi-notification {
+    align-self: center;
+    display: flex;
+    font-size: 5vmin;
+}
+
+#riichi-notification .player-name {
+    border-top-left-radius: 2vmin;
+    border-bottom-left-radius: 2vmin;
+    padding-left: 5vmin;
+    background-color: #c81b20;
+}
+
+#riichi-notification .riichi {
+    border-top-right-radius: 2vmin;
+    border-bottom-right-radius: 2vmin;
+    padding: 0vmin 5vmin;
+    background: linear-gradient(-85deg, #cbb364 0%, #cbb364 87%, #c81b20 87%, #c81b20 100%);
+}
+
 [data-seat="0"] > .point-display {
     background-image: linear-gradient(to right, #e98e1a, #e98e1a, #e98e1a, #261b18);
+}
+
+[data-seat="0"] .action:first-child {
+    background: linear-gradient(-45deg, #c26328, #c26328 20%, white 20%, white 80%, #c26328 80%, #c26328 100%);
 }
 
 [data-seat="1"] > .point-display {
     background-image: linear-gradient(to right, #b7a581, #b7a581, #b7a581, #1f1f1f);
 }
 
+[data-seat="1"] .action:first-child {
+    background: linear-gradient(-45deg, #695737, #695737 20%, white 20%, white 80%, #695737 80%, #695737 100%);
+}
+
 [data-seat="2"] > .point-display {
     background-image: linear-gradient(to right, #da89a0, #da89a0, #da89a0, #0d050c);
 }
 
+[data-seat="2"] .action:first-child {
+    background: linear-gradient(-45deg, #ffcfe2, #ffcfe2 20%, white 20%, white 80%, #ffcfe2 80%, #ffcfe2 100%);
+}
+
 [data-seat="3"] > .point-display {
     background-image: linear-gradient(to right, #1898d8, #1898d8, #1898d8, #1a1c1f);
+}
+
+[data-seat="3"] .action:first-child {
+    background: linear-gradient(-45deg, #2995d4, #2995d4 20%, white 20%, white 80%, #2995d4 80%, #2995d4 100%);
 }
 
 #spectator-ui > .header {
