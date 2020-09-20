@@ -153,19 +153,19 @@
 
 .point-display .action:first-child {
     color: black;
-    border-radius: 2vmin;
-    width: 10vmin;
-    height: 10vmin;
+    border-radius: 0.5vmin;
+    width: 6vmin;
+    height: 8vmin;
     text-align: center;
-    line-height: 10vmin;
-    font-size: 5vmin;
+    line-height: 8vmin;
+    font-size: 4vmin;
 }
 
 .player-display .riichi .action:first-child {
-    width: 9vmin;
-    height: 9vmin;
-    line-height: 9vmin;
-    margin: 0.5vmin 0vmin;
+    width: 5vmin;
+    height: 7vmin;
+    line-height: 7vmin;
+    margin: 0.4vmin 0vmin;
     background-color: white;
     background-clip: padding-box;
 }
@@ -175,7 +175,7 @@
     z-index: -1;
     position: absolute;
     top: 0; right: 0; bottom: 0; left: 0;
-    margin: -0.5vmin;
+    margin: -0.4vmin;
     border-radius: inherit;
     background: linear-gradient(-45deg, #cbb364 0%, #cbb364 76%, #c81b20 76%, #c81b20 100%);
 }
@@ -189,12 +189,12 @@
     position: relative;
     color: black;
     background-color: white;
-    border-radius: 1vmin;
-    line-height: 5vmin;
+    border-radius: 0.5vmin;
+    line-height: 4vmin;
     text-align: center;
-    width: 5vmin;
-    height: 5vmin;
-    font-size: 2.5vmin;
+    width: 4vmin;
+    height: 4vmin;
+    font-size: 2vmin;
 }
 
 .point-display .action:hover {
