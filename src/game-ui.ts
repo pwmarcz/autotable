@@ -105,13 +105,6 @@ export class SpectatorOverlay {
     });
 
     this.client.things.on('update', (entries, isFull) => {
-      const things = entries.map(([k, v]) => this.world.things.get(k)!).filter(t => t !== undefined);
-      const markers = things.filter(t => t.type === ThingType.MARKER);
-      if (markers.length > 0) {
-        this.updateRound();
-        this.updateSeatings();
-      }
-
       let updateScores = isFull;
 
       for (const [key, info] of entries) {
@@ -121,6 +114,13 @@ export class SpectatorOverlay {
 
         const thing = this.world.things.get(key);
         if (!thing) {
+          continue;
+        }
+
+        if (thing.type === ThingType.MARKER) {
+          const seat = parseInt(info.slotName.substring(info.slotName.indexOf('@') + 1));
+          this.updateRound();
+          this.updateSeatings(seat);
           continue;
         }
 
@@ -362,11 +362,11 @@ export class SpectatorOverlay {
     this.honbaDisplay.innerText = (this.client.match.get(0)?.honba ?? 0).toString();
   }
 
-  private updateSeatings(): void {
-    const marker = [...this.world.things.values()].find(t => t.type === ThingType.MARKER);
+  private updateSeatings(seat?: number): void {
+    const marker = seat ?? [...this.world.things.values()].find(t => t.type === ThingType.MARKER)?.slot.seat;
     for (let i = 0; i < 4; i++){
       this.playerDisplays[i].classList.remove("push");
-      if (i >= marker?.slot.seat!) {
+      if (i >= marker!) {
         this.playerDisplays[i].classList.add("push");
       }
     }
@@ -420,12 +420,13 @@ export class GameUi {
     spectatorPassword: HTMLInputElement;
     spectate: HTMLButtonElement;
     stopSpectate: HTMLButtonElement;
-    spectateOptions: HTMLDivElement;
     spectators: HTMLDivElement;
-    viewTop: HTMLButtonElement;
-    viewAuto: HTMLButtonElement;
-    viewHand: Array<HTMLButtonElement>;
-    viewCalls: Array<HTMLButtonElement>;
+
+    viewTop: HTMLDivElement;
+    viewDora: HTMLDivElement;
+    viewAuto: HTMLDivElement;
+    viewHand: Array<HTMLDivElement>;
+    viewCalls: Array<HTMLDivElement>;
   }
 
   private isSpectating: boolean = false;
@@ -458,18 +459,19 @@ export class GameUi {
       spectatorPassword: document.getElementById('spectator-password') as HTMLInputElement,
       spectate: document.getElementById('spectate')! as HTMLButtonElement,
       stopSpectate: document.getElementById('stop-spectate')! as HTMLButtonElement,
-      spectateOptions: document.getElementById('spectate-options')! as HTMLDivElement,
       spectators: document.getElementById('spectators')! as HTMLDivElement,
-      viewTop: document.getElementById('view-top')! as HTMLButtonElement,
-      viewAuto: document.getElementById('view-auto')! as HTMLButtonElement,
+
+      viewTop: document.getElementById('view-top')! as HTMLDivElement,
+      viewDora: document.getElementById('view-dora')! as HTMLDivElement,
+      viewAuto: document.getElementById('view-auto')! as HTMLDivElement,
       viewHand: [],
       viewCalls: [],
     };
 
     for (let i = 0; i < 4; i++) {
       this.elements.takeSeat.push(document.querySelector(`.seat-button-${i} button`) as HTMLButtonElement);
-      this.elements.viewHand.push(document.querySelector(`.view-hand[data-seat="${i}"]`) as HTMLButtonElement);
-      this.elements.viewCalls.push(document.querySelector(`.view-calls[data-seat="${i}"]`) as HTMLButtonElement);
+      this.elements.viewHand.push(document.querySelector(`.player-display [data-seat="${i}"] .hand`) as HTMLDivElement);
+      this.elements.viewCalls.push(document.querySelector(`.player-display [data-seat="${i}"] .calls`) as HTMLDivElement);
     }
 
     this.elements.nick.value = localStorage.getItem("nick") ?? "";
@@ -575,6 +577,10 @@ export class GameUi {
     this.elements.viewAuto.onclick = () => {
       this.mainView.spectateAuto();
       this.updateSeats();
+    };
+
+    this.elements.viewDora.onclick = () => {
+      this.mainView.spectateDora();
     };
 
     this.elements.nick.oninput = this.elements.nick.onchange = (event) => {
@@ -695,7 +701,6 @@ export class GameUi {
 
     setVisibility(this.elements.spectate.parentElement!, !this.isSpectating && this.client.seat === null);
     setVisibility(this.elements.stopSpectate.parentElement!, this.isSpectating);
-    setVisibility(this.elements.spectateOptions, this.isSpectating);
     setVisibility(this.elements.leaveSeat.parentElement!, this.client.seat !== null);
     for (const button of toDisable) {
       button.disabled = this.client.seat === null;

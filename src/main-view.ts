@@ -419,6 +419,12 @@ export class MainView {
     this.activeSeat = 0;
   }
 
+  spectateDora() {
+    this.autoSpectate = false;
+    this.cameraPosition = CameraPosition.DoraSpectator;
+    this.activeSeat = 0;
+  }
+
   spectateAuto(): void {
     this.autoSpectate = true;
     this.autoCameraPosition = CameraPosition.TopDown;
