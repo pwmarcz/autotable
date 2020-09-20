@@ -48,10 +48,12 @@ export class SpectatorOverlay {
   private isEnabled: boolean = false;
 
   private readonly spectatorOverlay: HTMLDivElement;
+  private readonly honbaDisplay: HTMLDivElement;
   private readonly playerNames: Array<HTMLDivElement> = [];
 
   constructor(private readonly client: Client, private readonly world: World) {
     this.spectatorOverlay = document.getElementById('spectator-ui') as HTMLDivElement;
+    this.honbaDisplay = document.getElementById('honba-display') as HTMLDivElement;
     for (let i = 0; i < 4; i++) {
       this.playerNames.push(document.querySelector(`.player-display [data-seat='${i}'] .name-display`) as HTMLDivElement);
     }
@@ -62,6 +64,10 @@ export class SpectatorOverlay {
 
     this.client.seats.on('update', () => {
       this.updateNicks();
+    });
+
+    this.client.match.on('update', () => {
+      this.updateHonba();
     });
 
     setVisibility(this.spectatorOverlay, this.isEnabled);
@@ -83,6 +89,10 @@ export class SpectatorOverlay {
 
       this.playerNames[i].innerText = nick;
     }
+  }
+
+  private updateHonba(): void {
+    this.honbaDisplay.innerText = (this.client.match.get(0)?.honba ?? 0).toString();
   }
 
   setEnabled(isEnabled: boolean): void {
