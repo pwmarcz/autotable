@@ -22,7 +22,7 @@ const SHIFT_TIME = 100;
 export class World {
   private static readonly heldRotationOptions = [Rotation.STANDING, Rotation.FACE_DOWN];
 
-  private setup: Setup;
+  setup: Setup;
 
   private objectView: ObjectView;
 

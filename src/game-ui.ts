@@ -4,6 +4,7 @@ import { World } from "./world";
 import { DealType, GameType, Conditions, Points, GAME_TYPES, ThingType } from './types';
 import { DEALS } from './setup-deal';
 import { MainView } from './main-view';
+import { start } from 'repl';
 import { Thing } from './thing';
 
 export function setVisibility(element: HTMLElement, isVisible: boolean): void {
@@ -44,6 +45,16 @@ export function tileMapToString(tileMap: Record<string, number>): string {
   return desc;
 }
 
+function numberWithCommas(x: number, addSign?: boolean): string {
+  let number = x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  if (addSign){
+    if (x > 0) {
+      number = "+" + number;
+    }
+  }
+  return number;
+}
+
 export class SpectatorOverlay {
   private isEnabled: boolean = false;
 
@@ -61,6 +72,7 @@ export class SpectatorOverlay {
 
   private readonly playerDisplays: Array<HTMLDivElement> = [];
   private readonly playerNames: Array<HTMLDivElement> = [];
+  private readonly playerScores: Array<HTMLDivElement> = [];
 
   constructor(private readonly client: Client, private readonly world: World) {
     this.spectatorOverlay = document.getElementById('spectator-ui') as HTMLDivElement;
@@ -74,6 +86,7 @@ export class SpectatorOverlay {
     for (let i = 0; i < 4; i++) {
       this.playerDisplays.push(document.querySelector(`.player-display [data-seat='${i}']`) as HTMLDivElement);
       this.playerNames.push(document.querySelector(`.player-display [data-seat='${i}'] .name-display`) as HTMLDivElement);
+      this.playerScores.push(document.querySelector(`.player-display [data-seat='${i}'] .points`) as HTMLDivElement);
     }
 
     this.client.nicks.on('update', () => {
@@ -97,6 +110,8 @@ export class SpectatorOverlay {
         this.updateRound();
         this.updateSeatings();
       }
+
+      let updateScores = isFull;
 
       for (const [key, info] of entries) {
         if (!info) {
@@ -136,25 +151,141 @@ export class SpectatorOverlay {
           }
         }
 
-        if (thing.slot.name.startsWith("riichi") !== info?.slotName?.startsWith("riichi")) {
-          const isRemoved = thing.slot.name.startsWith("riichi");
-          const slotName = isRemoved ? thing.slot.name : info.slotName;
-          const seat = parseInt(slotName.substring(slotName.indexOf('@') + 1));
-          if (isRemoved) {
-            this.playerDisplays[seat].classList.remove("riichi");
-          } else {
-            this.playerDisplays[seat].classList.add("riichi");
-            if (!isFull) {
-              this.showRiichiNotification(seat);
+        if (thing.type === ThingType.STICK) {
+          if (!updateScores) {
+            const seat = parseInt(info.slotName.substring(info.slotName.indexOf('@') + 1));
+            if (seat !== thing.slot.seat || thing.slot.name.substring(3) !== info.slotName?.substring(3)) {
+              updateScores = true;
             }
           }
-          continue;
+
+          if (thing.slot.name.startsWith("riichi") !== info?.slotName?.startsWith("riichi")) {
+            const isRemoved = thing.slot.name.startsWith("riichi");
+            const slotName = isRemoved ? thing.slot.name : info.slotName;
+            const seat = parseInt(slotName.substring(slotName.indexOf('@') + 1));
+            if (isRemoved) {
+              this.playerDisplays[seat].classList.remove("riichi");
+            } else {
+              this.playerDisplays[seat].classList.add("riichi");
+              if (!isFull) {
+                this.showRiichiNotification(seat);
+              }
+            }
+          }
         }
+      }
+
+      if (updateScores) {
+        this.updateScores(isFull);
       }
     });
 
     setVisibility(this.spectatorOverlay, this.isEnabled);
     setVisibility(this.riichiNotification, false);
+
+    this.updateScores(true);
+    this.updateNicks();
+  }
+
+  private readonly scores: Array<number | null> = [];
+  private readonly scoreChanges: Array<number | null> = [];
+  private scoreUpdateTimeout: NodeJS.Timeout | null = null;
+  private isAnimatingScore: boolean = false;
+
+  private updateScores(skipAnimation: boolean): void {
+    setTimeout(() => {
+      if (this.isAnimatingScore) {
+        return;
+      }
+
+      const scores = this.world.setup.getScores();
+      for (let i = 0; i < 4; i++) {
+        if (scores[i] === null) {
+          continue;
+        }
+
+        const change = scores[i]! - (this.scores[i] ?? 0) - (this.scoreChanges[i] ?? 0);
+        if (skipAnimation) {
+          this.scores[i] = (this.scores[i] ?? 0) + change;
+          this.playerScores[i].innerText = numberWithCommas(this.scores[i]!);
+        } else {
+          this.scoreChanges[i] = (this.scoreChanges[i] ?? 0) + change;
+        }
+      }
+
+      if (this.scoreChanges.findIndex(s => s) === -1){
+        return;
+      }
+
+      const sticksLeft = [...this.world.slots.values()].find(s => s.name.startsWith("payment") && s.thing !== null);
+
+      if (this.scoreUpdateTimeout !== null) {
+        clearTimeout(this.scoreUpdateTimeout);
+      }
+
+      this.scoreUpdateTimeout = setTimeout(() => {
+        this.scoreUpdateTimeout = null;
+        this.isAnimatingScore = true;
+        const changes = [...this.scoreChanges];
+        for (let i = 0; i < 4; i++) {
+          if (this.scoreChanges[i] !== null) {
+            this.scoreChanges[i] = 0;
+          }
+
+          if (!changes[i]) {
+            continue;
+          }
+
+          if (changes[i]! > 0) {
+            this.playerNames[i].classList.add("gain");
+          } else {
+            this.playerNames[i].classList.add("loss");
+          }
+
+          this.playerNames[i].innerText = numberWithCommas(changes[i]!, true);
+        }
+
+        setTimeout(() => {
+          this.animateScoreChange(changes, Date.now());
+        }, 2000);
+      }, sticksLeft ? 5000 : 3000);
+    }, 0);
+  }
+
+  private animateScoreChange(changes: Array<number | null>, startTime: number): void {
+    const now = Date.now();
+    const elapsedTime = now - startTime;
+    let done = true;
+    for (let i = 0; i < 4; i++) {
+      if (changes[i] === null || this.scores[i] === null) {
+        continue;
+      }
+      done = false;
+
+      const change = changes[i]! > 0 ? Math.min(changes[i]!, elapsedTime * 10) : Math.max(changes[i]!, -elapsedTime * 10);
+      changes[i]! -= change;
+      this.scores[i] = this.scores[i]! + change;
+      this.playerNames[i].innerText = numberWithCommas(changes[i]!, true);
+      this.playerScores[i].innerText = numberWithCommas(this.scores[i] ?? 0);
+
+      if (changes[i] === 0) {
+        this.playerNames[i].innerText = this.nicks[i];
+        this.playerNames[i].classList.remove("loss");
+        this.playerNames[i].classList.remove("gain");
+        changes[i] = null;
+        continue;
+      }
+    }
+
+    if (!done) {
+      setTimeout(() => {
+        this.animateScoreChange(changes, now);
+      }, 10);
+      return;
+    }
+
+    this.isAnimatingScore = false;
+    this.updateScores(false);
   }
 
   private showRiichiNotification(seat: number): void {
@@ -194,20 +325,24 @@ export class SpectatorOverlay {
   private updateNicks(): void {
     for (let i = 0; i < 4; i++) {
       const playerId = this.client.seatPlayers[i];
-      const nick = playerId !== null ? this.client.nicks.get(playerId) : null;
+      let nick = playerId !== null ? this.client.nicks.get(playerId) : null;
       if (nick === null) {
-        this.nicks[i] = '';
-
-        continue;
+        nick = '';
+      } else if (nick === '') {
+        nick = 'Jyanshi';
       }
 
-      if (nick === '') {
-        this.nicks[i] = 'Jyanshi';
+      if(this.nicks[i] === nick) {
         continue;
       }
 
       this.nicks[i] = nick;
-      this.playerNames[i].innerText = this.nicks[i];
+
+      if (!this.isAnimatingScore) {
+        this.playerNames[i].classList.remove("gain");
+        this.playerNames[i].classList.remove("loss");
+        this.playerNames[i].innerText = this.nicks[i];
+      }
     }
   }
 
