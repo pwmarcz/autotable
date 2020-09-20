@@ -145,9 +145,6 @@ export class Game {
       case 'z':
         this.zoom.start(1);
         break;
-      case 'x':
-        this.zoom.start(-1);
-        break;
       case 'q':
         this.lookDownState = 1 - this.lookDownState;
         this.lookDown.start(this.lookDownState);
