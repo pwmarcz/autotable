@@ -5,6 +5,14 @@ import { DealType, GameType, Conditions, Points, GAME_TYPES } from './types';
 import { DEALS } from './setup-deal';
 import { MainView } from './main-view';
 
+export function setVisibility(element: HTMLElement, isVisible: boolean): void {
+  if (isVisible) {
+    element.setAttribute('style', '');
+    return;
+  }
+  element.setAttribute('style', 'display:none !important');
+}
+
 export function parseTileString(tiles: string): Record<string, number> {
   const tileMap: Record<string, number> = {};
   for (const result of [..."mpsz"].map(g => new RegExp(`[1-9]+${g}`).exec(tiles))) {
@@ -35,11 +43,21 @@ export function tileMapToString(tileMap: Record<string, number>): string {
   return desc;
 }
 
-enum SeatWind {
-  East = 0,
-  South,
-  West,
-  North,
+export class SpectatorOverlay {
+
+  private isEnabled: boolean = false;
+
+  private readonly spectatorOverlay: HTMLDivElement;
+
+  constructor(private readonly client: Client, private readonly world: World) {
+    this.spectatorOverlay = document.getElementById('spectator-ui') as HTMLDivElement;
+    setVisibility(this.spectatorOverlay, this.isEnabled);
+  }
+
+  setEnabled(isEnabled: boolean): void {
+    this.isEnabled = isEnabled;
+    setVisibility(this.spectatorOverlay, this.isEnabled);
+  }
 }
 
 export class GameUi {
@@ -72,11 +90,14 @@ export class GameUi {
   }
 
   private isSpectating: boolean = false;
+  private readonly spectatorOverlay: SpectatorOverlay;
 
   constructor(
     private readonly client: Client,
     private readonly world: World,
     private readonly mainView: MainView) {
+
+    this.spectatorOverlay = new SpectatorOverlay(client, world);
 
     this.elements = {
       sidebarBody: document.getElementById('sidebar-body')! as HTMLDivElement,
@@ -145,7 +166,7 @@ export class GameUi {
     this.client.nicks.on('update', this.updateSeats.bind(this));
     this.client.spectators.on('update', (entries) => {
       const spectators = [...this.client.spectators.entries()].filter(([key, value]) => value !== null);
-      this.setVisibility(this.elements.spectators, spectators.length > 0);
+      setVisibility(this.elements.spectators, spectators.length > 0);
       for (const [key, value] of entries) {
         const element = document.querySelector(`[data-spectator-id='${key}']`)! as HTMLDivElement;
         if (value === null) {
@@ -165,6 +186,7 @@ export class GameUi {
         `);
       }
       this.isSpectating = this.client.spectators.get(this.client.playerId()) !== null;
+      this.spectatorOverlay.setEnabled(this.isSpectating);
 
       if (this.isSpectating) {
         this.mainView.setPerspective(true);
@@ -199,7 +221,7 @@ export class GameUi {
 
     this.elements.toggleSidebar.onclick = () => {
       const isVisible = this.elements.sidebarBody.getAttribute("style")?.length! > 0;
-      this.setVisibility(this.elements.sidebarBody, isVisible);
+      setVisibility(this.elements.sidebarBody, isVisible);
       this.elements.toggleSidebar.innerHTML = isVisible ? "&lsaquo;" : "&rsaquo;";
     };
 
@@ -324,14 +346,6 @@ export class GameUi {
     this.elements.akaText.value = tileMapToString(parseTileString(this.elements.akaText.value));
   }
 
-  private setVisibility(element: HTMLElement, isVisible: boolean): void {
-    if (isVisible) {
-      element.setAttribute('style', '');
-      return;
-    }
-    element.setAttribute('style', 'display:none !important');
-  }
-
   private updateSeats(): void {
     const toDisable = [
       this.elements.deal,
@@ -340,14 +354,14 @@ export class GameUi {
       this.elements.toggleSetup,
     ];
 
-    this.setVisibility(this.elements.spectate.parentElement!, !this.isSpectating && this.client.seat === null);
-    this.setVisibility(this.elements.stopSpectate.parentElement!, this.isSpectating);
-    this.setVisibility(this.elements.spectateOptions, this.isSpectating);
-    this.setVisibility(this.elements.leaveSeat.parentElement!, this.client.seat !== null);
+    setVisibility(this.elements.spectate.parentElement!, !this.isSpectating && this.client.seat === null);
+    setVisibility(this.elements.stopSpectate.parentElement!, this.isSpectating);
+    setVisibility(this.elements.spectateOptions, this.isSpectating);
+    setVisibility(this.elements.leaveSeat.parentElement!, this.client.seat !== null);
     for (const button of toDisable) {
       button.disabled = this.client.seat === null;
     }
-    this.setVisibility(document.querySelector('.seat-buttons')! as HTMLElement, this.client.seat === null && !this.isSpectating);
+    setVisibility(document.querySelector('.seat-buttons')! as HTMLElement, this.client.seat === null && !this.isSpectating);
 
     if (this.client.seat === null) {
       for (let i = 0; i < 4; i++) {

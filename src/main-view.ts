@@ -55,7 +55,6 @@ export class MainView {
 
   constructor(private readonly mainGroup: Group, private readonly client: Client, private readonly world: World) {
     this.main = document.getElementById('main')!;
-
     this.scene = new Scene();
     this.scene.autoUpdate = false;
     this.viewGroup = new Group();
