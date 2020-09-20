@@ -47,8 +47,6 @@ export function tileMapToString(tileMap: Record<string, number>): string {
 export class SpectatorOverlay {
   private isEnabled: boolean = false;
 
-  private dora: Array<number> = [];
-
   private readonly spectatorOverlay: HTMLDivElement;
 
   private readonly roundDisplay: HTMLDivElement;
@@ -93,6 +91,10 @@ export class SpectatorOverlay {
       }
 
       for (const [key, info] of entries) {
+        if (!info) {
+          return;
+        }
+
         const thing = this.world.things.get(key);
         if (!thing) {
           continue;
@@ -104,7 +106,6 @@ export class SpectatorOverlay {
             continue;
           }
           const index = thing.getTypeIndexNoFlags();
-          console.log(index);
           let x = index % 9;
           const y = index % 40 / 9 | 0;
           if (y < 3) {
@@ -125,6 +126,18 @@ export class SpectatorOverlay {
             indicator.remove();
             continue;
           }
+        }
+
+        if (thing.slot.name.startsWith("riichi") !== info?.slotName?.startsWith("riichi")) {
+          const isRemoved = thing.slot.name.startsWith("riichi");
+          const slotName = isRemoved ? thing.slot.name : info.slotName;
+          const seat = parseInt(slotName.substring(slotName.indexOf('@') + 1));
+          if (isRemoved) {
+            this.playerDisplays[seat].classList.remove("riichi");
+          } else {
+            this.playerDisplays[seat].classList.add("riichi");
+          ]
+          continue;
         }
       }
     });
