@@ -277,7 +277,7 @@
 }
 
 [data-seat="3"] > .point-display {
-    background-image: linear-gradient(to right, #1898d8, #1898d8, #1898d8, #1a1c1f);
+    background-image: linear-gradient(to right, #40a1ca, #40a1ca, #40a1ca, #1a1c1f);
 }
 
 [data-seat="3"] .action:first-child {
@@ -296,6 +296,79 @@
     margin-left: 0.75vmin;
     font-size: 2vmin;
     padding: 0.75vmin;
+}
+
+.match-status-display {
+    display: flex;
+    align-items: stretch;
+    padding: 1vmin;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 2vmin;
+}
+
+.stick-display {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    margin-left: 2vmin;
+    margin-right: 1vmin;
+}
+
+.stick-display > * {
+    display: flex;
+    align-items: center;
+    line-height: 1.5vmin;
+    font-size: 1.5vmin;
+}
+
+.stick-display .image {
+    position: relative;
+    width: 6vmin;
+    height: 1vmin;
+    border-radius: 0.2vmin;
+    margin-right: 0.5vmin;
+}
+
+.stick-display .riichi .image {
+    background-color: #006ea7;
+}
+
+.stick-display .image:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-image: url("/img/sticks.svg");
+    background-size: 100% 900%;
+}
+
+.stick-display .riichi .image:before {
+    background-position-y: 37%;
+}
+
+.stick-display .honba .image {
+    background-color: white;
+}
+
+.match-status-display .dora {
+    background-color: white;
+    position: relative;
+    width: 3.2vmin;
+    height: 4vmin;
+    border-radius: 0.25vmin;
+}
+
+.match-status-display .dora:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-image: url("/img/tiles.svg");
+    background-size: 1000% 800%;
 }
 
 .round-display {
