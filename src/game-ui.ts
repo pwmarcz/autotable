@@ -50,6 +50,7 @@ export class SpectatorOverlay {
   private readonly spectatorOverlay: HTMLDivElement;
   private readonly honbaDisplay: HTMLDivElement;
   private readonly roundDisplay: HTMLDivElement;
+  private readonly playerDisplays: Array<HTMLDivElement> = [];
   private readonly playerNames: Array<HTMLDivElement> = [];
 
   constructor(private readonly client: Client, private readonly world: World) {
@@ -58,6 +59,7 @@ export class SpectatorOverlay {
     this.roundDisplay = document.getElementById('round-display') as HTMLDivElement;
 
     for (let i = 0; i < 4; i++) {
+      this.playerDisplays.push(document.querySelector(`.player-display [data-seat='${i}']`) as HTMLDivElement);
       this.playerNames.push(document.querySelector(`.player-display [data-seat='${i}'] .name-display`) as HTMLDivElement);
     }
 
@@ -72,6 +74,7 @@ export class SpectatorOverlay {
     this.client.match.on('update', () => {
       this.updateHonba();
       this.updateRound();
+      this.updateDealer();
     });
 
     this.client.things.on('update', (entries) => {
@@ -109,6 +112,12 @@ export class SpectatorOverlay {
 
   private updateDealer(): void {
     const dealer = this.client.match.get(0)?.dealer ?? null;
+    for (let i = 0; i < 4; i++){
+      this.playerDisplays[i].classList.remove("dealer");
+      if (dealer === i) {
+        this.playerDisplays[i].classList.add("dealer");
+      }
+    }
   }
 
   private updateRound(): void {

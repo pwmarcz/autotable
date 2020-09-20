@@ -209,12 +209,12 @@
 }
 
 .player-display .dealer-indicator {
-    padding-top: 1vmin;
+    padding-top: 0.5vmin;
+    border-bottom: 0.5vmin solid transparent;
 }
 
 .player-display .dealer .dealer-indicator {
-    padding-top: 0.5vmin;
-    border-bottom: 0.5vmin solid #be2011;
+    border-bottom-color: #be2011;
 }
 
 .name-display {
