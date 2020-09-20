@@ -383,6 +383,10 @@
     flex: 1;
 }
 
+.player-display > .push {
+    order: -1;
+}
+
 .seat-buttons {
     position: absolute;
     top: 0;

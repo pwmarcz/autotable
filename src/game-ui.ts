@@ -82,6 +82,7 @@ export class SpectatorOverlay {
       const markers = things.filter(t => t?.type === ThingType.MARKER);
       if (markers.length > 0) {
         this.updateRound();
+        this.updateSeatings();
       }
     });
 
@@ -108,6 +109,16 @@ export class SpectatorOverlay {
 
   private updateHonba(): void {
     this.honbaDisplay.innerText = (this.client.match.get(0)?.honba ?? 0).toString();
+  }
+
+  private updateSeatings(): void {
+    const marker = [...this.world.things.values()].find(t => t.type === ThingType.MARKER);
+    for (let i = 0; i < 4; i++){
+      this.playerDisplays[i].classList.remove("push");
+      if (i >= marker?.slot.seat!) {
+        this.playerDisplays[i].classList.add("push");
+      }
+    }
   }
 
   private updateDealer(): void {
