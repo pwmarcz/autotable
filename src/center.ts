@@ -159,7 +159,7 @@ export class Center {
       (this.namePlateSize.x / 2 + (seat % 2) * this.namePlateSize.y) * 10 ,
       this.namePlateSize.y * 5
     );
-    context.fillText(actualNick, 0, 0);
+    context.fillText(actualNick.substring(0, 14), 0, 0);
     this.namePlateTextures[seat].needsUpdate = true;
   }
 

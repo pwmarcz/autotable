@@ -251,7 +251,7 @@ export class SpectatorOverlay {
         setTimeout(() => {
           this.animateScoreChange(changes, Date.now());
         }, 2000);
-      }, sticksLeft ? 5000 : 3000);
+      }, sticksLeft ? 10000 : 5000);
     }, 0);
   }
 
@@ -343,6 +343,8 @@ export class SpectatorOverlay {
       } else if (nick === '') {
         nick = 'Jyanshi';
       }
+
+      nick = nick.substr(0, 14);
 
       if(this.nicks[i] === nick) {
         continue;
