@@ -1,9 +1,10 @@
 import $ from 'jquery';
 import { Client } from "./client";
 import { World } from "./world";
-import { DealType, GameType, Conditions, Points, GAME_TYPES } from './types';
+import { DealType, GameType, Conditions, Points, GAME_TYPES, ThingType } from './types';
 import { DEALS } from './setup-deal';
 import { MainView } from './main-view';
+import { Thing } from './thing';
 
 export function setVisibility(element: HTMLElement, isVisible: boolean): void {
   if (isVisible) {
@@ -44,16 +45,18 @@ export function tileMapToString(tileMap: Record<string, number>): string {
 }
 
 export class SpectatorOverlay {
-
   private isEnabled: boolean = false;
 
   private readonly spectatorOverlay: HTMLDivElement;
   private readonly honbaDisplay: HTMLDivElement;
+  private readonly roundDisplay: HTMLDivElement;
   private readonly playerNames: Array<HTMLDivElement> = [];
 
   constructor(private readonly client: Client, private readonly world: World) {
     this.spectatorOverlay = document.getElementById('spectator-ui') as HTMLDivElement;
     this.honbaDisplay = document.getElementById('honba-display') as HTMLDivElement;
+    this.roundDisplay = document.getElementById('round-display') as HTMLDivElement;
+
     for (let i = 0; i < 4; i++) {
       this.playerNames.push(document.querySelector(`.player-display [data-seat='${i}'] .name-display`) as HTMLDivElement);
     }
@@ -68,6 +71,15 @@ export class SpectatorOverlay {
 
     this.client.match.on('update', () => {
       this.updateHonba();
+      this.updateRound();
+    });
+
+    this.client.things.on('update', (entries) => {
+      const things = entries.map(([k, v]) => this.world.things.get(k)!).filter(t => t !== undefined);
+      const markers = things.filter(t => t?.type === ThingType.MARKER);
+      if (markers.length > 0) {
+        this.updateRound();
+      }
     });
 
     setVisibility(this.spectatorOverlay, this.isEnabled);
@@ -93,6 +105,21 @@ export class SpectatorOverlay {
 
   private updateHonba(): void {
     this.honbaDisplay.innerText = (this.client.match.get(0)?.honba ?? 0).toString();
+  }
+
+  private updateDealer(): void {
+    const dealer = this.client.match.get(0)?.dealer ?? null;
+  }
+
+  private updateRound(): void {
+    const marker = [...this.world.things.values()].find(t => t.type === ThingType.MARKER);
+    if (!marker) {
+      return;
+    }
+
+    this.roundDisplay.innerText = marker.rotationIndex === 0 ? "東" : "南";
+    const dealer = this.client.match.get(0)?.dealer ?? 0;
+    this.roundDisplay.innerText += `${((4 + dealer - marker.slot.seat!) % 4) + 1}局`;
   }
 
   setEnabled(isEnabled: boolean): void {
