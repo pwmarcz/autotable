@@ -47,11 +47,17 @@ export function tileMapToString(tileMap: Record<string, number>): string {
 export class SpectatorOverlay {
   private isEnabled: boolean = false;
 
+  private readonly riichiNotifications: Array<number> = [];
+  private riichiNotificationTimeout: NodeJS.Timeout | null = null;
+  private readonly nicks: Array<string> = [];
+
   private readonly spectatorOverlay: HTMLDivElement;
 
   private readonly roundDisplay: HTMLDivElement;
   private readonly honbaDisplay: HTMLDivElement;
   private readonly matchStatusDisplay: HTMLDivElement;
+
+  private readonly riichiNotification: HTMLDivElement;
 
   private readonly playerDisplays: Array<HTMLDivElement> = [];
   private readonly playerNames: Array<HTMLDivElement> = [];
@@ -62,6 +68,8 @@ export class SpectatorOverlay {
     this.roundDisplay = document.getElementById('round-display') as HTMLDivElement;
     this.honbaDisplay = document.getElementById('honba-display') as HTMLDivElement;
     this.matchStatusDisplay = document.getElementById('match-status-display') as HTMLDivElement;
+
+    this.riichiNotification = document.getElementById('riichi-notification') as HTMLDivElement;
 
     for (let i = 0; i < 4; i++) {
       this.playerDisplays.push(document.querySelector(`.player-display [data-seat='${i}']`) as HTMLDivElement);
@@ -82,7 +90,7 @@ export class SpectatorOverlay {
       this.updateDealer();
     });
 
-    this.client.things.on('update', (entries) => {
+    this.client.things.on('update', (entries, isFull) => {
       const things = entries.map(([k, v]) => this.world.things.get(k)!).filter(t => t !== undefined);
       const markers = things.filter(t => t.type === ThingType.MARKER);
       if (markers.length > 0) {
@@ -136,13 +144,51 @@ export class SpectatorOverlay {
             this.playerDisplays[seat].classList.remove("riichi");
           } else {
             this.playerDisplays[seat].classList.add("riichi");
-          ]
+            if (!isFull) {
+              this.showRiichiNotification(seat);
+            }
+          }
           continue;
         }
       }
     });
 
     setVisibility(this.spectatorOverlay, this.isEnabled);
+    setVisibility(this.riichiNotification, false);
+  }
+
+  private showRiichiNotification(seat: number): void {
+    this.riichiNotifications.push(seat);
+
+    if (this.riichiNotificationTimeout !== null) {
+      return;
+    }
+
+    this.riichiNotificationTimeout = setTimeout(() => {
+      this.processRiichiNotification();
+    }, 0);
+  }
+
+  private processRiichiNotification(): void {
+    this.riichiNotificationTimeout = null;
+    const notification = this.riichiNotifications.shift();
+    if (!notification) {
+      return;
+    }
+
+    let delay = 3000;
+    const playerName = this.riichiNotification.querySelector(".player-name") as HTMLDivElement;
+    playerName.innerText = this.nicks[notification];
+    if (playerName.innerText?.length !== 0) {
+      setVisibility(this.riichiNotification, true);
+    } else {
+      delay = 0;
+    }
+
+    this.riichiNotificationTimeout = setTimeout(() => {
+      setVisibility(this.riichiNotification, false);
+      this.processRiichiNotification();
+    }, delay);
   }
 
   private updateNicks(): void {
@@ -150,16 +196,18 @@ export class SpectatorOverlay {
       const playerId = this.client.seatPlayers[i];
       const nick = playerId !== null ? this.client.nicks.get(playerId) : null;
       if (nick === null) {
-        this.playerNames[i].innerText = '';
+        this.nicks[i] = '';
+
         continue;
       }
 
       if (nick === '') {
-        this.playerNames[i].innerText = 'Jyanshi';
+        this.nicks[i] = 'Jyanshi';
         continue;
       }
 
-      this.playerNames[i].innerText = nick;
+      this.nicks[i] = nick;
+      this.playerNames[i].innerText = this.nicks[i];
     }
   }
 

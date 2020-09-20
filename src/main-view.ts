@@ -107,9 +107,9 @@ export class MainView {
   }
 
   private applyQueueItem(previous?: AutoQueueItem): void {
+    this.queueTaskId = null;
     const change = this.autoQueue.shift();
     if (!change) {
-      this.queueTaskId = null;
       return;
     }
 
