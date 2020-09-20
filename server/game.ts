@@ -9,7 +9,7 @@ export type Client = {
   send(data: string): void;
 }
 
-const MAX_PLAYERS = 8;
+const MAX_PLAYERS = 16;
 
 const EXPIRY_HOURS = 2;
 const EXPIRY_TIME = EXPIRY_HOURS * 60 * 60 * 1000;
