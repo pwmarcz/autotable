@@ -142,9 +142,6 @@ export class Game {
       case ' ':
         this.lookDown.start(1);
         break;
-      case 'z':
-        this.zoom.start(1);
-        break;
       case 'q':
         this.lookDownState = 1 - this.lookDownState;
         this.lookDown.start(this.lookDownState);
@@ -162,9 +159,6 @@ export class Game {
     switch(event.key) {
       case ' ':
         this.lookDown.start(0);
-        break;
-      case 'z':
-        this.zoom.start(0);
         break;
     }
   }
