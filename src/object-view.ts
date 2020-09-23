@@ -112,7 +112,7 @@ export class ObjectView {
       for (let j = 0; j < 6; j++) {
         const trayPos = new Vector3(
           25 + 24 * j - World.WIDTH / 2,
-          -33 - World.WIDTH / 2,
+          -66 - World.WIDTH / 2,
           0
         );
         trayPos.applyAxisAngle(new Vector3(0, 0, 1), Math.PI * i / 2);

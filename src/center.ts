@@ -63,54 +63,10 @@ export class Center {
     this.client.seats.on('update', this.update.bind(this));
     this.client.things.on('update', this.update.bind(this));
 
-    for (let i = 0; i < 4; i++) {
-      const namePlateWidth = this.namePlateSize.x + (i % 2) * (2 * this.namePlateSize.y);
-
-      this.namePlateCanvases[i] = document.getElementById(`name-plate-${i}`)! as HTMLCanvasElement;
-      this.namePlateCanvases[i].width = namePlateWidth * 10;
-      this.namePlateCanvases[i].height = this.namePlateSize.y * 10;
-      this.namePlateContexts[i] = this.namePlateCanvases[i].getContext('2d')!;
-
-      const group = new Group();
-      this.group.add(group);
-      group.rotateZ(Math.PI * i / 2);
-
-      const wallMesh = new Mesh(
-        new PlaneGeometry(
-          this.namePlateSize.x,
-          Size.TILE.z * 2,
-        ),
-        new MeshLambertMaterial({ color: 0xeeeedd })
-      );
-      wallMesh.rotation.set(-Math.PI / 2, 0, 0);
-      wallMesh.position.set(0, (-AssetLoader.worldSize) / 2, 0);
-      group.add(wallMesh);
-
-
-      const namePlateGeometry = new PlaneGeometry(
-        namePlateWidth,
-        this.namePlateSize.y
-      );
-
-      const material = new MeshLambertMaterial(
-        {
-          color: 0xffffff,
-        }
-      );
-      const namePlateMesh = new Mesh(namePlateGeometry, material);
-      // namePlateMesh.rotation.set(Math.PI / 180 * 5, 0, 0);
-      group.add(namePlateMesh);
-      namePlateMesh.position.set(0, (-AssetLoader.worldSize - this.namePlateSize.y) / 2, Size.TILE.z - 0.3);
-
-      const texture = new CanvasTexture(this.namePlateCanvases[i]);
-      this.namePlateTextures.push(texture);
-      texture.flipY = true;
-      texture.center = new Vector2(0.5, 0.5);
-      texture.anisotropy = 16;
-      material.map = texture;
-
-      this.updateNamePlate(i, this.nicks[i]);
-    }
+    const tableEdge = loader.makeTableEdge();
+    tableEdge.position.set(0, 0, (-25.5 / 2) + Size.TILE.z);
+    this.group.add(tableEdge);
+    tableEdge.updateMatrixWorld();
 
     client.on('disconnect', this.update.bind(this));
   }
@@ -118,6 +74,7 @@ export class Center {
   private readonly namePlates: Array<string> = [];
 
   private updateNamePlate(seat: number, nick: string | null): void {
+    return;
     const actualNick = nick ?? "";
     if (this.namePlates[seat] === actualNick) {
       return;
