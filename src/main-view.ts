@@ -7,7 +7,6 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { World } from './world';
 import { Client } from './client';
 import { ThingInfo } from './types';
-import { runInThisContext } from 'vm';
 
 const RATIO = 1.5;
 
@@ -304,7 +303,7 @@ export class MainView {
         break;
       } case CameraPosition.PlayerView: {
         this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 1.05);
-        this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2, 0, 0);
+        this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.22, 0, 0);
         if (zoom !== 0) {
           const dist = new Vector3(0, 1.37, -1).multiplyScalar(zoom * 55);
           this.camera.position.add(dist);
@@ -343,7 +342,7 @@ export class MainView {
       case CameraPosition.PlayerView: {
         this.camera.position.set(
           0,
-          -53 * lookDown - World.WIDTH,
+          -64 * lookDown - World.WIDTH,
           174);
         this.camera.rotation.set(Math.PI * 0.25, 0, 0);
         this.camera.scale.setScalar(1 - 0.45 * zoom);

@@ -216,7 +216,7 @@ const START: Record<string, Slot> = {
     name: `tray`,
     group: `tray`,
     type: ThingType.STICK,
-    origin: new Vector3(15, -25, 0),
+    origin: new Vector3(15, -41, 0),
     rotations: [Rotation.FACE_UP],
   }),
 
