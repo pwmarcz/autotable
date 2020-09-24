@@ -83,9 +83,13 @@ export class Movement {
           rotationIndex = matchingIndex;
         }
       } else {
-        rotationIndex = thing.slot.group === slot.group
-         ? thing.rotationIndex
-         : Math.max(0, slot.rotationOptions.findIndex(r => r.equals(thing.slot.rotationOptions[thing.rotationIndex])));
+        if (slot.group === 'meld' && thing.slot.group == 'discard') {
+            rotationIndex = 1;
+        } else {
+            rotationIndex = thing.slot.group === slot.group
+             ? thing.rotationIndex
+             : Math.max(0, slot.rotationOptions.findIndex(r => r.equals(thing.slot.rotationOptions[thing.rotationIndex])));
+        }
       }
 
       thing.moveTo(slot, rotationIndex);
