@@ -1,5 +1,5 @@
 import { AssetLoader } from "./asset-loader";
-import { Mesh, CanvasTexture, Vector2, MeshLambertMaterial, PlaneGeometry, Group } from "three";
+import { Mesh, CanvasTexture, Vector2, MeshLambertMaterial, Group } from "three";
 import { Client } from "./client";
 import { World } from "./world";
 import { Size } from "./types";
@@ -20,9 +20,9 @@ export class Center {
   client: Client;
 
   private readonly namePlateSize = new Vector2(
-    AssetLoader.worldSize,
-    World.WIDTH / 12
-  );
+    128 * 8,
+    15.5 * 4 * 8,
+  ).multiplyScalar(8);
   private readonly namePlateContexts: Array<CanvasRenderingContext2D> = [];
   private readonly namePlateCanvases: Array<HTMLCanvasElement> = [];
   private readonly namePlateTextures: Array<CanvasTexture> = [];
@@ -68,13 +68,41 @@ export class Center {
     this.group.add(tableEdge);
     tableEdge.updateMatrixWorld();
 
+    for (let i = 0; i < 4; i++) {
+      this.namePlateCanvases[i] = document.getElementById(`name-plate-${i}`)! as HTMLCanvasElement;
+      this.namePlateCanvases[i].width = this.namePlateSize.x;
+      this.namePlateCanvases[i].height = this.namePlateSize.y;
+      this.namePlateContexts[i] = this.namePlateCanvases[i].getContext('2d')!;
+
+      const namePlate = loader.makeNamePlate();
+      namePlate.position.set(0, -World.WIDTH / 2 - 23, 3);
+      namePlate.rotateX(Math.PI);
+      this.group.add(namePlate);
+
+      const group = new Group();
+      this.group.add(group);
+      group.rotateZ(Math.PI * i / 2);
+      group.add(namePlate);
+
+      group.updateMatrixWorld(true);
+
+      const texture = new CanvasTexture(this.namePlateCanvases[i]);
+      this.namePlateTextures.push(texture);
+      texture.flipY = false;
+      texture.center = new Vector2(0.5, 0.5);
+      texture.anisotropy = 16;
+      const material = namePlate.material as MeshLambertMaterial;
+      material.map = texture;
+
+      this.updateNamePlate(i, this.nicks[i]);
+    }
+
     client.on('disconnect', this.update.bind(this));
   }
 
   private readonly namePlates: Array<string> = [];
 
   private updateNamePlate(seat: number, nick: string | null): void {
-    return;
     const actualNick = nick ?? "";
     if (this.namePlates[seat] === actualNick) {
       return;
@@ -82,39 +110,31 @@ export class Center {
 
     this.namePlates[seat] = actualNick;
 
-    const namePlateWidth = this.namePlateSize.x + (seat % 2) * (2 * this.namePlateSize.y);
     const context = this.namePlateContexts[seat];
 
     context.resetTransform();
 
     context.fillStyle = '#ddddd0';
-    context.fillRect(0, 0, namePlateWidth * 10, this.namePlateSize.y * 10);
-    const xOffset = (this.namePlateSize.x / 5 * 2 + (seat % 2) * this.namePlateSize.y) * 10  ;
+    context.fillRect(0, 0, this.namePlateSize.x, this.namePlateSize.y);
 
     context.fillStyle = this.namePlateColors[seat];
     context.fillRect(
-      xOffset,
-      this.namePlateSize.y * 10 / 6 ,
-      this.namePlateSize.x  * 10 / 5,
-      this.namePlateSize.y * 10 / 3 * 2
+      0,
+      0,
+      this.namePlateSize.x,
+      this.namePlateSize.y
     );
 
     context.strokeStyle = '#888888';
     context.lineWidth = 2;
-    context.strokeRect(
-      xOffset,
-      this.namePlateSize.y * 10 / 6 ,
-      this.namePlateSize.x * 10 / 5,
-      this.namePlateSize.y * 10 / 3 * 2
-    );
 
     context.textAlign = 'center';
-    context.font = `${this.namePlateSize.y * 5 / 2}px Koruri`;
+    context.font = `${this.namePlateSize.y / 6}px Koruri`;
     context.fillStyle = '#fff';
     context.textBaseline = 'middle';
     context.translate(
-      (this.namePlateSize.x / 2 + (seat % 2) * this.namePlateSize.y) * 10 ,
-      this.namePlateSize.y * 5
+      this.namePlateSize.x / 2,
+      this.namePlateSize.y / 3.5
     );
     context.fillText(actualNick.substring(0, 14), 0, 0);
     this.namePlateTextures[seat].needsUpdate = true;

@@ -31,6 +31,12 @@ export class AssetLoader {
     return this.cloneMesh(this.meshes.center);
   }
 
+  makeNamePlate(): Mesh {
+    const mesh = this.cloneMesh(this.meshes.name_plate);
+    // (mesh.material as MeshStandardMaterial).color.setHex(0xddddd0);
+    return mesh;
+  }
+
   makeTableEdge(): Mesh {
     const mesh = this.cloneMesh(this.meshes.table_edge);
     (mesh.material as MeshStandardMaterial).color.setHex(0xddddd0);
