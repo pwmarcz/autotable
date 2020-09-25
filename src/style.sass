@@ -1,0 +1,396 @@
+body
+    background-color: red
+
+#full
+    position: fixed
+    top: 0
+    bottom: 0
+    left: 0
+    right: 0
+    background-color: #222
+
+#main
+    position: absolute
+    top: 50%
+    left: 50%
+    transform: translate(-50%, -50%)
+    overflow: hidden
+
+#selection
+    position: absolute
+    z-index: 1
+    border: 1px solid rgba(160, 85, 0, 0.8)
+    background-color: rgba(160, 85, 0, 0.2)
+    pointer-events: none
+    visibility: hidden
+
+.cursor
+    position: absolute
+    background: url(../img/hand.svg)
+    background-size: 100%
+    width: 50px
+    height: 35px
+    z-index: 2
+    /* border: 1px solid red */
+
+    margin-left: -20px
+    margin-top: -5px
+    transform-origin: 20px 5px
+    pointer-events: none
+    opacity: 0.6
+
+    visibility: hidden
+
+.cursor.rotate-1
+    transform: rotate(-90deg)
+.cursor.rotate-2
+    transform: rotate(-180deg)
+.cursor.rotate-3
+    transform: rotate(-270deg)
+
+.cursor
+    visibility: visible
+    top: 50%
+    left: 20%
+
+.cursor.rotate-1
+    visibility: visible
+    top: 50%
+    left: 40%
+
+.cursor.rotate-2
+    visibility: visible
+    top: 80%
+    left: 20%
+
+.cursor.rotate-3
+    visibility: visible
+    top: 80%
+    left: 40%
+
+.mark
+    position: absolute
+    top: 100px
+    left: 100px
+    width: 10px
+    height: 10px
+    background: white
+
+#sidebar
+    position: absolute
+    top: 0
+    left: 0
+    height: 100%
+    background: rgba(30,30,30, 0.6)
+    user-select: none
+
+#sidebar-body
+    min-width: 220px
+
+#toggle-sidebar
+    cursor: pointer
+
+#toggle-sidebar:hover
+    color: grey !important
+
+.dropdown-menu
+    background: rgba(30,30,30, 0.8) !important
+
+#server:not(.connected) .server-connected
+    display: none
+
+#server.connected .server-disconnected
+    display: none
+
+#center, #name-plate-0, #name-plate-1, #name-plate-2, #name-plate-3
+    display: none
+
+#deal
+    position: relative
+
+.btn-progress
+    position: absolute
+    top: 0
+    left: 0
+    bottom: 0
+    width: 0%
+    background: #fff2ca
+    transition: width 600ms
+.btn-progress-text
+    position: relative
+
+#spectator-ui
+    font-family: 'Koruri'
+    color: white
+    position: absolute
+    top: 0
+    bottom: 0
+    left: 0
+    right: 0
+    display: flex
+    flex-direction: column
+    user-select: none
+    padding: 3vmin 4vmin
+
+.player-display
+    display: flex
+    text-align: right
+    padding: 0 5vmin
+    align-items: flex-end
+    padding-right: 7vmin
+
+.point-display
+    margin-left: 2vmin
+    position: relative
+    font-size: 3vmin
+    padding: 0vmin 1.5vmin
+
+.point-display .actions
+    display: flex
+    align-items: flex-end
+    position: absolute
+    z-index: 0
+    bottom: 1vmin
+
+// @media (max-aspect-ratio: 1/1)
+
+.point-display .action:first-child
+    color: black
+    border-radius: 0.5vmin
+    width: 6vmin
+    height: 8vmin
+    text-align: center
+    line-height: 8vmin
+    font-size: 4vmin
+
+.player-display .riichi .action:first-child
+    width: 5vmin
+    height: 7vmin
+    line-height: 7vmin
+    margin: 0.4vmin 0vmin
+    background-color: white
+    background-clip: padding-box
+
+.player-display .riichi .action:first-child:before
+    content: ''
+    z-index: -1
+    position: absolute
+    top: 0
+    right: 0
+    bottom: 0
+    left: 0
+    margin: -0.4vmin
+    border-radius: inherit
+    background: linear-gradient(-45deg, #cbb364 0%, #cbb364 76%, #c81b20 76%, #c81b20 100%)
+
+.point-display .action
+    margin-left: 1vmin
+
+.point-display .action
+    cursor: pointer
+    position: relative
+    color: black
+    background-color: white
+    border-radius: 0.5vmin
+    line-height: 4vmin
+    text-align: center
+    width: 4vmin
+    height: 4vmin
+    font-size: 2vmin
+
+.point-display .action:hover
+    font-weight: bold
+
+.point-display > .points
+    flex: 1
+
+.player-display .dealer-indicator
+    padding-top: 0.5vmin
+    border-bottom: 0.5vmin solid transparent
+
+.player-display .dealer .dealer-indicator
+    border-bottom-color: #be2011
+
+.name-display
+    font-size: 2.5vmin
+    padding-right: 1vmin
+
+.name-display.gain, .name-display.loss
+    font-size: 3vmin
+    padding-right: 1.5vmin
+    color: #33d880
+
+.name-display.loss
+    color: #a6101f
+
+#riichi-notification
+    align-self: center
+    display: flex
+    font-size: 5vmin
+
+#riichi-notification .player-name
+    border-top-left-radius: 2vmin
+    border-bottom-left-radius: 2vmin
+    padding-left: 5vmin
+    background-color: #c81b20
+
+$namePlateColors: ("0": #e98e1a, "1": #b7a581, "2": #da89a0, "3": #40a1ca)
+$pointDisplayColorBright: ("0": #c26328, "1": #695737, "2": #ffcfe2, "3": #2995d4)
+$pointDisplayColorDark: ("0": #261b18, "1": #1f1f1f, "2": #0d050c, "3": #1a1c1f)
+
+#riichi-notification .riichi
+    border-top-right-radius: 2vmin
+    border-bottom-right-radius: 2vmin
+    padding: 0vmin 5vmin
+    background: linear-gradient(-85deg, #cbb364 0%, #cbb364 87%, #c81b20 87%, #c81b20 100%)
+
+@for $i from 0 to 4
+    [data-seat="#{$i}"] > .point-display
+        background-image: linear-gradient(to right, map-get($pointDisplayColorBright, "#{$i}") 50%, map-get($pointDisplayColorDark, "#{$i}") 100%)
+
+    [data-seat="#{$i}"] .action:first-child
+        background: linear-gradient(-45deg, map-get($namePlateColors, "#{$i}"), map-get($namePlateColors, "#{$i}") 20%, white 20%, white 80%, map-get($namePlateColors, "#{$i}") 80%, map-get($namePlateColors, "#{$i}") 100%)
+
+#spectator-ui > .header
+    display: flex
+    align-items: center
+    padding-right: 2.5vmin
+
+.header > .view-change-action
+    border-radius: 5px
+    background-color:rgba(200, 200, 200, 0.2)
+    margin-left: 0.75vmin
+    font-size: 2vmin
+    padding: 0.75vmin
+    cursor: pointer
+
+.header > .view-change-action:hover
+    background-color: rgba(200, 200, 200, 0.5)
+
+.match-status-display
+    display: flex
+    align-items: center
+    padding: 1vmin
+    background-color: rgba(0, 0, 0, 0.5)
+    border-radius: 2vmin
+
+.stick-display
+    display: flex
+    flex-direction: column
+    justify-content: space-around
+    align-self: stretch
+    margin-left: 2vmin
+    margin-right: 1vmin
+
+.stick-display > *
+    display: flex
+    align-items: center
+    line-height: 1.5vmin
+    font-size: 1.5vmin
+
+.stick-display .image
+    position: relative
+    width: 6vmin
+    height: 1vmin
+    border-radius: 0.2vmin
+    margin-right: 0.5vmin
+
+.stick-display .riichi .image
+    background-color: #006ea7
+
+.stick-display .image:before
+    content: ''
+    position: absolute
+    top: 0
+    bottom: 0
+    left: 0
+    right: 0
+    background-image: url("../img/sticks.svg")
+    background-size: 100% 900%
+
+.stick-display .riichi .image:before
+    background-position-y: 37%
+
+.stick-display .honba .image
+    background-color: white
+
+.match-status-display .dora
+    margin-left: 0.5vmin
+    background-color: white
+    position: relative
+    width: 3.2vmin
+    height: 4vmin
+    border-radius: 0.25vmin
+
+.match-status-display .dora > div
+    width: 100%
+    height: 100%
+    background-image: url("../img/tiles.svg")
+    background-size: 1000% 800%
+
+.round-display
+    font-size: 3vmin
+    line-height: 3vmin
+    padding: 0.2vmin 1vmin
+    border-radius: 1vmin
+    border: 0.5vmin solid white
+
+.player-display > div
+    flex: 1
+
+.player-display > .push
+    order: -1
+
+.seat-buttons
+    position: absolute
+    top: 0
+    bottom: 0
+    left: 0
+    right: 0
+    background-color: rgba(30, 30, 30, 0.4)
+    display: block
+.seat-button
+    position: absolute
+.seat-button-0
+    bottom: 20px
+    left: 50%
+    transform: translate(-50%, 0)
+.seat-button-1
+    top: 50%
+    right: 20%
+    transform: translate(0, -50%)
+.seat-button-2
+    top: 20px
+    left: 50%
+    transform: translate(-50%, 0)
+.seat-button-3
+    top: 50%
+    left: 20%
+    transform: translate(0, -50%)
+
+/* https://fontlibrary.org/en/font/segment7 */
+@font-face
+    font-family: 'Segment7Standard'
+    src: url('../img/Segment7Standard.otf') format('opentype')
+    font-weight: normal
+    font-style: italic
+
+@font-face
+    font-family: 'Koruri'
+    src: url('//cdn.plusminus.io/font/webkoruri/20140628/WebKoruri.eot')
+    src: url('//cdn.plusminus.io/font/webkoruri/20140628/WebKoruri.eot?#iefix') format('embedded-opentype')
+    src: url('//cdn.plusminus.io/font/webkoruri/20140628/WebKoruri.woff') format('woff'), url('//cdn.plusminus.io/font/webkoruri/20140628/WebKoruri.ttf') format('truetype')
+
+    /*  for fuck'n chrome  */
+    // src: url(//cdn.plusminus.io/font/webkoruri/20140628/WebKoruri.woff) format('woff')
+
+.dark-select
+    background-color: #343a40 !important
+    border-color: #343a40 !important
+    color: #fff !important
+.dark-select:focus
+    box-shadow: 0 0 0 0.2rem rgba(130, 138, 145, 0.5) !important
+
+/* Override system setting */
+.collapsing
+    transition: height 0.2s ease !important
