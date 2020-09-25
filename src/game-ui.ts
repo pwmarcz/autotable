@@ -205,6 +205,7 @@ export class GameUi {
     });
     for (let i = 0; i < 4; i++) {
       this.elements.takeSeat[i].onclick = () => {
+        this.objectView.rotateTableCloth(i);
         this.client.nicks.set(this.client.playerId(), this.elements.nick.value);
         this.client.seats.set(this.client.playerId(), { seat: i });
       };

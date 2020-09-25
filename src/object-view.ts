@@ -109,9 +109,15 @@ export class ObjectView {
     material.map = texture;
   }
 
-  resetTableCloth() {
+  resetTableCloth(): void {
     const material = this.tableMesh.material as MeshLambertMaterial;
     material.map = this.assetLoader.textures.table;
+  }
+
+
+  rotateTableCloth(seat: number): void {
+    this.tableMesh.rotation.set(0, 0, Math.PI / 2 * seat);
+    this.tableMesh.updateMatrixWorld();
   }
 
   private addStatic(): void {
