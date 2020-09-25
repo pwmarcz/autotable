@@ -273,7 +273,7 @@ export class SpectatorOverlay {
   private processRiichiNotification(): void {
     this.riichiNotificationTimeout = null;
     const notification = this.riichiNotifications.shift();
-    if (!notification) {
+    if (notification === undefined) {
       return;
     }
 
