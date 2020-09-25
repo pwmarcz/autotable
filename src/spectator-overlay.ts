@@ -77,7 +77,7 @@ export class SpectatorOverlay {
 
         if (thing.type === ThingType.MARKER) {
           const seat = parseInt(info.slotName.substring(info.slotName.indexOf('@') + 1));
-          this.updateRound();
+          this.updateRound(info.rotationIndex, seat);
           this.updateSeatings(seat);
           continue;
         }
@@ -342,15 +342,23 @@ export class SpectatorOverlay {
     }
   }
 
-  private updateRound(): void {
+  private updateRound(rotation?: number, seat?: number): void {
     const marker = [...this.world.things.values()].find(t => t.type === ThingType.MARKER);
     if (!marker) {
       return;
     }
 
-    this.roundDisplay.innerText = marker.rotationIndex === 0 ? "東" : "南";
+    if (rotation === undefined) {
+      rotation = marker.rotationIndex;
+    }
+
+    if (seat === undefined) {
+      seat = marker.slot.seat!;
+    }
+
+    this.roundDisplay.innerText = rotation === 0 ? "東" : "南";
     const dealer = this.client.match.get(0)?.dealer ?? 0;
-    this.roundDisplay.innerText += `${((4 + dealer - marker.slot.seat!) % 4) + 1}局`;
+    this.roundDisplay.innerText += `${((4 + dealer - seat) % 4) + 1}局`;
   }
 
   setEnabled(isEnabled: boolean): void {
