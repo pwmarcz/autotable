@@ -5,6 +5,8 @@ import { DealType, GameType, Conditions, Points, GAME_TYPES } from './types';
 import { DEALS } from './setup-deal';
 import { MainView } from './main-view';
 import { SpectatorOverlay } from './spectator-overlay';
+import { AssetLoader } from './asset-loader';
+import { ObjectView } from './object-view';
 
 export function setVisibility(element: HTMLElement, isVisible: boolean): void {
   if (isVisible) {
@@ -67,6 +69,7 @@ export class GameUi {
     spectate: HTMLButtonElement;
     stopSpectate: HTMLButtonElement;
     spectators: HTMLDivElement;
+    tableClothInput: HTMLInputElement;
 
     viewTop: HTMLDivElement;
     viewDora: HTMLDivElement;
@@ -81,7 +84,10 @@ export class GameUi {
   constructor(
     private readonly client: Client,
     private readonly world: World,
-    private readonly mainView: MainView) {
+    private readonly mainView: MainView,
+    private readonly assetLoader: AssetLoader,
+    private readonly objectView: ObjectView,
+  ) {
 
     this.spectatorOverlay = new SpectatorOverlay(client, world);
 
@@ -107,6 +113,7 @@ export class GameUi {
       spectate: document.getElementById('spectate')! as HTMLButtonElement,
       stopSpectate: document.getElementById('stop-spectate')! as HTMLButtonElement,
       spectators: document.getElementById('spectators')! as HTMLDivElement,
+      tableClothInput: document.getElementById('table-cloth-input')! as HTMLInputElement,
 
       viewTop: document.getElementById('view-top')! as HTMLDivElement,
       viewDora: document.getElementById('view-dora')! as HTMLDivElement,
@@ -238,6 +245,28 @@ export class GameUi {
         return;
       }
       this.trySetSpectating(true);
+    };
+
+    this.elements.tableClothInput.onchange = (event) => {
+      const reader = new FileReader();
+      const input = event.target as HTMLInputElement;
+      if (!input.files) {
+        return;
+      }
+
+      const file = input.files[0];
+      if (!file) {
+        return;
+      }
+
+      reader.onload = (e) => {
+        const url = e.target?.result as string;
+        this.assetLoader.loadTableCloth(url).then(() => {
+          this.objectView.setTableCloth();
+        });
+      };
+
+      reader.readAsDataURL(input.files[0]);
     };
 
     this.elements.removeSpectatorPassword.onclick = () => {

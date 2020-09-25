@@ -14,6 +14,7 @@ import { Size } from './types';
 
 export class AssetLoader {
   static readonly worldSize = World.WIDTH + Size.TILE.y * 2;
+  private static readonly TableClothLocalStorageKey = "_tableClothDataUrl";
   textures: Record<string, Texture> = {};
   meshes: Record<string, Mesh> = {};
 
@@ -22,7 +23,10 @@ export class AssetLoader {
       AssetLoader.worldSize,
       AssetLoader.worldSize
     );
-    const tableMaterial = new MeshLambertMaterial({ color: 0xeeeeee, map: this.textures.table });
+    const tableMaterial = new MeshLambertMaterial({
+      color: 0xeeeeee,
+      map: this.textures.customTableCloth ?? this.textures.table
+    });
     const tableMesh = new Mesh(tableGeometry, tableMaterial);
     return tableMesh;
   }
@@ -69,12 +73,19 @@ export class AssetLoader {
   }
 
   loadAll(): Promise<void> {
-    return Promise.all([
+    const tasks = [
       this.loadTexture(jpg['table'], 'table'),
       this.loadTexture(png['tiles.washizu.auto'], 'tiles.washizu.auto'),
       this.loadModels(glbModels),
       (document as any).fonts.load('40px "Segment7Standard"'),
-    ]).then(() => {
+    ];
+
+    const savedCloth = localStorage.getItem(AssetLoader.TableClothLocalStorageKey);
+    if (savedCloth) {
+      tasks.push(this.loadTableCloth(savedCloth));
+    }
+
+    return Promise.all(tasks).then(() => {
       this.textures.table.wrapS = RepeatWrapping;
       this.textures.table.wrapT = RepeatWrapping;
       this.textures.table.repeat.set(3, 3);
@@ -82,12 +93,21 @@ export class AssetLoader {
     });
   }
 
-  loadTexture(url: string, name: string): Promise<void> {
+  loadTableCloth(url: string): Promise<void> {
+    return this.loadTexture(url, "customTableCloth").then((texture) => {
+      texture.flipY = true;
+      if (url.length < 600000) {
+        localStorage.setItem(AssetLoader.TableClothLocalStorageKey, url);
+      }
+    });
+  }
+
+  loadTexture(url: string, name: string): Promise<Texture> {
     const loader = new TextureLoader();
     return new Promise(resolve => {
       loader.load(url, (texture: Texture) => {
-        this.textures[name] = this.processTexture(texture);;
-        resolve();
+        this.textures[name] = this.processTexture(texture);
+        resolve(this.textures[name]);
       });
     });
   }

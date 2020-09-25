@@ -34,6 +34,7 @@ export class ObjectView {
   private dropShadowObjects: Array<Mesh>;
 
   selectedObjects: Array<Mesh>;
+  tableMesh: Mesh;
 
   constructor(mainGroup: Group, assetLoader: AssetLoader, client: Client) {
     this.mainGroup = mainGroup;
@@ -98,14 +99,23 @@ export class ObjectView {
     this.shadowObject.instanceMatrix.needsUpdate = true;
   }
 
+  setTableCloth(): void {
+    const texture = this.assetLoader.textures.customTableCloth;
+    if (!texture) {
+      return;
+    }
+
+    const material = this.tableMesh.material as MeshLambertMaterial;
+    material.map = texture;
+  }
+
   private addStatic(): void {
-    const tableMesh = this.assetLoader.makeTable();
-    tableMesh.position.set(World.WIDTH / 2, World.WIDTH / 2, -0.01);
+    this.tableMesh = this.assetLoader.makeTable();
+    this.tableMesh.position.set(World.WIDTH / 2, World.WIDTH / 2, -0.01);
+    this.mainGroup.add(this.tableMesh);
+    this.tableMesh.updateMatrixWorld();
 
-    this.mainGroup.add(tableMesh);
     this.mainGroup.add(this.center.group);
-
-    tableMesh.updateMatrixWorld();
     this.center.group.updateMatrixWorld(true);
 
     for (let i = 0; i < 4; i++) {
