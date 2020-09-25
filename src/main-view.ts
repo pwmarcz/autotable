@@ -187,6 +187,11 @@ export class MainView {
             delay: 3000,
           });
 
+          this.autoQueue.push({
+            view: CameraPosition.HandSpectator,
+            squashable: true,
+          });
+
           return true;
         }
       }
