@@ -109,6 +109,11 @@ export class ObjectView {
     material.map = texture;
   }
 
+  resetTableCloth() {
+    const material = this.tableMesh.material as MeshLambertMaterial;
+    material.map = this.assetLoader.textures.table;
+  }
+
   private addStatic(): void {
     this.tableMesh = this.assetLoader.makeTable();
     this.tableMesh.position.set(World.WIDTH / 2, World.WIDTH / 2, -0.01);

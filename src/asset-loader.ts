@@ -102,6 +102,11 @@ export class AssetLoader {
     });
   }
 
+  forgetTableCloth() {
+    localStorage.removeItem(AssetLoader.TableClothLocalStorageKey);
+    delete this.textures.customTableCloth;
+  }
+
   loadTexture(url: string, name: string): Promise<Texture> {
     const loader = new TextureLoader();
     return new Promise(resolve => {

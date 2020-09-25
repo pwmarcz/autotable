@@ -70,6 +70,7 @@ export class GameUi {
     stopSpectate: HTMLButtonElement;
     spectators: HTMLDivElement;
     tableClothInput: HTMLInputElement;
+    resetTableCloth: HTMLButtonElement;
 
     viewTop: HTMLDivElement;
     viewDora: HTMLDivElement;
@@ -114,6 +115,7 @@ export class GameUi {
       stopSpectate: document.getElementById('stop-spectate')! as HTMLButtonElement,
       spectators: document.getElementById('spectators')! as HTMLDivElement,
       tableClothInput: document.getElementById('table-cloth-input')! as HTMLInputElement,
+      resetTableCloth: document.getElementById('reset-table-cloth')! as HTMLButtonElement,
 
       viewTop: document.getElementById('view-top')! as HTMLDivElement,
       viewDora: document.getElementById('view-dora')! as HTMLDivElement,
@@ -237,6 +239,11 @@ export class GameUi {
 
     this.elements.viewDora.onclick = () => {
       this.mainView.spectateDora();
+    };
+
+    this.elements.resetTableCloth.onclick = () => {
+      this.assetLoader.forgetTableCloth();
+      this.objectView.resetTableCloth();
     };
 
     this.elements.nick.oninput = this.elements.nick.onchange = (event) => {
