@@ -209,7 +209,7 @@ export class SpectatorOverlay {
         setTimeout(() => {
           this.animateScoreChange(changes, Date.now());
         }, 2000);
-      }, sticksLeft ? 10000 : 5000);
+      }, sticksLeft ? 30000 : 10000);
     }, 0);
   }
 
