@@ -1,5 +1,6 @@
 import { Vector3, Vector2, Euler } from "three";
 import { Slot } from "./slot";
+import { TileThingGroup } from "./thing-group";
 import { Size, ThingType, GameType } from "./types";
 
 const WORLD_SIZE = 174;
@@ -137,7 +138,7 @@ const START: Record<string, Slot> = {
   'meld': new Slot({
     name: `meld`,
     group: `meld`,
-    origin: new Vector3(174, 0, 0),
+    origin: new Vector3(174 + Size.TILE.x, 0, 0),
     direction: new Vector2(-1, 1),
     rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
   }),
