@@ -163,12 +163,26 @@ export class MainView {
         if (info.rotationIndex === 1 && thing.rotationIndex !== info.rotationIndex) {
           // set the first tile flipped in the round as the dora indicator location
           if (this.doraIndicatorLocation === null) {
-            this.doraIndicatorLocation = thing.slot.places[0].position.clone();
+            this.doraIndicatorLocation = this.world.slots.get(info.slotName)!.places[0].position.clone();
             this.doraIndicatorLocation.setZ(0);
           }
 
+          if (info.slotName.includes("0@")) {
+            this.autoQueue.push({
+              seat: 0,
+              view: CameraPosition.DoraSpectator,
+              delay: 3000,
+            });
+
+            this.autoQueue.push({
+              seat: 0,
+              view: CameraPosition.TopDown,
+              squashable: true,
+            });
+            return true;
+          }
+
           this.autoQueue.push({
-            seat: 0,
             view: CameraPosition.DoraSpectator,
             delay: 3000,
           });
@@ -196,7 +210,7 @@ export class MainView {
         this.autoQueue.push({
           seat,
           view: CameraPosition.CallSpectator,
-          delay: 1500,
+          delay: 2500,
         });
 
         this.autoQueue.push({
