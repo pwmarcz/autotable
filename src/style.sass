@@ -140,7 +140,6 @@ body
     padding-right: 7vmin
 
 .point-display
-    margin-left: 2vmin
     position: relative
     font-size: 3vmin
     padding: 0vmin 1.5vmin
@@ -335,11 +334,13 @@ $pointDisplayColorDark: ("0": #261b18, "1": #1f1f1f, "2": #0d050c, "3": #1a1c1f)
     border-radius: 1vmin
     border: 0.5vmin solid white
 
-.player-display > div
-    flex: 1
+.player-display
+    > div
+        margin-left: 2vmin
+        flex: 1
 
-.player-display > .push
-    order: -1
+    > .push
+        order: -1
 
 .seat-buttons
     position: absolute
