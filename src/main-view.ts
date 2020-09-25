@@ -426,7 +426,7 @@ export class MainView {
 
   spectateAuto(): void {
     this.autoSpectate = true;
-    this.autoCameraPosition = CameraPosition.TopDown;
-    this.autoActiveSeat = 0;
+    this.autoCameraPosition = this.cameraPosition;
+    this.autoActiveSeat = this.activeSeat;
   }
 }
