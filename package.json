@@ -26,6 +26,6 @@
   },
   "scripts": {
     "start": "cd server && node dist/index.js",
-    "postinstall": "cd server && tsc",
+    "postinstall": "cd server && tsc"
   }
 }
