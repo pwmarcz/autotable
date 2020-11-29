@@ -23,9 +23,9 @@
     "popper.js": "^1.16.1",
     "qs": "^6.9.4",
     "three": "^0.115.0"
-  }
+  },
   "scripts": {
     "start": "cd server && node dist/index.js",
     "postinstall": "cd server && tsc",
-  },
+  }
 }
