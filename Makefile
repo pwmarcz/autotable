@@ -3,7 +3,7 @@ all: files
 
 SERVER = pwmarcz.pl
 
-TEXTURES = img/sticks.auto.png img/tiles.auto.png img/center.auto.png img/winds.auto.png
+TEXTURES = img/sticks.auto.png img/tiles.lars.png img/center.auto.png img/winds.lars.png
 
 ICONS = img/icon-16.auto.png img/icon-32.auto.png img/icon-96.auto.png
 
