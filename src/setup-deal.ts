@@ -162,6 +162,7 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
 
 export const POINTS: Record<Points, Array<number>> = {
   // -10k, 10k, 5k, 1k, 500, 100
+  '0': [0, 0, 0, 0, 0, 0],
   '25': [2, 1, 2, 4, 1, 5],
   '30': [2, 1, 3, 4, 1, 5],
   '35': [2, 2, 2, 4, 1, 5],

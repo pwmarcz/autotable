@@ -64,7 +64,7 @@ export const GAME_TYPES: Record<GameType, GameTypeMeta> = {
   MINEFIELD: { points: '25', seats: [0, 2]},
 };
 
-export type Points = '25' | '30' | '35' | '40' | '100';
+export type Points = '0' | '25' | '30' | '35' | '40' | '100';
 
 export interface Conditions {
   gameType: GameType;
