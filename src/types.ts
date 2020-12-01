@@ -75,7 +75,7 @@ export interface Conditions {
 
 export namespace Conditions {
   export function initial(): Conditions {
-    return { gameType: GameType.FOUR_PLAYER, back: 0, fives: '111', points: '25' };
+    return { gameType: GameType.FOUR_PLAYER, back: 0, fives: '000', points: '0' };
   }
 
   export function equals(a: Conditions, b: Conditions): boolean {
