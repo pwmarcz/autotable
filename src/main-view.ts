@@ -6,12 +6,12 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import { World } from './world';
 
-const RATIO = 1.5;
+const RATIO = 1.7;
 
 export class MainView {
   private main: HTMLElement;
   private stats: Stats;
-  private perspective = false;
+  private perspective = true;
 
   private scene: Scene;
   private mainGroup: Group;
