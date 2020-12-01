@@ -106,6 +106,8 @@ export class ObjectView {
     tableMesh.updateMatrixWorld();
     this.center.mesh.updateMatrixWorld();
 
+    //LG Change, don't add any point stick trays
+    /*
     for (let i = 0; i < 4; i++) {
       for (let j = 0; j < 6; j++) {
         const trayPos = new Vector3(
@@ -125,6 +127,7 @@ export class ObjectView {
         tray.updateMatrixWorld();
       }
     }
+    */
   }
 
   updateScores(scores: Array<number | null>): void {
