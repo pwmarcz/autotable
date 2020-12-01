@@ -100,7 +100,8 @@ export class MainView {
       const camera = new PerspectiveCamera(30, RATIO, 0.1, 1000);
       return camera;
     } else {
-      const w = World.WIDTH * 1.2;
+      //const w = World.WIDTH * 1.2;
+      const w = World.WIDTH * 1.5; //LG Adjusted camera to new wider view port
       const h = w / RATIO;
       const camera = new OrthographicCamera(
         -w / 2, w / 2,
@@ -129,12 +130,11 @@ export class MainView {
     mouse2: Vector2 | null): void
   {
     if (fromTop) {
-      //this.camera.position.set(0, 0, 400); //Original camera location
-      this.camera.position.set(0, 0, 450); //LG Adjusted camera to new wider view port
+      this.camera.position.set(0, 0, 400); //Original camera location
       this.camera.rotation.set(0, 0, 0);
     } else {
       //this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 1.05); //Original camera location
-      this.camera.position.set(0, -World.WIDTH*1.38, World.WIDTH * 1.00); //LG Adjusted camera to new wider view port
+      this.camera.position.set(0, -World.WIDTH*1.30, World.WIDTH * 0.90); //LG Adjusted camera to new wider view port
       this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2, 0, 0);
       if (zoom !== 0) {
         const dist = new Vector3(0, 1.37, -1).multiplyScalar(zoom * 55);
