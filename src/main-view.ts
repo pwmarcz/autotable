@@ -72,6 +72,8 @@ export class MainView {
     const w = this.renderer.domElement.clientWidth;
     const h = this.renderer.domElement.clientHeight;
 
+    this.renderer.setClearColor (0x404040, 1); //LG Edit, change to a slightly lighter non-black background color
+
     if (this.camera !== null) {
       this.scene.remove(this.camera);
     }
