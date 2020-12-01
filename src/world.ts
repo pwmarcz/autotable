@@ -205,7 +205,7 @@ export class World {
     this.selected.splice(0);
     this.checkPushes();
 
-    const back = 1 - this.conditions.back;
+    const back = 0; //1 - this.conditions.back; //LG Change to only use back 0, not toggle between 0 and 1, so we can use the texture space for more tile faces
     const conditions = { ...this.conditions, back, gameType, fives, points };
 
     let match = this.client.match.get(0);
