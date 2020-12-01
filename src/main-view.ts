@@ -6,7 +6,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import { World } from './world';
 
-const RATIO = 1.7;
+const RATIO = 1.8;
 
 export class MainView {
   private main: HTMLElement;
@@ -129,10 +129,12 @@ export class MainView {
     mouse2: Vector2 | null): void
   {
     if (fromTop) {
-      this.camera.position.set(0, 0, 400);
+      //this.camera.position.set(0, 0, 400); //Original camera location
+      this.camera.position.set(0, 0, 450); //LG Adjusted camera to new wider view port
       this.camera.rotation.set(0, 0, 0);
     } else {
-      this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 1.05);
+      //this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 1.05); //Original camera location
+      this.camera.position.set(0, -World.WIDTH*1.38, World.WIDTH * 1.00); //LG Adjusted camera to new wider view port
       this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2, 0, 0);
       if (zoom !== 0) {
         const dist = new Vector3(0, 1.37, -1).multiplyScalar(zoom * 55);
