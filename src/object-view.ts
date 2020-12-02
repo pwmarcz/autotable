@@ -159,9 +159,12 @@ export class ObjectView {
         material.emissive.setHex(0x111111);
       }
 
+      /*
+      //LG Edit don't make bottom wall tiles darker
       if (thing.bottom) {
         material.color.setHex(0xbbbbbb);
       }
+      */
 
       if (thing.selected) {
         this.selectedObjects.push(obj);
