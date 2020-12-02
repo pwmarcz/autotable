@@ -6,7 +6,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import { World } from './world';
 
-const RATIO = 1.8;
+const RATIO = 1.8; //LG Adjusted camera to new wider view port (org Ratio 1.5)
 
 export class MainView {
   private main: HTMLElement;
@@ -97,11 +97,12 @@ export class MainView {
 
   private makeCamera(perspective: boolean): Camera {
     if (perspective) {
-      const camera = new PerspectiveCamera(30, RATIO, 0.1, 1000);
+      //const camera = new PerspectiveCamera(30, RATIO, 0.1, 1000);
+      const camera = new PerspectiveCamera(28, RATIO, 0.1, 1000); //LG Adjusted camera to new wider view port
       return camera;
     } else {
       //const w = World.WIDTH * 1.2;
-      const w = World.WIDTH * 1.5; //LG Adjusted camera to new wider view port
+      const w = World.WIDTH * 1.45; //LG Adjusted camera to new wider view port
       const h = w / RATIO;
       const camera = new OrthographicCamera(
         -w / 2, w / 2,
