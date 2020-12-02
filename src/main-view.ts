@@ -6,7 +6,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import { World } from './world';
 
-const RATIO = 1.8; //LG Adjusted camera to new wider view port (org Ratio 1.5)
+const RATIO = 1.85; //LG Adjusted camera to new wider view port (org Ratio 1.5)
 
 export class MainView {
   private main: HTMLElement;
