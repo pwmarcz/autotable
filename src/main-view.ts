@@ -136,7 +136,8 @@ export class MainView {
     } else {
       //this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 1.05); //Original camera location
       this.camera.position.set(0, -World.WIDTH*1.30, World.WIDTH * 0.90); //LG Adjusted camera to new wider view port
-      this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2, 0, 0);
+      //this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2, 0, 0);
+      this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2 - 0.05, 0, 0); //LG Adjusted camera to center a little below the center
       if (zoom !== 0) {
         const dist = new Vector3(0, 1.37, -1).multiplyScalar(zoom * 55);
         this.camera.position.add(dist);
