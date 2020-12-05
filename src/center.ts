@@ -89,15 +89,41 @@ export class Center {
     this.ctx.translate(256, 256);
 
     for (let i = 0; i < 4; i++) {
+
+      //LGEdit new altered name rendering
+      this.drawNickLars(this.nicks[i]);
+      /*
+      //Original center rendering
       this.drawScore(this.scores[i]);
       this.drawNick(this.nicks[i]);
       if (this.dealer === i) {
         this.drawDealer();
       }
+      */
       this.ctx.rotate(-Math.PI / 2);
     }
     this.ctx.rotate(Math.PI/4);
     this.texture.needsUpdate = true;
+  }
+
+  //LG Edit, new draw method to draw a larger nick i score location
+  drawNickLars(nick: string | null): void { 
+    let text;
+
+    this.ctx.fillStyle = '#afa'; //Green for players
+
+    if (nick === null) {
+      text = 'Empty';
+      this.ctx.fillStyle = '#555'; //gray for empty
+    } else if (nick === '') {
+      text = 'Player';
+    } else {
+      text = nick.substr(0, 10);
+    }
+
+    this.ctx.textAlign = 'center';
+    this.ctx.font = '30px Verdana, Arial';
+    this.ctx.fillText(text, 0, 85);
   }
 
   drawScore(score: number | null): void {
