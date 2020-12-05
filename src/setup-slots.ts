@@ -139,6 +139,7 @@ const START: Record<string, Slot> = {
     origin: new Vector3(174, 0, 0),
     direction: new Vector2(-1, 1),
     rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
+    drawShadow: true,
   }),
 
   'kita': new Slot({
