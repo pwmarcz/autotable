@@ -152,7 +152,7 @@ const START: Record<string, Slot> = {
   'wall': new Slot({
     name: 'wall',
     group: 'wall',
-    origin: new Vector3(30 - 8, 20 + 8, 0),
+    origin: new Vector3(30 - Size.TILE.y, 20 + Size.TILE.y, 0),
     rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
   }),
 
