@@ -114,7 +114,7 @@ export class Center {
 
     if (nick === null) {
       text = 'Empty';
-      this.ctx.fillStyle = '#555'; //gray for empty
+      this.ctx.fillStyle = '#333'; //gray for empty
     } else if (nick === '') {
       text = 'Player';
     } else {
@@ -122,8 +122,8 @@ export class Center {
     }
 
     this.ctx.textAlign = 'center';
-    this.ctx.font = '30px Verdana, Arial';
-    this.ctx.fillText(text, 0, 85);
+    this.ctx.font = '28px Verdana, Arial';
+    this.ctx.fillText(text, 0, 95);
   }
 
   drawScore(score: number | null): void {
