@@ -77,8 +77,8 @@ export class Center {
     this.dirty = false;
 
     //render black box in the center
-    const offset = 0.16 * 512;
-    const width = 0.68 * 512;
+    const offset = 0.18 * 512;
+    const width = 0.64 * 512;
     
     this.ctx.resetTransform();
 
@@ -89,7 +89,13 @@ export class Center {
 
     this.ctx.translate(256, 256);
 
-    let textSize = 24;
+    let textSize = 30; //larger text size default
+
+    for (let i = 0; i < 4; i++) {
+
+      //LGEdit check if any names are longer
+      if (this.nicks[i].length > 12) textSize = 22; //use smaller text for all
+    }
 
     for (let i = 0; i < 4; i++) {
 
@@ -126,7 +132,7 @@ export class Center {
 
     this.ctx.textAlign = 'center';
     this.ctx.font = textSize+'px Verdana, Arial';
-    this.ctx.fillText(text, 0, 130);
+    this.ctx.fillText(text, 0, 120);
   }
 
   drawScore(score: number | null): void {
