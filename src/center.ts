@@ -91,10 +91,10 @@ export class Center {
 
     let textSize = 30; //larger text size default
 
-    for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
 
       //LGEdit check if any names are longer
-      if (this.nicks[i].length > 12) textSize = 22; //use smaller text for all
+      if (this.nicks[j].length > 12) textSize = 22; //use smaller text for all
     }
 
     for (let i = 0; i < 4; i++) {
