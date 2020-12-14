@@ -76,9 +76,10 @@ export class Center {
     }
     this.dirty = false;
 
-    const offset = 0.24 * 512;
-    const width = 0.52 * 512;
-
+    //render black box in the center
+    const offset = 0.20 * 512;
+    const width = 0.60 * 512;
+    
     this.ctx.resetTransform();
 
     this.ctx.fillStyle = '#000';
@@ -113,17 +114,17 @@ export class Center {
     this.ctx.fillStyle = '#afa'; //Green for players
 
     if (nick === null) {
-      text = 'Empty';
+      text = 'EmptyLongerName';
       this.ctx.fillStyle = '#333'; //gray for empty
     } else if (nick === '') {
       text = 'Player';
     } else {
-      text = nick.substr(0, 10);
+      text = nick.substr(0, 16);
     }
 
     this.ctx.textAlign = 'center';
     this.ctx.font = '28px Verdana, Arial';
-    this.ctx.fillText(text, 0, 95);
+    this.ctx.fillText(text, 0, 115);
   }
 
   drawScore(score: number | null): void {
