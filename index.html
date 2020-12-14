@@ -8,16 +8,7 @@
     <link href="img/icon-16.auto.png" rel="shortcut icon" sizes="16x16">
     <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.css">
     <link rel="stylesheet" href="./src/style.css">
-    <script>
-        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-        ga('create', 'UA-50655023-2', 'pwmarcz.pl');
-        ga('send', 'pageview');
-      </script>
-    </head>
+</head>
 <body>
     <canvas id="center"></canvas>
     <!-- https://opengameart.org/content/thwack-sounds -->
@@ -94,7 +85,7 @@
                 <br>
             </div>
 
-            <div class="mt-2 d-flex">
+            <div class="mt-2 d-flex" STYLE="display:none !important;">
                 <button class="btn btn-secondary btn-sm mr-2 w-100" id="toggle-dealer">Dealer</button>
                 <button class="btn btn-secondary btn-sm w-100" id="toggle-honba">Honba</button>
             </div>
@@ -134,10 +125,7 @@
                         Press <b>P</b> to toggle perspective mode
                         </p>
                         <h4>Settings</h4>
-                        <label class="dropdown-menu-item">
-                            <input type="checkbox" id="perspective">
-                            Perspective mode
-                        </label>
+                        
                         <label>
                             <input type="checkbox" id="benchmark">
                             Benchmark mode (don't limit FPS)
@@ -156,6 +144,10 @@
             </div>
 
             <div class="mt-2">
+            <label class="dropdown-menu-item">
+                <input type="checkbox" checked id="perspective">
+                Perspective mode
+            </label>
                 <small>
                     <a class="text-white-50" target="_blank" href="about.html">About the project</a>
                 </small>
