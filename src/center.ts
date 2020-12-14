@@ -77,8 +77,8 @@ export class Center {
     this.dirty = false;
 
     //render black box in the center
-    const offset = 0.20 * 512;
-    const width = 0.60 * 512;
+    const offset = 0.18 * 512;
+    const width = 0.64 * 512;
     
     this.ctx.resetTransform();
 
@@ -123,8 +123,8 @@ export class Center {
     }
 
     this.ctx.textAlign = 'center';
-    this.ctx.font = '28px Verdana, Arial';
-    this.ctx.fillText(text, 0, 115);
+    this.ctx.font = '24px Verdana, Arial';
+    this.ctx.fillText(text, 0, 120);
   }
 
   drawScore(score: number | null): void {
