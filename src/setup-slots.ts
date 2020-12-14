@@ -138,7 +138,7 @@ const START: Record<string, Slot> = {
     group: `meld`,
     origin: new Vector3(174, 0, 0),
     direction: new Vector2(-1, 1),
-    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
+    rotations: [Rotation.FACE_UP, Rotation.FACE_DOWN], 
     drawShadow: true,
   }),
 
@@ -154,7 +154,7 @@ const START: Record<string, Slot> = {
     name: 'wall',
     group: 'wall',
     origin: new Vector3(30 - Size.TILE.y+1.5, 20 + Size.TILE.y-0.5, 0),
-    rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
+    rotations: [Rotation.FACE_DOWN],
   }),
 
   'wall.open': new Slot({
@@ -170,7 +170,7 @@ const START: Record<string, Slot> = {
     group: `discard`,
     origin: new Vector3(69, 60, 0),
     direction: new Vector2(1, 1),
-    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
+    rotations: [Rotation.FACE_UP],
     drawShadow: true,
   }),
 
@@ -179,7 +179,7 @@ const START: Record<string, Slot> = {
     group: `discard`,
     origin: new Vector3(69 + 6 * Size.TILE.x, 60 - 2 * Size.TILE.y, 0),
     direction: new Vector2(1, 1),
-    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
+    rotations: [Rotation.FACE_UP],
   }),
 
   'tray': new Slot({
