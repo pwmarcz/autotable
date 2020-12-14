@@ -89,10 +89,12 @@ export class Center {
 
     this.ctx.translate(256, 256);
 
+    let textSize = 24;
+
     for (let i = 0; i < 4; i++) {
 
       //LGEdit new altered name rendering
-      this.drawNickLars(this.nicks[i]);
+      this.drawNickLars(this.nicks[i],textSize);
       /*
       //Original center rendering
       this.drawScore(this.scores[i]);
@@ -108,7 +110,7 @@ export class Center {
   }
 
   //LG Edit, new draw method to draw a larger nick i score location
-  drawNickLars(nick: string | null): void { 
+  drawNickLars(nick: string | null, textSize: number): void { 
     let text;
 
     this.ctx.fillStyle = '#afa'; //Green for players
@@ -123,7 +125,7 @@ export class Center {
     }
 
     this.ctx.textAlign = 'center';
-    this.ctx.font = '24px Verdana, Arial';
+    this.ctx.font = textSize+'px Verdana, Arial';
     this.ctx.fillText(text, 0, 130);
   }
 
