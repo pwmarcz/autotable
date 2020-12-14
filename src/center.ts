@@ -93,10 +93,10 @@ export class Center {
 
     for (let j = 0; j < 4; j++) {
 
-      //LGEdit check if any names are longer
+      //LG Edit check if any names are longer
       if (this.nicks[j] !== null)
       {
-        if (this.nicks[j].length > 12) textSize = 22; //use smaller text for all
+        if (this.nicks[j].length > 12) textSize = 24; //use smaller text for all since one name is longer
       }
     }
 
@@ -125,7 +125,7 @@ export class Center {
     this.ctx.fillStyle = '#afa'; //Green for players
 
     if (nick === null) {
-      text = 'EmptyLongerName';
+      text = 'Empty';
       this.ctx.fillStyle = '#333'; //gray for empty
     } else if (nick === '') {
       text = 'Player';
