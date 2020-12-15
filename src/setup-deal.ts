@@ -70,6 +70,7 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
 
       //LG Edit, new roll versions with longer walls with out flower tiles
       { roll: 2, ranges: [['wall.14.0', 1, 10], ['wall.1.0', 2, 4], ['wall.4.0', 2, 30], ['wall.1.0', 3, 36], ['wall.1.0', 0, 12]] },
+      { roll: 3, ranges: [['wall.14.0', 0, 10], ['wall.1.0', 1, 4], ['wall.4.0', 1, 30], ['wall.1.0', 2, 36], ['wall.1.0', 3, 12]] },
 
        /*
         //Original shorter initial walls without flower tiles
