@@ -75,6 +75,9 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
       { roll: 4, ranges: [['wall.14.0', 2, 10], ['wall.1.0', 3, 4], ['wall.4.0', 3, 30], ['wall.1.0', 0, 36], ['wall.1.0', 1, 12]] },
 
       { roll: 5, ranges: [['wall.16.0', 1, 6], ['wall.1.0', 2, 8], ['wall.6.0', 2, 26], ['wall.1.0', 3, 36], ['wall.1.0', 0, 16]] },
+      { roll: 6, ranges: [['wall.16.0', 0, 6], ['wall.1.0', 1, 8], ['wall.6.0', 1, 26], ['wall.1.0', 2, 36], ['wall.1.0', 3, 16]] },
+      { roll: 7, ranges: [['wall.16.0', 3, 6], ['wall.1.0', 0, 8], ['wall.6.0', 0, 26], ['wall.1.0', 1, 36], ['wall.1.0', 2, 16]] },
+      { roll: 8, ranges: [['wall.16.0', 2, 6], ['wall.1.0', 3, 8], ['wall.6.0', 3, 26], ['wall.1.0', 0, 36], ['wall.1.0', 1, 16]] },
       
 
        /*
