@@ -135,7 +135,7 @@ export class Setup {
 
     //const roll = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1); 
 
-    const roll = 3; //LG debug, always the same roll during testing
+    const roll = Math.floor(Math.random() * 4)+ 1; //LG debug, always the same roll during testing
 
     // Debug
     //const roll = (window.ROLL && window.ROLL < 12) ? window.ROLL + 1 : 2;
