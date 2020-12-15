@@ -126,7 +126,7 @@ export class Setup {
       }
     }
 
-    tileIndex += 37 * conditions.back;
+    //tileIndex += 37 * conditions.back; //LG:Edit, only one back now, so don't use this
     return tileIndex;
   }
 
@@ -174,7 +174,7 @@ export class Setup {
       for (let i = 0; i < searched.length; i++) {
         // HACK: typeIndex includes back color
         const idx = tiles.findIndex(tile =>
-          (tile.typeIndex === searched[i] || tile.typeIndex === searched[i] + 37));
+          (tile.typeIndex === searched[i])); //LG Edit: removed "|| tile.typeIndex === searched[i] + 37" as we only hae one back now and don't use the 37 index shift
         if (idx === -1) {
           throw `not found: ${searched[i]}`;
         }

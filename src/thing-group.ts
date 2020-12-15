@@ -170,18 +170,21 @@ if (vUv.x <= ${TILE_DU} && vUv.y <= ${TILE_DV}) {
   }
 
   getOffset(typeIndex: number): Vector3 {
-    const x = (typeIndex % 37) % 8;
-    const y = Math.floor((typeIndex % 37) / 8);
-    const back = Math.floor(typeIndex / 37);
+    const tilesetNumber = 48; //LG Edit: Original code relied on only 37 to toggle different backs, which broke without our 8 flower tiles
+    const x = (typeIndex % tilesetNumber) % 8;
+    const y = Math.floor((typeIndex % tilesetNumber) / 8);
+    const back = Math.floor(typeIndex / tilesetNumber);
     return new Vector3(x * TILE_DU, y * TILE_DV, back * TILE_DV);
   }
 
   createMesh(typeIndex: number): Mesh {
     const mesh = this.assetLoader.make('tile');
 
-    const x = (typeIndex % 37) % 8;
-    const y = Math.floor((typeIndex % 37) / 8);
-    const back = Math.floor(typeIndex / 37);
+    const tilesetNumber = 48; //LG Edit: Original code relied on only 37 to toggle different backs, which broke without our 8 flower tiles
+   
+    const x = (typeIndex % tilesetNumber) % 8;
+    const y = Math.floor((typeIndex % tilesetNumber) / 8);
+    const back = Math.floor(typeIndex / tilesetNumber);
 
     // Clone geometry and modify front face
     const geometry = mesh.geometry.clone() as BufferGeometry;
