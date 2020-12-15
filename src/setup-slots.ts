@@ -154,7 +154,7 @@ const START: Record<string, Slot> = {
     name: 'wall',
     group: 'wall',
     origin: new Vector3(30 - Size.TILE.y+1.5, 20 + Size.TILE.y-0.5, 0),
-    rotations: [Rotation.FACE_DOWN],
+    rotations: [Rotation.FACE_DOWN, Rotation.FACE_UP],
   }),
 
   'wall.open': new Slot({
@@ -286,7 +286,7 @@ function fixupSlots(slots: Array<Slot>, gameType: GameType): void {
     }
     if (slot.group === 'wall' &&
         slot.indexes[0] !== 0  && slot.indexes[1] === 0) { //LG Edit , removed && slot.indexes[0] !== 18 to show shadown under slot 18
-      slot.drawShadow = true;
+      slot.drawShadow = false; //LG Edit , don't draw shadow under wall slots
     }
     if (slot.group === 'meld' && slot.indexes[0] > 0) {
       slot.linkDesc.requires = `meld.${slot.indexes[0]-1}.1@${slot.seat}`;

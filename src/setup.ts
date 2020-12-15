@@ -130,10 +130,13 @@ export class Setup {
   deal(seat: number, gameType: GameType, dealType: DealType): void {
     // console.log('deal', gameType, dealType);
 
-    const roll = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1);
+    //const roll = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1); 
+
+    const roll = 2; //LG debug, always the same roll during testing
+
     // Debug
-    // const roll = (window.ROLL && window.ROLL < 12) ? window.ROLL + 1 : 2;
-    // window.ROLL = roll;
+    //const roll = (window.ROLL && window.ROLL < 12) ? window.ROLL + 1 : 2;
+    //window.ROLL = roll;
 
     if (GAME_TYPES[gameType].seats.indexOf(seat) === -1) {
       seat = 0;
@@ -146,7 +149,8 @@ export class Setup {
       thing.prepareMove();
     }
 
-    shuffle(tiles);
+    //shuffle(tiles); //LG debug, don't shuffle
+
     for (const part of dealParts) {
       this.dealPart(part, tiles, roll, seat);
     }
