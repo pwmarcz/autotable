@@ -36,7 +36,7 @@ export class Setup {
 
   private addTiles(conditions: Conditions): void {
     const wallSlots = this.wallSlots().map(slot => slot.name);
-    shuffle(wallSlots);
+    //shuffle(wallSlots); //LG debug, don't shuffle initial slots
     let j = 0;
     for (let i = 0; i < 136; i++) {
       const tileIndex = this.tileIndex(i, conditions);
@@ -149,7 +149,7 @@ export class Setup {
       thing.prepareMove();
     }
 
-    //shuffle(tiles); //LG debug, don't shuffle
+    shuffle(tiles);
 
     for (const part of dealParts) {
       this.dealPart(part, tiles, roll, seat);
