@@ -36,7 +36,7 @@ export class Setup {
 
   private addTiles(conditions: Conditions): void {
     const wallSlots = this.wallSlots().map(slot => slot.name);
-    //shuffle(wallSlots); //LG debug, don't shuffle initial slots
+    shuffle(wallSlots);
     let j = 0;
     let numberOfTiles = 144; //LG Edit 144 with 8 flower tiles, 136 without
     for (let i = 0; i < numberOfTiles; i++) {
@@ -134,9 +134,7 @@ export class Setup {
     // console.log('deal', gameType, dealType);
 
     //const roll = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1); 
-
-    const roll = Math.floor(Math.random() * 4)+ 1 + 8; //LG debug, always the same roll during testing
-    
+    const roll = Math.floor(Math.random() * 12)+ 1; //LG edit roll 1-12 instead of 2-12  
 
     // Debug
     //const roll = (window.ROLL && window.ROLL < 12) ? window.ROLL + 1 : 2;
@@ -153,7 +151,7 @@ export class Setup {
       thing.prepareMove();
     }
 
-    //shuffle(tiles);//LG debug, don't shuffle initial slots
+    shuffle(tiles);
 
     for (const part of dealParts) {
       this.dealPart(part, tiles, roll, seat);
@@ -170,7 +168,7 @@ export class Setup {
     }
     if (dealPart.tiles !== undefined) {
       const searched = [...dealPart.tiles];
-      //shuffle(searched);//LG debug, don't shuffle initial slots
+      shuffle(searched);
 
       for (let i = 0; i < searched.length; i++) {
         // HACK: typeIndex includes back color
