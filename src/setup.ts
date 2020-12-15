@@ -149,7 +149,7 @@ export class Setup {
       thing.prepareMove();
     }
 
-    shuffle(tiles);
+    //shuffle(tiles);//LG debug, don't shuffle initial slots
 
     for (const part of dealParts) {
       this.dealPart(part, tiles, roll, seat);
@@ -166,7 +166,7 @@ export class Setup {
     }
     if (dealPart.tiles !== undefined) {
       const searched = [...dealPart.tiles];
-      shuffle(searched);
+      //shuffle(searched);//LG debug, don't shuffle initial slots
 
       for (let i = 0; i < searched.length; i++) {
         // HACK: typeIndex includes back color
