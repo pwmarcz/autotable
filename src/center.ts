@@ -82,7 +82,7 @@ export class Center {
     
     this.ctx.resetTransform();
 
-    this.ctx.fillStyle = '#000';
+    this.ctx.fillStyle = '#333';
     this.ctx.fillRect(offset, offset, width, width);
 
     this.ctx.textBaseline = 'middle';
@@ -126,7 +126,7 @@ export class Center {
 
     if (nick === null) {
       text = 'Empty';
-      this.ctx.fillStyle = '#333'; //gray for empty
+      this.ctx.fillStyle = '#555'; //gray for empty
     } else if (nick === '') {
       text = 'Player';
     } else {
