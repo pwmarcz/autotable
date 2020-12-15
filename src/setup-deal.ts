@@ -39,12 +39,22 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
         rotationIndex: 2,
       },
       {
+         //LG Edit: longer initial walls with flower tiles
+        ranges: [
+          ['wall.1.0', 0, 34],
+          ['wall.1.0', 1, 36],
+          ['wall.1.0', 2, 34],
+          ['wall.1.0', 3, 36],
+        ],
+        /*
+        //Original shorter initial walls without flower tiles
         ranges: [
           ['wall.1.0', 0, 32],
           ['wall.1.0', 1, 34],
           ['wall.1.0', 2, 32],
           ['wall.1.0', 3, 34],
         ],
+        */
       },
     ],
     HANDS: [
@@ -58,6 +68,11 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
         rotationIndex: 2,
       },
 
+      //LG Edit, new roll versions with longer walls with out flower tiles
+      { roll: 2, ranges: [['wall.16.0', 1, 6], ['wall.0.0', 2, 12], ['wall.6.0', 2, 26], ['wall.0.0', 3, 36], ['wall.1.0', 0, 12]] },
+
+       /*
+        //Original shorter initial walls without flower tiles
       { roll: 2, ranges: [['wall.16.0', 1, 4], ['wall.0.0', 2, 10], ['wall.6.0', 2, 24], ['wall.1.0', 3, 34], ['wall.1.0', 0, 12]] },
       { roll: 3, ranges: [['wall.15.0', 2, 6], ['wall.0.0', 3, 8], ['wall.5.0', 3, 26], ['wall.1.0', 0, 34], ['wall.1.0', 1, 10]] },
       { roll: 4, ranges: [['wall.14.0', 3, 8], ['wall.0.0', 0, 6], ['wall.4.0', 0, 28], ['wall.1.0', 1, 34], ['wall.1.0', 2, 8]] },
@@ -71,6 +86,7 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
       { roll: 10, ranges: [['wall.7.0', 1, 14], ['wall.15.0', 1, 6], ['wall.1.0', 2, 34], ['wall.1.0', 3, 30]] },
       { roll: 11, ranges: [['wall.6.0', 2, 14], ['wall.14.0', 2, 8], ['wall.1.0', 3, 34], ['wall.1.0', 0, 28]] },
       { roll: 12, ranges: [['wall.5.0', 3, 14], ['wall.13.0', 3, 10], ['wall.1.0', 0, 34], ['wall.1.0', 1, 26]] },
+      */
     ],
   },
 
