@@ -101,7 +101,7 @@ export class Setup {
   private tileIndex(i: number, conditions: Conditions): number | null {
     let tileIndex = Math.floor(i / 4);
 
-    if (i>135) tileIndex = tileIndex - 96; //LG Edit: custom tile indexes for last 8 flower tiles that will get index 40-47
+    if (i>135) tileIndex = tileIndex - 135; //LG Edit: custom tile indexes for last 8 flower tiles that will get index 40-47
 
     if (conditions.fives !== '000') {
       if (tileIndex === 4 && i % 4 === 0) {
