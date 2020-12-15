@@ -79,7 +79,10 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
       { roll: 7, ranges: [['wall.16.0', 3, 6], ['wall.1.0', 0, 8], ['wall.6.0', 0, 26], ['wall.1.0', 1, 36], ['wall.1.0', 2, 16]] },
       { roll: 8, ranges: [['wall.16.0', 2, 6], ['wall.1.0', 3, 8], ['wall.6.0', 3, 26], ['wall.1.0', 0, 36], ['wall.1.0', 1, 16]] },
       
-      { roll: 9, ranges: [['wall.1.0', 3, 14], ['wall.9.0', 3, 18], ['wall.1.0', 0, 36], ['wall.1.0', 1, 24]] },
+      { roll: 9, ranges: [['wall.2.0', 3, 14], ['wall.10.0', 3, 18], ['wall.1.0', 0, 36], ['wall.1.0', 1, 24]] },
+      { roll: 10, ranges: [['wall.2.0', 0, 14], ['wall.10.0', 0, 18], ['wall.1.0', 1, 36], ['wall.1.0', 2, 24]] },
+      { roll: 11, ranges: [['wall.2.0', 1, 14], ['wall.10.0', 1, 18], ['wall.1.0', 2, 36], ['wall.1.0', 3, 24]] },
+      { roll: 12, ranges: [['wall.2.0', 2, 14], ['wall.10.0', 2, 18], ['wall.1.0', 3, 36], ['wall.1.0', 0, 24]] },
       
        /*
         //Original shorter initial walls without flower tiles
