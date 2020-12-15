@@ -38,7 +38,8 @@ export class Setup {
     const wallSlots = this.wallSlots().map(slot => slot.name);
     //shuffle(wallSlots); //LG debug, don't shuffle initial slots
     let j = 0;
-    for (let i = 0; i < 136; i++) {
+    let numberOfTiles = 144; //LG Edit 144 with 8 flower tiles, 136 without
+    for (let i = 0; i < numberOfTiles; i++) {
       const tileIndex = this.tileIndex(i, conditions);
       if (tileIndex !== null) {
         this.addThing(ThingType.TILE, tileIndex, wallSlots[j++]);
@@ -99,6 +100,8 @@ export class Setup {
 
   private tileIndex(i: number, conditions: Conditions): number | null {
     let tileIndex = Math.floor(i / 4);
+
+    if (i>135) tileIndex = tileIndex - 96; //LG Edit: custom tile indexes for last 8 flower tiles that will get index 40-47
 
     if (conditions.fives !== '000') {
       if (tileIndex === 4 && i % 4 === 0) {

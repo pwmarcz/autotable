@@ -14,12 +14,22 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
   FOUR_PLAYER: {
     INITIAL: [
       {
+        //LG Edit: longer initial walls with flower tiles
+        ranges: [
+          ['wall.1.0', 0, 36],
+          ['wall.1.0', 1, 36],
+          ['wall.1.0', 2, 36],
+          ['wall.1.0', 3, 36],
+        ]
+        /*
+        //Original shorter initial walls without flower tiles
         ranges: [
           ['wall.1.0', 0, 34],
           ['wall.1.0', 1, 34],
           ['wall.1.0', 2, 34],
           ['wall.1.0', 3, 34],
         ]
+        */
       },
     ],
     WINDS: [
