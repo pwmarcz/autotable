@@ -1,7 +1,12 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'jenkins/jnlp-agent-docker'
+    }
+
+  }
   stages {
-    stage('') {
+    stage('error') {
       steps {
         sh 'ls '
         sh '''
