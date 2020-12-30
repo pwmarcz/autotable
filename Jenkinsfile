@@ -1,24 +1,9 @@
 pipeline {
-  agent {
-    docker {
-      image 'jenkins/jnlp-agent-docker'
-    }
-
-  }
+  agent any
   stages {
-    stage('error') {
+    stage('') {
       steps {
-        sh 'ls '
-        sh '''
-
-docker info 
-'''
-        sh '''
-
-docker build -t autotable:${BUILD_NUMBER} . 
-'''
-        sh '''docker tag autotable:${BUILD_NUMBER} autotable:latest 
-'''
+        sh 'docker-compose build .'
       }
     }
 
