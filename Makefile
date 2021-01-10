@@ -3,7 +3,7 @@ all: files
 
 SERVER = pwmarcz.pl
 
-TEXTURES = img/sticks.auto.png img/tiles.auto.png img/center.auto.png img/winds.auto.png
+TEXTURES = img/sticks.auto.png img/tiles.auto.png img/tiles.washizu.auto.png img/center.auto.png img/winds.auto.png
 
 ICONS = img/icon-16.auto.png img/icon-32.auto.png img/icon-96.auto.png
 
@@ -18,8 +18,14 @@ server:
 .PHONY: files
 files: img/models.auto.glb $(ICONS)
 
+.PHONY: svgs
+svgs: $(ICONS) $(TEXTURES)
+
 img/tiles.auto.png: img/tiles.svg
-	inkscape $< --export-filename=$@ --export-width=512
+	inkscape $< --export-filename=$@ --export-width=1024 --export-background=#ffffff --export-background-opacity=1
+
+img/tiles.washizu.auto.png: img/tiles.washizu.svg
+	inkscape $< --export-filename=$@ --export-width=1024 --export-background=#eeeeee --export-background-opacity=0.1
 
 img/sticks.auto.png: img/sticks.svg
 	inkscape $< --export-filename=$@ --export-width=256 --export-height=512
@@ -34,18 +40,12 @@ img/icon-%.auto.png: img/icon.svg
 	inkscape $< --export-filename=$@ --export-width=$*
 
 img/models.auto.glb: img/models.blend $(TEXTURES)
-	blender $< --background --python export.py -- $@
+	blender $< --background -noaudio --python export.py -- $@
 
 .PHONY: build
 build: files
-ifeq ($(OS),Windows_NT)
-	del /S /Q build
-	node_modules\.bin\parcel build *.html --public-url . --cache-dir .cache\build\ --out-dir build\ --no-source-maps
-else
 	rm -rf build
-	./node_modules/.bin/parcel build *.html --public-url . --cache-dir .cache/build/ --out-dir build/ --no-source-maps
-endif
-
+	yarn run parcel build *.html --public-url . --cache-dir .cache/build/ --out-dir build/ --no-source-maps
 
 .PHONY: build-server
 build-server:

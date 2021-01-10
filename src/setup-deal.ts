@@ -64,6 +64,47 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
     ],
   },
 
+  WASHIZU: {
+    INITIAL: [
+      {
+        ranges: [
+          ['washizu.bag.0', 0, 136],
+        ],
+        absolute: true
+      },
+    ],
+    WINDS: [
+      {
+        tiles: [27, 28, 29, 30],
+        ranges: [['hand.5', 0, 4]],
+        rotationIndex: 2,
+      },
+      {
+        ranges: [
+          ['washizu.bag.0', 0, 132],
+        ],
+        absolute: true
+      },
+    ],
+    HANDS: [
+      {
+        ranges: [
+          ['hand.0', 0, 13],
+          ['hand.0', 1, 13],
+          ['hand.0', 2, 13],
+          ['hand.0', 3, 13],
+        ],
+        rotationIndex: 2,
+      },
+      {
+        ranges: [
+          ['washizu.bag.0', 0, 84],
+        ],
+        absolute: true
+      }
+    ],
+  },
+
   THREE_PLAYER: {
     INITIAL: [
       {

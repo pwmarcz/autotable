@@ -44,10 +44,11 @@ export class Game {
     this.objectView = new ObjectView(this.mainGroup, assetLoader, this.client);
     this.soundPlayer = new SoundPlayer(this.client);
     this.world = new World(this.objectView, this.soundPlayer, this.client);
-    this.mainView = new MainView(this.mainGroup);
+    this.mainView = new MainView(this.mainGroup, this.client, this.world);
     this.mouseUi = new MouseUi(this.world, this.mainGroup);
     this.clientUi = new ClientUi(this.client);
-    this.gameUi = new GameUi(this.client, this.world);
+    this.gameUi = new GameUi(this.client, this.world, this.mainView, this.assetLoader, this.objectView);
+    this.world.registerEvents();
 
     this.settings = {
       perspective: document.getElementById('perspective') as HTMLInputElement,
@@ -55,7 +56,6 @@ export class Game {
       muted: document.getElementById('muted') as HTMLInputElement,
       sticky: document.getElementById('sticky') as HTMLInputElement,
     };
-
 
     this.setupEvents();
   }
@@ -142,12 +142,6 @@ export class Game {
       case ' ':
         this.lookDown.start(1);
         break;
-      case 'z':
-        this.zoom.start(1);
-        break;
-      case 'x':
-        this.zoom.start(-1);
-        break;
       case 'q':
         this.lookDownState = 1 - this.lookDownState;
         this.lookDown.start(this.lookDownState);
@@ -165,12 +159,6 @@ export class Game {
     switch(event.key) {
       case ' ':
         this.lookDown.start(0);
-        break;
-      case 'z':
-        this.zoom.start(0);
-        break;
-      case 'x':
-        this.zoom.start(0);
         break;
     }
   }

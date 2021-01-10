@@ -10,19 +10,17 @@ Autotable is a tabletop simulator for Riichi Mahjong.
 
 This repository uses [Git LFS](https://git-lfs.github.com/) to track large files. To clone all files, you need to install it first.
 
-You need the following:
+You need the following utilities installed and present in `PATH`:
 
 * GNU make
 * node and yarn
-* Inkscape (for textures: .svg -> .png conversion)
+* Inkscape 1.0+ (for textures: .svg -> .png conversion)
 * Blender (for 3D models: .blend -> .glb conversion)
-
-You must ensure that the executables for both Inkscape and Blender are on your PATH
 
 Run:
 
-* `yarn` to install packages
-* `cd server && yarn && cd ..` to install more packages
+* `yarn` to install frontend packages
+* `cd server && yarn` to install server packages
 * `make parcel` to run and serve frontend
 * `make files` to re-generate static files (textures and models)
 * `make server` to run server

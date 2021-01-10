@@ -3,6 +3,7 @@
 import { EventEmitter } from 'events';
 
 import { Message, Entry } from '../server/protocol';
+import { resolve } from 'path';
 
 export interface Game {
   gameId: string;
@@ -10,6 +11,7 @@ export interface Game {
 }
 
 export class BaseClient {
+  isAuthed: boolean = false;
   private ws: WebSocket | null = null;
   private game: Game | null = null;
   private events: EventEmitter = new EventEmitter();
@@ -31,6 +33,15 @@ export class BaseClient {
     });
   }
 
+  private authWaits: Array<[(_: boolean) => void, (_: any) => void] > = [];
+
+  auth(password: string): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      this.authWaits.push([resolve, reject]);
+      this.send({ type: 'AUTH', password });
+    });
+  }
+
   disconnect(): void {
     this.ws?.close();
   }
@@ -45,14 +56,14 @@ export class BaseClient {
 
     this.ws.onmessage = event => {
       const message = JSON.parse(event.data as string) as Message;
-      // console.log('recv', message);
       this.onMessage(message);
     };
   }
 
-  on(what: 'connect', handler: (game: Game, isFirst: boolean) => void): void;
+  on(what: 'connect', handler: (game: Game, isFirst: boolean, password: string) => void): void;
   on(what: 'disconnect', handler: (game: Game | null) => void): void;
   on(what: 'update', handler: (things: Array<Entry>, full: boolean) => void): void;
+  on(what: 'authed', handler: (isAuthed: boolean) => void): void;
 
   on(what: string, handler: (...args: any[]) => void): void {
     this.events.on(what, handler);
@@ -82,7 +93,6 @@ export class BaseClient {
     if (!this.open) {
       return;
     }
-    // console.log('send', message);
     const data = JSON.stringify(message);
     this.ws!.send(data);
   }
@@ -113,11 +123,21 @@ export class BaseClient {
           gameId: message.gameId,
           playerId: message.playerId,
         };
-        this.events.emit('connect', this.game, message.isFirst);
+        this.events.emit('connect', this.game, message.isFirst, message.password);
         break;
 
       case 'UPDATE':
         this.events.emit('update', message.entries, message.full);
+        break;
+
+      case 'AUTHED':
+        const wait = this.authWaits.shift();
+        if (!wait) {
+          break;
+        }
+        this.isAuthed = message.isAuthed;
+        this.events.emit('authed', message.isAuthed);
+        wait[0](message.isAuthed);
         break;
     }
   }

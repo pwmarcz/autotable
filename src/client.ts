@@ -15,6 +15,7 @@ export class Client extends BaseClient {
   nicks: Collection<string, string>;
   mouse: Collection<string, MouseInfo>;
   sound: Collection<number, SoundInfo>;
+  spectators: Collection<string, string>;
 
   seat: number | null = 0;
   seatPlayers: Array<string | null> = new Array(4).fill(null);
@@ -30,6 +31,7 @@ export class Client extends BaseClient {
     this.nicks = new Collection('nicks', this, { perPlayer: true });
     this.mouse = new Collection('mouse', this, { rateLimit: 100, perPlayer: true });
     this.sound = new Collection('sound', this, { ephemeral: true });
+    this.spectators = new Collection('spectators', this, { writeProtected: true, perPlayer: true });
     this.seats.on('update', this.onSeats.bind(this));
   }
 
@@ -65,18 +67,21 @@ interface CollectionOptions {
   // The server will not send all updates, but limit to N per second.
   rateLimit?: number;
 
+  // Only authenticated clients can write to this collection
+  writeProtected?: boolean;
+
   // If we are initializing the server (i.e. we're the first player), send
   // our value.
   sendOnConnect?: boolean;
 }
 
 export class Collection<K extends string | number, V> {
+  public options: CollectionOptions;
   private kind: string;
   private client: Client;
   private map: Map<K, V> = new Map();
   private pending: Map<K, V | null> = new Map();
   private events: EventEmitter = new EventEmitter();
-  private options: CollectionOptions;
   private intervalId: NodeJS.Timeout | null = null;
   private lastUpdate: number = 0;
 
@@ -103,23 +108,20 @@ export class Collection<K extends string | number, V> {
   }
 
   update(localEntries: Array<[K, V | null]>): void {
-    if (!this.client.connected()) {
-      for (const [key, value] of localEntries) {
-        if (value !== null) {
-          this.map.set(key, value);
-        } else {
-          this.map.delete(key);
-        }
-      }
-      this.events.emit('update', localEntries, false);
-    } else {
-      const now = new Date().getTime();
-      for (const [key, value] of localEntries) {
-        this.pending.set(key, value);
-      }
-      if (!this.options.rateLimit || now > this.lastUpdate + this.options.rateLimit) {
-        this.sendPending();
-      }
+    if (!this.options.writeProtected)  {
+      this.cacheEntries(localEntries, false);
+    }
+
+    if(!this.client.connected()) {
+      return;
+    }
+
+    const now = new Date().getTime();
+    for (const [key, value] of localEntries) {
+      this.pending.set(key, value);
+    }
+    if (!this.options.rateLimit || now > this.lastUpdate + this.options.rateLimit) {
+      this.sendPending();
     }
   }
 
@@ -128,27 +130,57 @@ export class Collection<K extends string | number, V> {
   }
 
   on(what: 'update', handler: (localEntries: Array<[K, V | null]>, full: boolean) => void): void;
+  on(what: 'optionsChanged', handler: (options: CollectionOptions) => void): void;
   on(what: string, handler: (...args: any[]) => void): void {
     this.events.on(what, handler);
+  }
+
+  setOption(option: keyof CollectionOptions, value: any) {
+    if (this.options[option] === value) {
+      return;
+    }
+
+    this.options[option] = value;
+    this.client.update([[option, this.kind, value]]);
+    this.events.emit("optionsChanged", this.options);
   }
 
   private onUpdate(entries: Array<Entry>, full: boolean): void {
     if (full) {
       this.map.clear();
     }
-    const localEntries = [];
+
     for (const [kind, key, value] of entries) {
-      if (kind === this.kind) {
-        localEntries.push([key, value]);
-        if (value !== null) {
-          this.map.set(key as K, value);
-        } else {
-          this.map.delete(key as K);
+      if (key !== this.kind) {
+        continue;
+      }
+
+      if (kind === "writeProtected") {
+        if (this.options.writeProtected === value) {
+          continue;
         }
+        this.options.writeProtected = value;
+        this.events.emit("optionsChanged", this.options);
+      }
+    }
+
+    this.cacheEntries(
+      entries.filter(([kind, _, __]) => kind === this.kind).map(([_, k, v]) => [k as K, v as V | null]),
+      full,
+    )
+  }
+
+  private cacheEntries(entries: Array<[K, V | null]>, full: boolean): void {
+    const localEntries = [];
+    for (const [key, value] of entries) {
+      localEntries.push([key, value]);
+      if (value !== null) {
+        this.map.set(key as K, value);
+      } else {
+        this.map.delete(key as K);
       }
     }
     if (full || localEntries.length > 0) {
-      console.log(full ? 'full update' : 'update', this.kind, localEntries.length);
       this.events.emit('update', localEntries, full);
     }
   }
@@ -157,6 +189,9 @@ export class Collection<K extends string | number, V> {
     if (isFirst) {
       if (this.options.unique) {
         this.client.update([['unique', this.kind, this.options.unique]]);
+      }
+      if (this.options.writeProtected) {
+        this.client.update([['writeProtected', this.kind, true]]);
       }
       if (this.options.ephemeral) {
         this.client.update([['ephemeral', this.kind, true]]);

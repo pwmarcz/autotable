@@ -73,8 +73,13 @@ export class MouseUi {
     this.main.addEventListener('mousemove', this.onMouseMove.bind(this));
     this.main.addEventListener('mouseleave', this.onMouseLeave.bind(this));
     this.main.addEventListener('mousedown', this.onMouseDown.bind(this));
+    this.main.addEventListener('wheel', this.onWheel.bind(this));
     this.main.addEventListener('contextmenu', e => e.preventDefault());
     window.addEventListener('mouseup', this.onMouseUp.bind(this));
+  }
+
+  private onWheel(event: WheelEvent): void {
+    this.world.onFlip(Math.sign(event.deltaY));
   }
 
   private onMouseMove(event: MouseEvent): void {

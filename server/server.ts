@@ -42,6 +42,11 @@ export class Server {
         }
       });
 
+      client.on('error', (e) => {
+        console.debug('> error', e);
+        this.onClose(client);
+      });
+
       client.on('close', () => {
         console.debug('> disconnect');
         this.onClose(client);
@@ -82,6 +87,7 @@ export class Server {
         game.join(client);
         break;
       }
+
       default:
         throw `unknown message: ${message.type}`;
     }

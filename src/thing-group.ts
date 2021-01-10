@@ -1,9 +1,10 @@
-import { Vector3, Euler, Mesh, Group, Material, InstancedMesh, Matrix4, BufferGeometry, MeshLambertMaterial, InstancedBufferGeometry, InstancedBufferAttribute } from "three";
+import { Vector3, Euler, Mesh, Group, Material, InstancedMesh, Matrix4, BufferGeometry, MeshLambertMaterial, InstancedBufferGeometry, InstancedBufferAttribute, Vector4, Color, DoubleSide, MeshLambertMaterialParameters } from "three";
 import { AssetLoader } from "./asset-loader";
 import { ThingType } from "./types";
+import { type } from "jquery";
 
-const TILE_DU = 32 / 256;
-const TILE_DV = 40 / 256;
+const TILE_DU = 1 / 10;
+const TILE_DV = 1 / 8;
 const STICK_DV = 1 / 6;
 
 export interface ThingParams {
@@ -63,7 +64,8 @@ export class MarkerThingGroup extends ThingGroup {
 }
 
 abstract class InstancedThingGroup extends ThingGroup {
-  protected instancedMesh: InstancedMesh = null!;
+  protected instancedMeshGroups: Record<number, InstancedMesh> | null = null;
+  protected indexToGroupMap: number[] | null = null;
   private zero: Matrix4 = new Matrix4().makeScale(0, 0, 0);
 
   abstract getOriginalMesh(): Mesh;
@@ -74,17 +76,17 @@ abstract class InstancedThingGroup extends ThingGroup {
     return true;
   }
 
-  createInstancedMesh(params: Array<ThingParams>): InstancedMesh {
+  protected createMaterial(): MeshLambertMaterial {
     const origMesh = this.getOriginalMesh();
-
     const origMaterial = origMesh.material as MeshLambertMaterial;
+
     const material = new MeshLambertMaterial({
       map: origMaterial.map,
       color: origMaterial.color,
     });
 
     const paramChunk = `
-attribute vec3 offset;
+attribute vec4 offset;
 #include <common>
 `;
     const uvChunk = this.getUvChunk();
@@ -97,7 +99,11 @@ attribute vec3 offset;
     // Fix cache conflict: https://github.com/mrdoob/three.js/issues/19377
     material.defines = material.defines ?? {};
     material.defines.THING_TYPE = origMesh.name;
+    return material;
+  }
 
+  protected createInstancedMesh(params: Array<ThingParams>): InstancedMesh {
+    const material = this.createMaterial();
     const data = new Float32Array(params.length * 3);
     for (let i = 0; i < params.length; i++) {
       const v = this.getOffset(params[i].typeIndex);
@@ -106,6 +112,7 @@ attribute vec3 offset;
       data[3 * i + 2] = v.z;
     }
 
+    const origMesh = this.getOriginalMesh();
     const geometry = new InstancedBufferGeometry().copy(origMesh.geometry as BufferGeometry);
     geometry.setAttribute('offset', new InstancedBufferAttribute(data, 3));
     const instancedMesh = new InstancedMesh(geometry, material, params.length);
@@ -115,13 +122,32 @@ attribute vec3 offset;
   replace(startIndex: number, params: Array<ThingParams>): void {
     super.replace(startIndex, params);
 
-    if (this.instancedMesh !== null) {
-      (this.instancedMesh.material as Material).dispose();
-      this.instancedMesh.geometry.dispose();
-      this.group.remove(this.instancedMesh);
+    if (this.instancedMeshGroups !== null) {
+      for(const meshType of (Object.values(this.instancedMeshGroups))) {
+        (meshType.material as Material).dispose();
+        meshType.geometry.dispose();
+        this.group.remove(meshType);
+      }
     }
-    this.instancedMesh = this.createInstancedMesh(params);
-    this.group.add(this.instancedMesh);
+
+    this.instancedMeshGroups = this.createInstanceMeshGroups(params);
+    for(const meshType of Object.values(this.instancedMeshGroups)) {
+      this.group.add(meshType);
+    }
+
+    this.indexToGroupMap = [];
+    for (const p of params) {
+      this.indexToGroupMap.push(this.getGroupIndex(p.typeIndex));
+    }
+  }
+
+  protected createInstanceMeshGroups(params: ThingParams[]): Record<number, InstancedMesh> {
+    const mesh = this.createInstancedMesh(params);
+    return { 0: mesh };
+  }
+
+  protected getGroupIndex(index: number): number {
+    return 0;
   }
 
   setSimple(index: number, position: Vector3, rotation: Euler): void {
@@ -134,8 +160,21 @@ attribute vec3 offset;
     mesh.rotation.copy(rotation);
     mesh.updateMatrix();
     mesh.visible = false;
-    this.instancedMesh.setMatrixAt(i, mesh.matrix);
-    this.instancedMesh.instanceMatrix.needsUpdate = true;
+
+    if (this.instancedMeshGroups === null || this.indexToGroupMap === null) {
+      return;
+    }
+
+    const activeGroupId = this.indexToGroupMap[i].toString();
+
+    for(const [groupId, groupMesh] of Object.entries(this.instancedMeshGroups)) {
+      if (activeGroupId === groupId) {
+        groupMesh.setMatrixAt(i, mesh.matrix);
+      } else {
+        groupMesh.setMatrixAt(i, this.zero);
+      }
+      groupMesh.instanceMatrix.needsUpdate = true;
+    }
   }
 
   setCustom(index: number, position: Vector3, rotation: Euler): Mesh {
@@ -144,13 +183,41 @@ attribute vec3 offset;
     mesh.position.copy(position);
     mesh.rotation.copy(rotation);
     mesh.visible = true;
-    this.instancedMesh.setMatrixAt(i, this.zero);
-    this.instancedMesh.instanceMatrix.needsUpdate = true;
+
+    if (this.instancedMeshGroups === null) {
+      return mesh;
+    }
+
+    for(const groupMesh of Object.values(this.instancedMeshGroups)) {
+      groupMesh.setMatrixAt(i, this.zero);
+      groupMesh.instanceMatrix.needsUpdate = true;
+    }
+
     return mesh;
   }
 }
 
 export class TileThingGroup extends InstancedThingGroup {
+  createInstanceMeshGroups(params: ThingParams[]): Record<number, InstancedMesh> {
+    const mesh = this.createInstancedMesh(params);
+    mesh.renderOrder = 1;
+    const washizuMesh = this.createInstancedMesh(params);
+    const material = this.createMaterial();
+    material.map = this.assetLoader.textures["tiles.washizu.auto"];
+    material.transparent = true;
+    material.depthWrite = false;
+    material.side = DoubleSide;
+    washizuMesh.material = material;
+    return {
+      0: mesh,
+      1: washizuMesh
+    };
+  }
+
+  getGroupIndex(typeIndex: number): number {
+    return (typeIndex & (1 << 10)) >> 10;
+  }
+
   protected name: string = 'tile';
 
   getOriginalMesh(): Mesh {
@@ -160,40 +227,50 @@ export class TileThingGroup extends InstancedThingGroup {
   getUvChunk(): string {
     return `
 #include <uv_vertex>
-if (vUv.x <= ${TILE_DU} && vUv.y <= ${TILE_DV}) {
+if (vUv.x <= ${TILE_DU}) {
   vUv.x += offset.x;
   vUv.y += offset.y;
-} else if (vUv.y >= ${4*TILE_DV}) {
+} else {
   vUv.y += offset.z;
 }
 `;
   }
 
   getOffset(typeIndex: number): Vector3 {
-    const x = (typeIndex % 37) % 8;
-    const y = Math.floor((typeIndex % 37) / 8);
-    const back = Math.floor(typeIndex / 37);
-    return new Vector3(x * TILE_DU, y * TILE_DV, back * TILE_DV);
+    const back = (typeIndex & (1 << 8)) >> 8;
+    const dora = (typeIndex & (1 << 9)) >> 9;
+    typeIndex &= 0xff;
+    const x = typeIndex % 40 % 9;
+    const  y = Math.floor(typeIndex % 40 / 9) + dora * 4;
+    return new Vector3(x * TILE_DU, y * TILE_DV, back * TILE_DV * 4);
   }
 
   createMesh(typeIndex: number): Mesh {
     const mesh = this.assetLoader.make('tile');
 
-    const x = (typeIndex % 37) % 8;
-    const y = Math.floor((typeIndex % 37) / 8);
-    const back = Math.floor(typeIndex / 37);
+    const offset = this.getOffset(typeIndex);
 
     // Clone geometry and modify front face
     const geometry = mesh.geometry.clone() as BufferGeometry;
     mesh.geometry = geometry;
     const uvs: Float32Array = geometry.attributes.uv.array as Float32Array;
     for (let i = 0; i < uvs.length; i += 2) {
-      if (uvs[i] <= TILE_DU && uvs[i+1] <= TILE_DV) {
-        uvs[i] += x * TILE_DU;
-        uvs[i+1] += y * TILE_DV;
-      } else if (uvs[i+1] >= 4 * TILE_DV) {
-        uvs[i+1] += back * TILE_DV;
+      if (uvs[i] <= TILE_DU) {
+        uvs[i] += offset.x;
+        uvs[i+1] += offset.y;
+      } else {
+        uvs[i+1] += offset.z;
       }
+    }
+
+    if (this.getGroupIndex(typeIndex) === 1) {
+      const material = mesh.material as MeshLambertMaterial;
+      material.map = this.assetLoader.textures['tiles.washizu.auto'];
+      material.side = DoubleSide;
+      material.transparent = true;
+      material.depthWrite = false;
+    } else {
+      mesh.renderOrder = 1;
     }
 
     return mesh;

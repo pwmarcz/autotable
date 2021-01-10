@@ -4,30 +4,32 @@ import { Message, Entry } from './protocol';
 
 export type Client = {
   game: Game | null;
+  isAuthed: boolean;
   playerId: string | null;
   send(data: string): void;
 }
 
-const MAX_PLAYERS = 8;
+const MAX_PLAYERS = 16;
 
 const EXPIRY_HOURS = 2;
 const EXPIRY_TIME = EXPIRY_HOURS * 60 * 60 * 1000;
 
 export class Game {
-  gameId: string;
+  password: string;
   expiryTime: number | null;
   private starting: boolean = true;
   private clients: Map<string, Client> = new Map();
 
   private unique: Map<string, string> = new Map();
   private ephemeral: Map<string, boolean> = new Map();
+  private writeProtected: Map<string, boolean> = new Map();
   private perPlayer: Map<string, boolean> = new Map();
 
   private collections: Map<string, Map<string | number, any>> = new Map();
 
-  constructor(gameId: string) {
-    console.log(`new game: ${gameId}`);
-    this.gameId = gameId;
+  constructor(public readonly gameId: string) {
+    this.password = randomString();
+    console.log(`new game: ${this.gameId}`);
     this.expiryTime = new Date().getTime() + EXPIRY_TIME;
   }
 
@@ -43,6 +45,7 @@ export class Game {
     this.clients.set(playerId, client);
     client.playerId = playerId;
     client.game = this;
+    client.isAuthed = this.starting;
 
     console.log(`${this.gameId}: join: ${playerId}`);
 
@@ -51,6 +54,7 @@ export class Game {
       gameId: this.gameId,
       playerId,
       isFirst: this.starting,
+      password: this.starting ? this.password : undefined,
     });
     this.starting = false;
     this.expiryTime = null;
@@ -65,40 +69,82 @@ export class Game {
         entries.push([kind, key, value]);
       }
     }
+
+    for (const [kind, value] of this.writeProtected.entries()) {
+      entries.push(["writeProtected", kind, value]);
+    }
+
     return entries;
   }
 
-  private update(entries: Array<Entry>): void {
+  private isAuthed(playerId: string | null): boolean {
+    return playerId !== null && this.clients.get(playerId)?.isAuthed === true;
+  }
+
+  private update(entries: Array<Entry>, senderId: string | null): void {
     if (!this.checkUnique(entries)) {
       this.sendAll({type: 'UPDATE', entries: this.allEntries(), full: true});
       return;
     }
 
+    const sendToAll: Array<Entry> = [];
+    const sendToOthers: Array<Entry> = [];
+
     for (const [kind, key, value] of entries) {
-      if (!this.ephemeral.get(kind)) {
-        let collection = this.collections.get(kind);
-        if (!collection) {
-          collection = new Map();
-          this.collections.set(kind, collection);
+      if (this.writeProtected.get(kind)){
+        if (!senderId || !this.isAuthed(senderId) && (!this.perPlayer.get(kind) || this.clients.get(senderId))) {
+          continue;
         }
-        if (value !== null) {
-          collection.set(key, value);
-        } else {
-          collection.delete(key);
-        }
+        sendToAll.push([kind, key, value]);
+      } else {
+        sendToOthers.push([kind, key, value]);
+      }
+
+      if (this.ephemeral.get(kind)) {
+        continue;
       }
 
       if (kind === 'unique') {
         this.unique.set(key as string, value);
+        continue;
       }
+
       if (kind === 'ephemeral') {
         this.ephemeral.set(key as string, value);
+        continue;
       }
+
       if (kind === 'perPlayer') {
         this.perPlayer.set(key as string, value);
+        continue;
+      }
+
+      if (kind === 'writeProtected' && this.isAuthed(senderId)) {
+        this.writeProtected.set(key as string, value);
+        continue;
+      }
+
+      let collection = this.collections.get(kind);
+      if (!collection) {
+        collection = new Map();
+        this.collections.set(kind, collection);
+      }
+      if (value !== null) {
+        collection.set(key, value);
+      } else {
+        collection.delete(key);
       }
     }
-    this.sendAll({type: 'UPDATE', entries, full: false});
+
+    if (sendToOthers.length > 0) {
+      const message: Message = {type: 'UPDATE', entries: sendToOthers, full: false};
+      this.sendAll(message, [senderId]);
+    }
+
+    if (sendToAll.length > 0) {
+      const message: Message = {type: 'UPDATE', entries: sendToAll, full: false};
+      this.sendAll(message);
+    }
   }
 
   private checkUnique(entries: Array<Entry>): boolean {
@@ -164,7 +210,7 @@ export class Game {
       }
     }
     if (toUpdate.length > 0) {
-      this.update(toUpdate);
+      this.update(toUpdate, client.playerId);
     }
     if (this.clients.size === 0) {
       this.expiryTime = new Date().getTime() + EXPIRY_TIME;
@@ -177,8 +223,11 @@ export class Game {
     client.send(data);
   }
 
-  private sendAll(message: Message): void {
+  private sendAll(message: Message, blacklist: Array<string|null> = []): void {
     for (const client of this.clients.values()) {
+      if (client.playerId !== null && blacklist.indexOf(client.playerId) >= 0) {
+        continue;
+      }
       this.send(client, message);
     }
   }
@@ -186,8 +235,17 @@ export class Game {
   onMessage(client: Client, message: Message): void {
     switch (message.type) {
       case 'UPDATE':
-        this.update(message.entries);
+        this.update(message.entries, client.playerId);
         break;
+
+      case 'AUTH': {
+        client.isAuthed = message.password === client.game?.password;
+        this.send(client, {
+          type: 'AUTHED',
+          isAuthed: client.isAuthed,
+        });
+        break;
+      }
     }
   }
 }

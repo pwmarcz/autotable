@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  nginx:
+    build:
+      context: .
+    image: autotable-nginx
+
+  server:
+    build:
+      context: ./server
+    image: autotable-server

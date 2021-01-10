@@ -47,8 +47,6 @@ export class Setup {
   }
 
   replace(conditions: Conditions): void {
-    // console.log('replace', conditions);
-
     const whatReplace: Record<ThingType, boolean> = {
       TILE: true,
       STICK: (
@@ -97,19 +95,10 @@ export class Setup {
     this.conditions = conditions;
   }
 
+  static readonly suits = [..."mpsz"];
+
   private tileIndex(i: number, conditions: Conditions): number | null {
     let tileIndex = Math.floor(i / 4);
-
-    if (conditions.fives !== '000') {
-      if (tileIndex === 4 && i % 4 === 0) {
-        tileIndex = 34;
-      } else if (tileIndex === 13 &&
-          (i % 4 === 0 || (i % 4 === 1 && conditions.fives === '121'))) {
-        tileIndex = 35;
-      } else if (tileIndex === 22 && i % 4 === 0) {
-        tileIndex = 36;
-      }
-    }
 
     if (conditions.gameType === GameType.BAMBOO) {
       if (!((18 <= tileIndex && tileIndex < 27) || tileIndex === 36)) {
@@ -123,17 +112,26 @@ export class Setup {
       }
     }
 
-    tileIndex += 37 * conditions.back;
+    const tileNumber = tileIndex % 9;
+    const tileSuit = Setup.suits[Math.floor(tileIndex / 9)];
+
+    if (conditions.back > 0){
+      tileIndex |= 1 << 8;
+    }
+
+    if ( conditions.aka[(tileNumber + 1) + tileSuit] > i % 4 ) {
+      tileIndex |= 1 << 9;
+    }
+
+    if ( conditions.gameType === GameType.WASHIZU && i % 4 !== 0 ) {
+      tileIndex |= 1 << 10;
+    }
+
     return tileIndex;
   }
 
   deal(seat: number, gameType: GameType, dealType: DealType): void {
-    // console.log('deal', gameType, dealType);
-
     const roll = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1);
-    // Debug
-    // const roll = (window.ROLL && window.ROLL < 12) ? window.ROLL + 1 : 2;
-    // window.ROLL = roll;
 
     if (GAME_TYPES[gameType].seats.indexOf(seat) === -1) {
       seat = 0;
@@ -166,8 +164,7 @@ export class Setup {
 
       for (let i = 0; i < searched.length; i++) {
         // HACK: typeIndex includes back color
-        const idx = tiles.findIndex(tile =>
-          (tile.typeIndex === searched[i] || tile.typeIndex === searched[i] + 37));
+        const idx = tiles.findIndex(tile => (tile.getTypeIndexNoFlags() === searched[i] && tile.isTransparent() == false));
         if (idx === -1) {
           throw `not found: ${searched[i]}`;
         }
@@ -273,7 +270,8 @@ export class Setup {
     this.pushes.push(...Slot.computePushes([...this.slots.values()]));
   }
 
-  getScores(): Array<number | null> {
+
+  getScores(): {seats: Array<number | null>, remaining: number} {
     const scores = new Array(4).fill(-20000);
     scores.push((25000 + 20000) * 4); // remaining
     const stickScores = [100, 500, 1000, 5000, 10000, 10000];
@@ -291,6 +289,9 @@ export class Setup {
       result[seat] = scores[seat];
     }
 
-    return result;
+    return {
+      seats: result,
+      remaining: scores[4]
+    }
   }
 }

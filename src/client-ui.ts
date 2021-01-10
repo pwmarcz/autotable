@@ -12,7 +12,6 @@ const RECONNECT_ATTEMPTS = 15;
 export class ClientUi {
   url: string;
   client: Client;
-  nickElement: HTMLInputElement;
   statusElement: HTMLElement;
   statusTextElement: HTMLElement;
 
@@ -24,15 +23,8 @@ export class ClientUi {
     this.url = this.getUrl();
     this.client = client;
 
-    this.nickElement = document.getElementById('nick')! as HTMLInputElement;
-    this.nickElement.value = localStorage.getItem('autotable.nick') ?? '';
-
-    this.nickElement.onchange = this.onNickChange.bind(this);
-    this.nickElement.oninput = this.onNickChange.bind(this);
-
     this.client.on('connect', this.onConnect.bind(this));
     this.client.on('disconnect', this.onDisconnect.bind(this));
-    this.onNickChange();
 
     const connectButton = document.getElementById('connect')!;
     connectButton.onclick = () => this.connect();
@@ -75,29 +67,22 @@ export class ClientUi {
     // @ts-ignore
     const env = process.env.NODE_ENV;
 
-    if (env !== 'production') {
-      return 'ws://localhost:1235';
-    }
-
     let path = window.location.pathname;
     path = path.substring(1, path.lastIndexOf('/')+1);
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsHost = window.location.host;
     const wsPath = path + 'ws';
-    return `${wsProtocol}//${wsHost}/${wsPath}`;
-  }
 
-  onNickChange(): void {
-    if (this.client.connected()) {
-      this.client.nicks.set(this.client.playerId(), this.nickElement.value);
+    if (env !== 'production') {
+      return `${wsProtocol}//${window.location.hostname}:1235/${wsPath}`;
     }
-    localStorage.setItem('autotable.nick', this.nickElement.value);
+
+    return `${wsProtocol}//${wsHost}/${wsPath}`;
   }
 
   onConnect(game: Game): void {
     this.setStatus(null);
     document.getElementById('server')!.classList.add('connected');
-    this.onNickChange();
     this.setUrlState(game.gameId);
     document.getElementsByTagName('title')[0].innerText = TITLE_CONNECTED;
 

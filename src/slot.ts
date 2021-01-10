@@ -36,6 +36,7 @@ export class Slot {
   direction: Vector2;
 
   // Permitted rotations for things in this slot
+  readonly rotationOptions: Array<Euler>;
   rotations: Array<Euler>;
 
   // Coordinates of this slot, e.g. 'wall.1.2@3' has indexes [1, 2]
@@ -70,6 +71,8 @@ export class Slot {
   // Rotate a tile hovered over this slot. Used for hand.
   rotateHeld: boolean;
 
+  phantom: boolean;
+
   constructor(params: {
     name: string;
     group: string;
@@ -82,18 +85,21 @@ export class Slot {
     drawShadow?: boolean;
     shadowRotation?: number;
     rotateHeld?: boolean;
+    phantom?: boolean;
   }) {
     this.name = params.name;
     this.group = params.group;
     this.type = params.type ?? ThingType.TILE;
     this.origin = params.origin;
     this.direction = params.direction ?? new Vector2(1, 1);
+    this.rotationOptions = params.rotations;
     this.rotations = params.rotations;
     this.linkDesc = params.links ?? {};
     this.canFlipMultiple = params.canFlipMultiple ?? false;
     this.drawShadow = params.drawShadow ?? false;
     this.shadowRotation = params.shadowRotation ?? 0;
     this.rotateHeld = params.rotateHeld ?? false;
+    this.phantom = params.phantom ?? false;
 
     this.places = this.rotations.map(this.makePlace.bind(this));
     this.offset = new Vector2(0, 0);
@@ -153,6 +159,7 @@ export class Slot {
       origin: this.origin,
       direction: this.direction,
       rotations: this.rotations,
+      phantom: this.phantom,
     });
     slot.linkDesc = linkDesc;
     slot.canFlipMultiple = this.canFlipMultiple;
@@ -269,5 +276,11 @@ export class Slot {
     }
   }
 
-
+  getTop(): Slot {
+    let top: Slot = this;
+    while(top.links.up != null) {
+      top = top.links.up;
+    }
+    return top;
+  }
 }

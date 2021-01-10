@@ -1,11 +1,11 @@
-import { Group, Mesh, Vector3, MeshBasicMaterial, MeshLambertMaterial, Object3D, PlaneBufferGeometry, InstancedMesh } from "three";
+import { Group, Mesh, Vector3, MeshBasicMaterial, MeshLambertMaterial, Object3D, PlaneBufferGeometry, InstancedMesh, PlaneGeometry, CanvasTexture, Vector2 } from "three";
 
 import { World } from "./world";
 import { Client } from "./client";
 import { AssetLoader } from "./asset-loader";
 import { Center } from "./center";
 import { ThingParams, ThingGroup, TileThingGroup, StickThingGroup, MarkerThingGroup } from "./thing-group";
-import { ThingType, Place } from "./types";
+import { ThingType, Place, Size } from "./types";
 
 export interface Render {
   type: ThingType;
@@ -16,6 +16,7 @@ export interface Render {
   held: boolean;
   temporary: boolean;
   bottom: boolean;
+  hidden: boolean;
 }
 
 const MAX_SHADOWS = 300;
@@ -33,13 +34,14 @@ export class ObjectView {
   private dropShadowObjects: Array<Mesh>;
 
   selectedObjects: Array<Mesh>;
+  tableMesh: Mesh;
 
   constructor(mainGroup: Group, assetLoader: AssetLoader, client: Client) {
     this.mainGroup = mainGroup;
     this.assetLoader = assetLoader;
 
     this.center = new Center(this.assetLoader, client);
-    this.center.mesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0.75);
+    this.center.group.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
     this.dropShadowObjects = [];
     this.selectedObjects = [];
 
@@ -97,20 +99,41 @@ export class ObjectView {
     this.shadowObject.instanceMatrix.needsUpdate = true;
   }
 
-  private addStatic(): void {
-    const tableMesh = this.assetLoader.makeTable();
-    tableMesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
-    this.mainGroup.add(tableMesh);
-    this.mainGroup.add(this.center.mesh);
+  setTableCloth(): void {
+    const texture = this.assetLoader.textures.customTableCloth;
+    if (!texture) {
+      return;
+    }
 
-    tableMesh.updateMatrixWorld();
-    this.center.mesh.updateMatrixWorld();
+    const material = this.tableMesh.material as MeshLambertMaterial;
+    material.map = texture;
+  }
+
+  resetTableCloth(): void {
+    const material = this.tableMesh.material as MeshLambertMaterial;
+    material.map = this.assetLoader.textures.table;
+  }
+
+
+  rotateTableCloth(seat: number): void {
+    this.tableMesh.rotation.set(0, 0, Math.PI / 2 * seat);
+    this.tableMesh.updateMatrixWorld();
+  }
+
+  private addStatic(): void {
+    this.tableMesh = this.assetLoader.makeTable();
+    this.tableMesh.position.set(World.WIDTH / 2, World.WIDTH / 2, -0.01);
+    this.mainGroup.add(this.tableMesh);
+    this.tableMesh.updateMatrixWorld();
+
+    this.mainGroup.add(this.center.group);
+    this.center.group.updateMatrixWorld(true);
 
     for (let i = 0; i < 4; i++) {
       for (let j = 0; j < 6; j++) {
         const trayPos = new Vector3(
           25 + 24 * j - World.WIDTH / 2,
-          -33 - World.WIDTH / 2,
+          -33 * 1.5 - World.WIDTH / 2,
           0
         );
         trayPos.applyAxisAngle(new Vector3(0, 0, 1), Math.PI * i / 2);
@@ -136,7 +159,7 @@ export class ObjectView {
     this.selectedObjects.splice(0);
     for (const thing of things) {
       const thingGroup = this.thingGroups.get(thing.type)!;
-      const custom = thing.hovered || thing.selected || thing.held || thing.bottom;
+      const custom = thing.hovered || thing.selected || thing.held || thing.bottom || thing.hidden;
       if (!custom && thingGroup.canSetSimple()) {
         thingGroup.setSimple(thing.thingIndex, thing.place.position, thing.place.rotation);
         continue;
@@ -148,9 +171,14 @@ export class ObjectView {
       const material = obj.material as MeshLambertMaterial;
       material.emissive.setHex(0);
       material.color.setHex(0xeeeeee);
-      material.transparent = false;
-      material.depthTest = true;
+
+      if (thing.hidden) {
+        material.transparent = true;
+        material.opacity = 0.0;
+      }
+
       obj.renderOrder = 0;
+      material.depthTest = true;
 
       if (thing.hovered) {
         material.emissive.setHex(0x111111);
@@ -160,7 +188,7 @@ export class ObjectView {
         material.color.setHex(0xbbbbbb);
       }
 
-      if (thing.selected) {
+      if (thing.selected && !thing.hidden) {
         this.selectedObjects.push(obj);
       }
 
@@ -169,7 +197,7 @@ export class ObjectView {
         material.opacity = thing.temporary ? 0.7 : 1;
         material.depthTest = false;
         obj.position.z += 1;
-        obj.renderOrder = 1;
+        obj.renderOrder = 2;
       }
 
       obj.updateMatrix();

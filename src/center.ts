@@ -1,9 +1,12 @@
 import { AssetLoader } from "./asset-loader";
-import { Mesh, CanvasTexture, Vector2, MeshLambertMaterial } from "three";
+import { Mesh, CanvasTexture, Vector2, MeshLambertMaterial, Group } from "three";
 import { Client } from "./client";
+import { World } from "./world";
+import { Size } from "./types";
 
 export class Center {
-  mesh: Mesh;
+  private mesh: Mesh;
+  group: Group;
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   texture: CanvasTexture;
@@ -12,13 +15,31 @@ export class Center {
   nicks: Array<string | null> = new Array(4).fill(null);
   dealer: number | null = null;
   honba = 0;
+  remainingTiles = 0;
 
   client: Client;
 
+  private readonly namePlateSize = new Vector2(
+    128 * 8,
+    15.5 * 4 * 8,
+  ).multiplyScalar(8);
+  private readonly namePlateContexts: Array<CanvasRenderingContext2D> = [];
+  private readonly namePlateCanvases: Array<HTMLCanvasElement> = [];
+  private readonly namePlateTextures: Array<CanvasTexture> = [];
+
   dirty = true;
+  private readonly namePlateColors: Array<string> = [
+    '#ba7329',
+    '#956d5d',
+    '#fb78a2',
+    '#3581d5',
+  ];
 
   constructor(loader: AssetLoader, client: Client) {
+    this.group = new Group();
     this.mesh = loader.makeCenter();
+    this.mesh.position.set(0, 0, 0.75);
+    this.group.add(this.mesh);
     this.canvas = document.getElementById('center')! as HTMLCanvasElement;
     this.ctx = this.canvas.getContext('2d')!;
 
@@ -40,23 +61,107 @@ export class Center {
     this.client.nicks.on('update', this.update.bind(this));
     this.client.match.on('update', this.update.bind(this));
     this.client.seats.on('update', this.update.bind(this));
+    this.client.things.on('update', this.update.bind(this));
+
+    const tableEdge = loader.makeTableEdge();
+    tableEdge.position.set(0, 0, (-25.5 / 2) + Size.TILE.z);
+    this.group.add(tableEdge);
+    tableEdge.updateMatrixWorld();
+
+    for (let i = 0; i < 4; i++) {
+      this.namePlateCanvases[i] = document.getElementById(`name-plate-${i}`)! as HTMLCanvasElement;
+      this.namePlateCanvases[i].width = this.namePlateSize.x;
+      this.namePlateCanvases[i].height = this.namePlateSize.y;
+      this.namePlateContexts[i] = this.namePlateCanvases[i].getContext('2d')!;
+
+      const namePlate = loader.makeNamePlate();
+      namePlate.position.set(0, -World.WIDTH / 2 - 23, 3);
+      namePlate.rotateX(Math.PI);
+      this.group.add(namePlate);
+
+      const group = new Group();
+      this.group.add(group);
+      group.rotateZ(Math.PI * i / 2);
+      group.add(namePlate);
+
+      group.updateMatrixWorld(true);
+
+      const texture = new CanvasTexture(this.namePlateCanvases[i]);
+      this.namePlateTextures.push(texture);
+      texture.flipY = false;
+      texture.center = new Vector2(0.5, 0.5);
+      texture.anisotropy = 16;
+      const material = namePlate.material as MeshLambertMaterial;
+      material.map = texture;
+
+      this.updateNamePlate(i, this.nicks[i]);
+    }
 
     client.on('disconnect', this.update.bind(this));
   }
 
+  private readonly namePlates: Array<string> = [];
+
+  private updateNamePlate(seat: number, nick: string | null): void {
+    const actualNick = nick ?? "";
+    if (this.namePlates[seat] === actualNick) {
+      return;
+    }
+
+    this.namePlates[seat] = actualNick;
+
+    const context = this.namePlateContexts[seat];
+
+    context.resetTransform();
+
+    context.fillStyle = '#ddddd0';
+    context.fillRect(0, 0, this.namePlateSize.x, this.namePlateSize.y);
+
+    context.fillStyle = this.namePlateColors[seat];
+    context.fillRect(
+      0,
+      0,
+      this.namePlateSize.x,
+      this.namePlateSize.y
+    );
+
+    context.strokeStyle = '#888888';
+    context.lineWidth = 2;
+
+    context.textAlign = 'center';
+    context.font = `${this.namePlateSize.y / 6}px Koruri`;
+    context.fillStyle = '#fff';
+    context.textBaseline = 'middle';
+    context.translate(
+      this.namePlateSize.x / 2,
+      this.namePlateSize.y / 3.5
+    );
+    context.fillText(actualNick.substring(0, 14), 0, 0);
+    this.namePlateTextures[seat].needsUpdate = true;
+  }
+
   update(): void {
     for (let i = 0; i < 4; i++) {
-      if (this.client.connected()) {
-        const playerId = this.client.seatPlayers[i];
-        const nick = playerId !== null ? this.client.nicks.get(playerId) : null;
-        this.nicks[i] = nick ?? null;
-      } else {
-        this.nicks[i] = null;
+      const playerId = this.client.seatPlayers[i];
+      const nick = playerId !== null ? this.client.nicks.get(playerId) : null;
+
+      if (nick === null) {
+        this.nicks[i] = '';
+        continue;
       }
+
+      if (nick === '') {
+        this.nicks[i] = 'Jyanshi';
+        continue;
+      }
+
+      this.nicks[i] = nick;
     }
 
     this.dealer = this.client.match.get(0)?.dealer ?? null;
     this.honba = this.client.match.get(0)?.honba ?? 0;
+    this.remainingTiles = [...this.client.things.entries()].filter(([i, t]) =>
+      t.slotName.startsWith("washizu.bag") && t.claimedBy === null).length;
 
     this.dirty = true;
   }
@@ -91,6 +196,7 @@ export class Center {
     for (let i = 0; i < 4; i++) {
       this.drawScore(this.scores[i]);
       this.drawNick(this.nicks[i]);
+      this.updateNamePlate(i, this.nicks[i]);
       if (this.dealer === i) {
         this.drawDealer();
       }
@@ -119,19 +225,11 @@ export class Center {
   }
 
   drawNick(nick: string | null): void {
-    let text;
-    if (nick === null) {
-      text = '';
-    } else if (nick === '') {
-      text = 'Player';
-    } else {
-      text = nick.substr(0, 10);
-    }
-
+    const text = (nick ?? "").substr(0, 10);
     this.ctx.textAlign = 'center';
     this.ctx.font = '20px Verdana, Arial';
     this.ctx.fillStyle = '#afa';
-    this.ctx.fillText(text, 0, 55);
+    this.ctx.fillText(text ?? "", 0, 55);
   }
 
   drawDealer(): void {
@@ -141,6 +239,17 @@ export class Center {
       this.ctx.textAlign = 'right';
       this.ctx.font = '40px Segment7Standard, monospace';
       this.ctx.fillText('' + this.honba, -90, 100);
+    }
+
+    if (this.remainingTiles > 0) {
+      if(this.remainingTiles < 14) {
+        this.ctx.fillStyle = '#f44';
+      } else {
+        this.ctx.fillStyle = '#88f';
+      }
+      this.ctx.textAlign = 'center';
+      this.ctx.font = '40px Segment7Standard, monospace';
+      this.ctx.fillText('' + this.remainingTiles, 0, 5);
     }
   }
 }

@@ -52,12 +52,10 @@ export class Thing {
   }
 
   prepareMove(): void {
-    // console.log('remove', this.index, this.slot.name);
     this.slot.thing = null;
   }
 
   moveTo(target: Slot, rotationIndex?: number): void {
-    // console.log('moveTo', this.index, target.name);
     if (target.thing !== null) {
       throw `slot not empty: ${this.index} ${target.name}`;
     }
@@ -80,9 +78,19 @@ export class Thing {
     this.sent = false;
   }
 
-  release(): void {
+  release(local?: boolean): void {
     this.claimedBy = null;
     this.shiftSlot = null;
-    this.sent = false;
+    if (!local) {
+      this.sent = false;
+    }
+  }
+
+  getTypeIndexNoFlags(): number {
+    return this.typeIndex & 0xff;
+  }
+
+  isTransparent(): boolean {
+    return (this.typeIndex & (1 << 10)) > 0;
   }
 }

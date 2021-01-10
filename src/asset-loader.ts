@@ -1,6 +1,8 @@
 // @ts-ignore
 import jpg from '../img/*.jpg';
 // @ts-ignore
+import png from '../img/*.png';
+// @ts-ignore
 import glbModels from '../img/models.auto.glb';
 
 import { Texture, Mesh, TextureLoader, Material, LinearEncoding,
@@ -11,19 +13,38 @@ import { Size } from './types';
 
 
 export class AssetLoader {
+  static readonly worldSize = World.WIDTH + Size.TILE.y * 2;
+  private static readonly TableClothLocalStorageKey = "_tableClothDataUrl";
   textures: Record<string, Texture> = {};
   meshes: Record<string, Mesh> = {};
 
   makeTable(): Mesh {
     const tableGeometry = new PlaneGeometry(
-      World.WIDTH + Size.TILE.y, World.WIDTH + Size.TILE.y);
-    const tableMaterial = new MeshLambertMaterial({ color: 0xeeeeee, map: this.textures.table });
+      AssetLoader.worldSize,
+      AssetLoader.worldSize
+    );
+    const tableMaterial = new MeshLambertMaterial({
+      color: 0xeeeeee,
+      map: this.textures.customTableCloth ?? this.textures.table
+    });
     const tableMesh = new Mesh(tableGeometry, tableMaterial);
     return tableMesh;
   }
 
   makeCenter(): Mesh {
     return this.cloneMesh(this.meshes.center);
+  }
+
+  makeNamePlate(): Mesh {
+    const mesh = this.cloneMesh(this.meshes.name_plate);
+    // (mesh.material as MeshStandardMaterial).color.setHex(0xddddd0);
+    return mesh;
+  }
+
+  makeTableEdge(): Mesh {
+    const mesh = this.cloneMesh(this.meshes.table_edge);
+    (mesh.material as MeshStandardMaterial).color.setHex(0xddddd0);
+    return mesh;
   }
 
   makeTray(): Mesh {
@@ -52,11 +73,19 @@ export class AssetLoader {
   }
 
   loadAll(): Promise<void> {
-    return Promise.all([
+    const tasks = [
       this.loadTexture(jpg['table'], 'table'),
+      this.loadTexture(png['tiles.washizu.auto'], 'tiles.washizu.auto'),
       this.loadModels(glbModels),
       (document as any).fonts.load('40px "Segment7Standard"'),
-    ]).then(() => {
+    ];
+
+    const savedCloth = localStorage.getItem(AssetLoader.TableClothLocalStorageKey);
+    if (savedCloth) {
+      tasks.push(this.loadTableCloth(savedCloth));
+    }
+
+    return Promise.all(tasks).then(() => {
       this.textures.table.wrapS = RepeatWrapping;
       this.textures.table.wrapT = RepeatWrapping;
       this.textures.table.repeat.set(3, 3);
@@ -64,12 +93,26 @@ export class AssetLoader {
     });
   }
 
-  loadTexture(url: string, name: string): Promise<void> {
+  loadTableCloth(url: string): Promise<void> {
+    return this.loadTexture(url, "customTableCloth").then((texture) => {
+      texture.flipY = true;
+      if (url.length < 600000) {
+        localStorage.setItem(AssetLoader.TableClothLocalStorageKey, url);
+      }
+    });
+  }
+
+  forgetTableCloth() {
+    localStorage.removeItem(AssetLoader.TableClothLocalStorageKey);
+    delete this.textures.customTableCloth;
+  }
+
+  loadTexture(url: string, name: string): Promise<Texture> {
     const loader = new TextureLoader();
     return new Promise(resolve => {
       loader.load(url, (texture: Texture) => {
-        this.textures[name] = this.processTexture(texture);;
-        resolve();
+        this.textures[name] = this.processTexture(texture);
+        resolve(this.textures[name]);
       });
     });
   }
@@ -97,7 +140,7 @@ export class AssetLoader {
     return texture;
   }
 
-  processMesh(mesh: Mesh): Mesh {
+  private processMesh(mesh: Mesh): Mesh {
     if (Array.isArray(mesh.material)) {
       mesh.material = mesh.material.map(this.processMaterial.bind(this));
     } else {
@@ -106,7 +149,7 @@ export class AssetLoader {
     return mesh;
   }
 
-  processMaterial(material: Material): Material {
+  private processMaterial(material: Material): Material {
     const standard = material as MeshStandardMaterial;
     const map = standard.map;
     if (map !== null) {

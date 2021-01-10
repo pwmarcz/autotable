@@ -1,14 +1,16 @@
 import { Vector3, Vector2, Euler } from "three";
 import { Slot } from "./slot";
+import { TileThingGroup } from "./thing-group";
 import { Size, ThingType, GameType } from "./types";
 
 const WORLD_SIZE = 174;
 
-const Rotation = {
+export const Rotation = {
   FACE_UP: new Euler(0, 0, 0),
   FACE_UP_SIDEWAYS: new Euler(0, 0, Math.PI / 2),
   STANDING: new Euler(Math.PI / 2, 0, 0),
   FACE_DOWN: new Euler(Math.PI, 0, 0),
+  FACE_DOWN_SIDEWAYS: new Euler(Math.PI, 0, Math.PI / 2),
   FACE_DOWN_REVERSE: new Euler(Math.PI, 0, Math.PI),
 };
 
@@ -78,8 +80,8 @@ function column(count: number, dy?: number): SlotOp {
   return repeat(count, new Vector3(0, dy ?? Size.TILE.y, 0));
 }
 
-function stack(dz?: number): SlotOp {
-  return repeat(2, new Vector3(0, 0, dz ?? Size.TILE.z), {stack: true});
+function stack(count?: number, dz?: number): SlotOp {
+  return repeat(count ?? 2, new Vector3(0, 0, dz ?? Size.TILE.z), {stack: true});
 }
 
 function seats(which?: Array<number>): SlotOp {
@@ -136,7 +138,7 @@ const START: Record<string, Slot> = {
   'meld': new Slot({
     name: `meld`,
     group: `meld`,
-    origin: new Vector3(174, 0, 0),
+    origin: new Vector3(174 + Size.TILE.x, 0, 0),
     direction: new Vector2(-1, 1),
     rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN],
   }),
@@ -169,7 +171,7 @@ const START: Record<string, Slot> = {
     group: `discard`,
     origin: new Vector3(69, 60, 0),
     direction: new Vector2(1, 1),
-    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
+    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN, Rotation.FACE_DOWN_SIDEWAYS],
     drawShadow: true,
   }),
 
@@ -178,14 +180,44 @@ const START: Record<string, Slot> = {
     group: `discard`,
     origin: new Vector3(69 + 6 * Size.TILE.x, 60 - 2 * Size.TILE.y, 0),
     direction: new Vector2(1, 1),
+    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN, Rotation.FACE_DOWN_SIDEWAYS],
+  }),
+
+  'discard.washizu': new Slot({
+    name: `discard`,
+    group: `discard`,
+    origin: new Vector3(69, 60, 0),
+    direction: new Vector2(1, 1),
     rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
+    drawShadow: true,
+  }),
+
+  'discard.washizu.extra': new Slot({
+    name: `discard.extra`,
+    group: `discard`,
+    origin: new Vector3(69 + 6 * Size.TILE.x, 60 - 2 * Size.TILE.y, 0),
+    direction: new Vector2(1, 1),
+    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
+  }),
+
+  'washizu.bag': new Slot({
+    name: 'washizu.bag',
+    group: 'washizu.bag',
+    type: ThingType.TILE,
+    origin: new Vector3().subVectors(
+      new Vector3(
+        WORLD_SIZE, WORLD_SIZE, 0,
+      ),
+      Size.TILE).divideScalar(2).add(new Vector3(0, 0, -135 * Size.TILE.z)),
+    rotations: [Rotation.FACE_DOWN],
+    phantom: true,
   }),
 
   'tray': new Slot({
     name: `tray`,
     group: `tray`,
     type: ThingType.STICK,
-    origin: new Vector3(15, -25, 0),
+    origin: new Vector3(15, -41, 0),
     rotations: [Rotation.FACE_UP],
   }),
 
@@ -272,6 +304,21 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('payment'), row(8, 3), seats()],
     [start('riichi'), seats([0, 2])],
     [start('marker'), seats([0, 2])],
+  ],
+
+  WASHIZU: [
+    [start('hand'), row(14, undefined, {shift: true}), seats()],
+    [start('hand.extra'), seats()],
+    [start('meld'), column(4), row(4, -Size.TILE.x, {push: true, shift: true}), seats()],
+    [start('wall'), row(19), stack(), seats()],
+    [start('washizu.bag'), stack(136), seats([0])],
+    [start('discard.washizu'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats()],
+    [start('discard.washizu.extra'), row(4, undefined, {push: true}), seats()],
+
+    [start('tray'), row(6, 24), column(10, -3), seats()],
+    [start('payment'), row(8, 3), seats()],
+    [start('riichi'), seats()],
+    [start('marker'), seats()],
   ],
 };
 

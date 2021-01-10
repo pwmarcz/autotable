@@ -1,4 +1,4 @@
-import { Vector3 } from "three";
+import { Vector3, Quaternion } from "three";
 
 import { Movement } from "./movement";
 import { Client } from "./client";
@@ -7,9 +7,10 @@ import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
 import { SoundPlayer } from "./sound-player";
-import { Conditions, ThingInfo, SoundType, Fives, Place, ThingType, Size, DealType, GameType, Points } from "./types";
+import { Conditions, ThingInfo, SoundType, Place, ThingType, Size, DealType, GameType, Points } from "./types";
 import { Slot } from "./slot";
 import { Thing } from "./thing";
+import { Rotation } from "./setup-slots";
 
 
 interface Select extends Place {
@@ -19,7 +20,9 @@ interface Select extends Place {
 const SHIFT_TIME = 100;
 
 export class World {
-  private setup: Setup;
+  private static readonly heldRotationOptions = [Rotation.STANDING, Rotation.FACE_DOWN];
+
+  setup: Setup;
 
   private objectView: ObjectView;
 
@@ -33,6 +36,7 @@ export class World {
 
   private movement: Movement | null = null;
   private heldMouse: Vector3 | null = null;
+  private heldRotationIndex: number = -1;
   mouseTracker: MouseTracker;
 
   soundPlayer: SoundPlayer;
@@ -60,11 +64,13 @@ export class World {
     this.mouseTracker = new MouseTracker(this.client);
 
     this.soundPlayer = soundPlayer;
+    this.sendUpdate();
+  }
 
+  registerEvents(): void {
     this.client.seats.on('update', this.onSeat.bind(this));
     this.client.things.on('update', this.onThings.bind(this));
     this.client.match.on('update', this.onMatch.bind(this));
-    this.sendUpdate();
   }
 
   toggleDealer(): void {
@@ -105,7 +111,15 @@ export class World {
       thing.moveTo(slot, thingInfo.rotationIndex);
       thing.sent = true;
 
-      thing.claimedBy = thingInfo.claimedBy;
+      if (thing.claimedBy !== thingInfo.claimedBy) {
+        if (thing.claimedBy !== null) {
+          thing.release();
+        } else {
+          thing.claimedBy = thingInfo.claimedBy;
+        }
+      }
+
+
       thing.heldRotation.set(
         thingInfo.heldRotation.x,
         thingInfo.heldRotation.y,
@@ -194,7 +208,7 @@ export class World {
     };
   }
 
-  deal(dealType: DealType, gameType: GameType, fives: Fives, points: Points): void {
+  deal(dealType: DealType, gameType: GameType, aka: Record<string, number>, points: Points): void {
     if (this.seat === null) {
       return;
     }
@@ -206,7 +220,7 @@ export class World {
     this.checkPushes();
 
     const back = 1 - this.conditions.back;
-    const conditions = { ...this.conditions, back, gameType, fives, points };
+    const conditions = { ...this.conditions, back, gameType, aka, points };
 
     let match = this.client.match.get(0);
     let honba;
@@ -264,6 +278,23 @@ export class World {
     this.selected = filterMostCommon(this.selected, thing => thing.slot.group + '@' + thing.slot.seat);
   }
 
+  private getHeld(): Array<Thing> {
+    const held: Array<Thing> = [];
+    for (const thing of this.things.values()) {
+      if (thing.claimedBy !== this.seat) {
+        continue;
+      }
+
+      if (thing.shiftSlot !== null) {
+        thing.release();
+      } else {
+        held.push(thing);
+      }
+    }
+
+    return held;
+  }
+
   onMove(mouse: Vector3 | null): void {
     if ((this.mouse === null && mouse === null) ||
         (this.mouse !== null && mouse !== null && this.mouse.equals(mouse))) {
@@ -284,18 +315,11 @@ export class World {
 
     this.movement = new Movement();
 
-    const held: Array<Thing> = [];
-
-    for (const thing of this.things.values()) {
-      if (thing.claimedBy === this.seat) {
-        if (thing.shiftSlot !== null) {
-          thing.release();
-        } else {
-          held.push(thing);
-        }
-      }
+    const held = this.getHeld();
+    if (held.length === 0) {
+      return;
     }
-    // this.things.filter(thing => thing.claimedBy === this.seat);
+
     held.sort((a, b) => compareZYX(a.slot.origin, b.slot.origin));
 
     for (let i = 0; i < held.length; i++) {
@@ -322,7 +346,14 @@ export class World {
       this.movement = null;
       return;
     }
-    this.movement.rotateHeld();
+
+    if(this.heldRotationIndex === -1) {
+      const rotation = this.movement.rotateHeld();
+      if (rotation !== null) {
+        this.heldRotationIndex = Math.max(0, World.heldRotationOptions.findIndex(o => o.equals(rotation)));
+      }
+    }
+
     this.movement.applyShift(this.seat!);
   }
 
@@ -363,7 +394,6 @@ export class World {
       if (slot.links.requires && slot.links.requires.thing === null) {
         continue;
       }
-
       const place = slot.placeWithOffset(0);
 
       const margin = Size.TILE.x / 2;
@@ -389,59 +419,74 @@ export class World {
       return false;
     }
 
-    if (this.hovered !== null && !this.isHolding()) {
-      let toHold;
-      if (this.selected.indexOf(this.hovered) !== -1) {
-        toHold = [...this.selected];
-      } else {
-        toHold = [this.hovered];
-        this.selected.splice(0);
-      }
-
-      toHold = toHold.filter(thing => thing.claimedBy === null);
-
-      for (const thing of toHold) {
-        thing.hold(this.seat);
-      }
-      this.hovered = null;
-      this.heldMouse = this.mouse;
-
-      this.drag();
-      this.sendMouse();
-      this.sendUpdate();
-
-      return true;
+    if (this.hovered === null || this.isHolding()) {
+      return false;
     }
-    return false;
+
+    let toHold;
+    if (this.selected.indexOf(this.hovered) !== -1) {
+      toHold = [...this.selected];
+    } else {
+      toHold = [this.hovered];
+      this.selected.splice(0);
+    }
+
+    toHold = toHold.filter(thing => thing.claimedBy === null);
+
+    for (const thing of toHold) {
+      thing.hold(this.seat);
+    }
+
+    this.hovered = null;
+    this.heldMouse = this.mouse;
+
+    this.drag();
+    this.sendMouse();
+    this.sendUpdate();
+
+    return true;
   }
 
   onDragEnd(): void {
-    if (this.isHolding()) {
-      if (this.heldMouse !== null && this.mouse !== null &&
-          this.heldMouse.equals(this.mouse)) {
-
-        // No movement; unselect
-        this.selected.splice(0);
-        this.dropInPlace();
-        // if (this.hovered !== null) {
-        //   this.selected.push(this.hovered);
-        // }
-      } else if (this.canDrop()) {
-        // Successful movement
-        this.drop();
-      } else {
-        this.dropInPlace();
-      }
+    if (!this.isHolding()) {
+      return;
     }
 
+    if (this.heldMouse !== null && this.mouse !== null &&
+        this.heldMouse.equals(this.mouse)) {
+
+      // No movement; unselect
+      this.selected.splice(0);
+      this.dropInPlace();
+      // if (this.hovered !== null) {
+      //   this.selected.push(this.hovered);
+      // }
+    } else if (this.canDrop()) {
+      // Successful movement
+      this.drop();
+    } else {
+      this.dropInPlace();
+    }
+
+    this.heldRotationIndex = -1;
   }
 
   onFlip(direction: number, animated?: boolean): void {
     if (this.isHolding()) {
-      return;
-    }
+      this.heldRotationIndex = Math.max(
+        0,
+        (this.heldRotationIndex + (direction % World.heldRotationOptions.length) + World.heldRotationOptions.length) % World.heldRotationOptions.length
+      );
 
-    if (this.selected.length > 0) {
+      if (this.seat !== null) {
+        const q = new Quaternion().setFromEuler(World.heldRotationOptions[this.heldRotationIndex]);
+        q.premultiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), this.seat * Math.PI / 2));
+        for (const thing of this.getHeld()) {
+            thing.heldRotation.setFromQuaternion(q);
+            thing.sent = false;
+        }
+      }
+    } else if (this.selected.length > 0) {
       const rotationIndex = mostCommon(this.selected, thing => thing.rotationIndex)!;
       const toFlip = [];
       for (const thing of this.selected) {
@@ -465,7 +510,6 @@ export class World {
       this.checkPushes();
     }
     this.sendUpdate();
-
   }
 
   private flipAnimated(things: Array<Thing>, i: number, rotationIndex: number): void {
@@ -501,6 +545,7 @@ export class World {
       }
     }
 
+    this.movement.setHeldRotation(World.heldRotationOptions[this.heldRotationIndex]);
     this.movement.apply();
     this.checkPushes();
     this.finishDrop();
@@ -545,7 +590,7 @@ export class World {
   updateView(): void {
     this.updateViewThings();
     this.updateViewDropShadows();
-    this.objectView.updateScores(this.setup.getScores());
+    this.objectView.updateScores(this.setup.getScores().seats);
   }
 
   private updateViewThings(): void {
@@ -574,6 +619,9 @@ export class World {
           };
           place.position.x += mouse.x - heldMouse.x;
           place.position.y += mouse.y - heldMouse.y;
+          if (thing.slot.phantom) {
+            place.position.z = mouse.z - heldMouse.z;
+          }
         }
       } else if (thing.lastShiftSlotTime >= now - SHIFT_TIME) {
         if (thing.lastShiftSlot !== null) {
@@ -582,7 +630,6 @@ export class World {
       } else if (thing.claimedBy !== null && thing.shiftSlot !== null) {
         place = thing.shiftSlot.places[thing.rotationIndex];
       }
-
       const held = thing.claimedBy !== null && thing.shiftSlot === null;
       const selected = this.selected.indexOf(thing) !== -1;
       const hovered = thing === this.hovered ||
@@ -597,6 +644,8 @@ export class World {
         (slot.links.up.thing === null ||
          slot.links.up.thing.claimedBy !== null);
 
+      const hidden = thing.slot?.phantom ?? false;
+
       toRender.push({
         type: thing.type,
         thingIndex: thing.index,
@@ -606,6 +655,7 @@ export class World {
         held,
         temporary,
         bottom,
+        hidden,
       });
     }
     this.objectView.updateThings(toRender);
@@ -626,7 +676,13 @@ export class World {
     if (this.seat !== null && !this.isHolding()) {
       for (const thing of this.things.values()) {
         if (thing.claimedBy === null) {
-          const place = thing.place();
+          let place = thing.place();
+          if (thing.slot?.phantom === true) {
+            if (thing.slot.links.up?.thing != null) {
+              continue;
+            }
+            place = thing.slot.getTop().placeWithOffset(thing.rotationIndex);
+          }
           result.push({...place, id: thing.index});
         }
       }

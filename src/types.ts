@@ -1,4 +1,5 @@
 import { Vector3, Euler } from "three";
+import { tileMapToString, parseTileString } from "./game-ui";
 
 export enum ThingType {
   TILE = 'TILE',
@@ -43,13 +44,12 @@ export enum DealType {
   HANDS = 'HANDS',
 }
 
-export type Fives = '000' | '111' | '121';
-
 export enum GameType {
   FOUR_PLAYER = 'FOUR_PLAYER',
   THREE_PLAYER = 'THREE_PLAYER',
   BAMBOO = 'BAMBOO',
   MINEFIELD = 'MINEFIELD',
+  WASHIZU = 'WASHIZU',
 }
 
 interface GameTypeMeta {
@@ -62,6 +62,7 @@ export const GAME_TYPES: Record<GameType, GameTypeMeta> = {
   THREE_PLAYER: { points: '35', seats: [0, 1, 2]},
   BAMBOO: { points: '100', seats: [0, 2]},
   MINEFIELD: { points: '25', seats: [0, 2]},
+  WASHIZU: { points: '25', seats: [0, 1, 2, 3] },
 };
 
 export type Points = '25' | '30' | '35' | '40' | '100';
@@ -69,23 +70,32 @@ export type Points = '25' | '30' | '35' | '40' | '100';
 export interface Conditions {
   gameType: GameType;
   back: number; // 0 or 1
-  fives: Fives;
+  aka: Record<string, number>;
   points: Points;
 }
 
 export namespace Conditions {
   export function initial(): Conditions {
-    return { gameType: GameType.FOUR_PLAYER, back: 0, fives: '111', points: '25' };
+    return { gameType: GameType.FOUR_PLAYER, back: 0, aka: parseTileString('5m5p5s'), points: '25' };
   }
 
   export function equals(a: Conditions, b: Conditions): boolean {
-    return a.gameType === b.gameType && a.back === b.back && a.fives === b.fives;
+    return a.gameType === b.gameType && a.back === b.back && tileMapToString(a.aka) === tileMapToString(b.aka);
   }
 
   export function describe(ts: Conditions): string {
-    const game = {'FOUR_PLAYER': '4p', 'THREE_PLAYER': '3p', 'BAMBOO': 'b', 'MINEFIELD': 'm'}[ts.gameType];
-    const fives = {'000': 'no red', '111': '1-1-1', '121': '1-2-1'}[ts.fives];
-    return `${game}, ${fives}`;
+    const game = {
+      'FOUR_PLAYER': '4p',
+      'THREE_PLAYER': '3p',
+      'BAMBOO': 'b',
+      'MINEFIELD': 'm',
+      'WASHIZU': 'w',
+    }[ts.gameType];
+    let aka = tileMapToString(ts.aka);
+    if (ts.aka === undefined || aka === "") {
+      aka = "no aka";
+    }
+    return `${game}, ${aka}`;
   }
 }
 

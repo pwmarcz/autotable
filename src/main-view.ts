@@ -5,8 +5,25 @@ import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import { World } from './world';
+import { Client } from './client';
+import { ThingInfo } from './types';
 
 const RATIO = 1.5;
+
+enum CameraPosition {
+  TopDown,
+  PlayerView,
+  HandSpectator,
+  CallSpectator,
+  DoraSpectator,
+}
+
+interface AutoQueueItem {
+  seat?: number;
+  view: CameraPosition;
+  delay?: number;
+  squashable?: boolean;
+}
 
 export class MainView {
   private main: HTMLElement;
@@ -14,23 +31,29 @@ export class MainView {
   private perspective = false;
 
   private scene: Scene;
-  private mainGroup: Group;
   private viewGroup: Group;
   private renderer: WebGLRenderer;
 
   camera: Camera = null!;
   private composer: EffectComposer = null!;
   private outlinePass: OutlinePass = null!;
+  private cameraPosition: CameraPosition = CameraPosition.TopDown;
+  private autoCameraPosition: CameraPosition = CameraPosition.TopDown;
+  private activeSeat: number = 0;
+  private autoActiveSeat: number = 0;
 
   private width = 0;
   private height = 0;
 
   private dummyObject: Object3D;
+  private autoSpectate: boolean = false;
 
-  constructor(mainGroup: Group) {
-    this.mainGroup = mainGroup;
+  private readonly autoQueue: Array<AutoQueueItem> = [];
+  private queueTaskId: NodeJS.Timeout | null = null;
+  private doraIndicatorLocation: Vector3 | null = null;
+
+  constructor(private readonly mainGroup: Group, private readonly client: Client, private readonly world: World) {
     this.main = document.getElementById('main')!;
-
     this.scene = new Scene();
     this.scene.autoUpdate = false;
     this.viewGroup = new Group();
@@ -46,11 +69,163 @@ export class MainView {
     this.setupLights();
     this.setupRendering();
 
+    this.client.match.on('update', () => {
+      this.autoQueue.push({
+        seat: 0,
+        view: CameraPosition.TopDown
+      });
+      this.startAutoQueue();
+      this.doraIndicatorLocation = null;
+    });
+
+    this.client.things.on('update', (update) => {
+      if (this.queueAutoItem(update)) {
+        this.startAutoQueue();
+      }
+    });
+
     this.stats = Stats();
     this.stats.dom.style.left = 'auto';
     this.stats.dom.style.right = '0';
     const full = document.getElementById('full')!;
     full.appendChild(this.stats.dom);
+  }
+
+  private startAutoQueue(): void {
+    if (this.autoQueue.length === 0) {
+      return;
+    }
+
+    if (this.queueTaskId !== null) {
+      return;
+    }
+
+    this.queueTaskId = setTimeout(() => {
+      this.applyQueueItem();
+    }, 0);
+  }
+
+  private applyQueueItem(previous?: AutoQueueItem): void {
+    this.queueTaskId = null;
+    const change = this.autoQueue.shift();
+    if (!change) {
+      return;
+    }
+
+    const duplicate = previous && change.view === previous.view && change.seat === previous.seat;
+
+    if(this.autoQueue.length > 0 && change.squashable) {
+      this.queueTaskId = setTimeout(() => this.applyQueueItem(previous), 0);
+    }
+
+    if (!duplicate) {
+      if (change.seat !== undefined) {
+        this.autoActiveSeat = change.seat;
+      }
+      this.autoCameraPosition = change.view;
+    }
+
+    this.queueTaskId = setTimeout(() => this.applyQueueItem(change), duplicate ? 0 : change.delay ?? 0);
+  }
+
+  private queueAutoItem(update: Array<[number, ThingInfo | null]>): boolean {
+    for(const [id, info] of update) {
+      const thing = this.world.things.get(id);
+      if (!thing) {
+        continue;
+      }
+
+      if (!info) {
+        continue;
+      }
+
+      const seat = parseInt(info.slotName.substring(info.slotName.indexOf('@') + 1));
+
+      if (info.slotName.startsWith('payment')) {
+        this.autoQueue.push({
+          seat: 0,
+          view: CameraPosition.TopDown,
+        });
+        return true;
+      }
+
+      if (info?.slotName.startsWith('wall')) {
+        // Show hand of player who just drew tile from wall.
+        if (info.claimedBy !== null && thing.rotationIndex !== 1) {
+          this.autoQueue.push({
+            seat: info.claimedBy,
+            view: CameraPosition.HandSpectator,
+          });
+          return true;
+        }
+
+        // Show dora if tile in wall was just flipped, then swap back to last hand
+        if (info.rotationIndex === 1 && thing.rotationIndex !== info.rotationIndex) {
+          // set the first tile flipped in the round as the dora indicator location
+          if (this.doraIndicatorLocation === null) {
+            this.doraIndicatorLocation = this.world.slots.get(info.slotName)!.places[0].position.clone();
+            this.doraIndicatorLocation.setZ(0);
+          }
+
+          if (info.slotName.includes("0@")) {
+            this.autoQueue.push({
+              seat: 0,
+              view: CameraPosition.DoraSpectator,
+              delay: 3000,
+            });
+
+            this.autoQueue.push({
+              seat: 0,
+              view: CameraPosition.TopDown,
+              squashable: true,
+            });
+            return true;
+          }
+
+          this.autoQueue.push({
+            view: CameraPosition.DoraSpectator,
+            delay: 3000,
+          });
+
+          this.autoQueue.push({
+            view: CameraPosition.HandSpectator,
+            squashable: true,
+          });
+
+          return true;
+        }
+      }
+
+      // Show hand of player who just revealed their tiles
+      if (info?.slotName.startsWith('hand') && info.rotationIndex !== thing.rotationIndex && info.rotationIndex === 1) {
+        this.autoQueue.push({
+          seat,
+          view: CameraPosition.HandSpectator,
+          delay: 1500,
+        });
+        return true;
+      }
+
+      // Show call area of player who just moved their tiles there, then swap to their hand
+      if (info?.slotName.startsWith('meld') && info.claimedBy === null) {
+        if(thing.slot.name.startsWith('meld') && thing.slot.seat === seat) {
+          continue;
+        }
+
+        this.autoQueue.push({
+          seat,
+          view: CameraPosition.CallSpectator,
+          delay: 2500,
+        });
+
+        this.autoQueue.push({
+          view: CameraPosition.HandSpectator,
+          delay: 1500,
+        });
+        return true;
+      }
+    }
+    return false;
   }
 
   private setupLights(): void {
@@ -96,6 +271,7 @@ export class MainView {
   private makeCamera(perspective: boolean): Camera {
     if (perspective) {
       const camera = new PerspectiveCamera(30, RATIO, 0.1, 1000);
+      camera.up = new Vector3(0, 0.001, 1).normalize();
       return camera;
     } else {
       const w = World.WIDTH * 1.2;
@@ -107,63 +283,99 @@ export class MainView {
       return camera;
     }
   }
+  readonly cameraUp = new Vector3(0, 0.001, 1).normalize();
 
   updateCamera(seat: number | null, lookDown: number, zoom: number, mouse2: Vector2 | null): void {
+    const realSeat = seat ?? (this.autoSpectate ? this.autoActiveSeat : this.activeSeat);
+    const angle = (realSeat) * Math.PI * 0.5;
+    this.camera.up.copy(this.cameraUp).applyAxisAngle(new Vector3(0, 0, 1), angle);
+
+    const cameraPosition = seat !== null
+      ? CameraPosition.PlayerView
+      : (this.autoSpectate
+        ? this.autoCameraPosition
+        : this.cameraPosition);
+
     if (this.perspective) {
-      this.updatePespectiveCamera(seat === null, lookDown, zoom, mouse2);
+      this.updatePespectiveCamera(cameraPosition, lookDown, zoom, mouse2);
     } else {
-      this.updateOrthographicCamera(seat === null, lookDown, zoom, mouse2);
+      this.updateOrthographicCamera(cameraPosition, lookDown, zoom, mouse2);
     }
 
-    const angle = (seat ?? 0) * Math.PI * 0.5;
-    this.viewGroup.rotation.set(0, 0, angle);
-    this.viewGroup.updateMatrixWorld();
+    if(cameraPosition !== CameraPosition.TopDown) {
+      this.viewGroup.setRotationFromAxisAngle(new Vector3(0, 0, 1), angle);
+      this.viewGroup.updateMatrixWorld();
+    }
   }
 
   private updatePespectiveCamera(
-    fromTop: boolean,
+    cameraPosition: CameraPosition,
     lookDown: number,
     zoom: number,
     mouse2: Vector2 | null): void
   {
-    if (fromTop) {
-      this.camera.position.set(0, 0, 400);
-      this.camera.rotation.set(0, 0, 0);
-    } else {
-      this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 1.05);
-      this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.2, 0, 0);
-      if (zoom !== 0) {
-        const dist = new Vector3(0, 1.37, -1).multiplyScalar(zoom * 55);
-        this.camera.position.add(dist);
-      }
-      if (zoom > 0 && mouse2) {
-        this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.6;
-        this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
+    switch (cameraPosition) {
+      case CameraPosition.TopDown: {
+        const center = this.camera.parent?.localToWorld(new Vector3());
+        this.camera.position.set(0, 0, 400);
+        this.camera.lookAt(center!);
+        break;
+      } case CameraPosition.PlayerView: {
+        this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH * 1.05);
+        this.camera.rotation.set(Math.PI * 0.3 - lookDown * 0.22, 0, 0);
+        if (zoom !== 0) {
+          const dist = new Vector3(0, 1.37, -1).multiplyScalar(zoom * 55);
+          this.camera.position.add(dist);
+        }
+        if (zoom > 0 && mouse2) {
+          this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.6;
+          this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
+        }
+        break;
+      } case CameraPosition.HandSpectator: {
+        this.camera.position.set(0, -World.WIDTH*1.44, World.WIDTH / 2).applyAxisAngle(new Vector3(0, 0, -1), Math.PI * 0.15);
+        const offset = this.camera.parent?.localToWorld(new Vector3(World.WIDTH / 8, -World.WIDTH / 4, 0));
+        this.camera.lookAt(offset!);
+        break;
+      } case CameraPosition.CallSpectator: {
+        const callArea = new Vector3(World.WIDTH * 13 / 32, -World.WIDTH * 3 / 8, 0);
+        this.camera.position.copy(callArea);
+        this.camera.position.setZ(100);
+        const center = this.camera.parent?.localToWorld(callArea);
+        this.camera.lookAt(center!);
+        break;
+      } case CameraPosition.DoraSpectator: {
+        this.camera.position.copy(new Vector3(0, 0, 100));
+        this.camera.lookAt(this.doraIndicatorLocation ?? new Vector3());
       }
     }
   }
 
   private updateOrthographicCamera(
-    fromTop: boolean,
+    cameraPosition: CameraPosition,
     lookDown: number,
     zoom: number,
     mouse2: Vector2 | null): void
   {
-    if (fromTop) {
-      this.camera.position.set(0, 0, 100);
-      this.camera.rotation.set(0, 0, 0);
-      this.camera.scale.setScalar(1.55);
-    } else {
-      this.camera.position.set(
-        0,
-        -53 * lookDown - World.WIDTH,
-        174);
-      this.camera.rotation.set(Math.PI * 0.25, 0, 0);
-      this.camera.scale.setScalar(1 - 0.45 * zoom);
+    switch (cameraPosition) {
+      case CameraPosition.PlayerView: {
+        this.camera.position.set(
+          0,
+          -64 * lookDown - World.WIDTH,
+          174);
+        this.camera.rotation.set(Math.PI * 0.25, 0, 0);
+        this.camera.scale.setScalar(1 - 0.45 * zoom);
 
-      if (zoom > 0 && mouse2) {
-        this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.6;
-        this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
+        if (zoom > 0 && mouse2) {
+          this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.6;
+          this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
+        }
+        break;
+      }
+      default: {
+        this.camera.position.set(0, 0, 100);
+        this.camera.lookAt(new Vector3(World.WIDTH / 2, World.WIDTH / 2, 0));
+        this.camera.scale.setScalar(1.55);
       }
     }
   }
@@ -205,5 +417,35 @@ export class MainView {
 
       this.setupRendering();
     }
+  }
+
+  spectateHand(i: number): void {
+    this.autoSpectate = false;
+    this.cameraPosition = CameraPosition.HandSpectator;
+    this.activeSeat = i;
+  }
+
+  spectateCall(i: number): void {
+    this.autoSpectate = false;
+    this.cameraPosition = CameraPosition.CallSpectator;
+    this.activeSeat = i;
+  }
+
+  spectateTop(): void {
+    this.autoSpectate = false;
+    this.cameraPosition = CameraPosition.TopDown;
+    this.activeSeat = 0;
+  }
+
+  spectateDora() {
+    this.autoSpectate = false;
+    this.cameraPosition = CameraPosition.DoraSpectator;
+    this.activeSeat = 0;
+  }
+
+  spectateAuto(): void {
+    this.autoSpectate = true;
+    this.autoCameraPosition = this.cameraPosition;
+    this.autoActiveSeat = this.activeSeat;
   }
 }
