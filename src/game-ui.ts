@@ -65,7 +65,7 @@ export class GameUi {
       };
     }
     for (let i = 0; i < 4; i++) {
-      this.setupProgressButton(this.elements.kick[i], 2000, () => {
+      this.setupProgressButton(this.elements.kick[i], 1500, () => {
         const kickedId = this.client.seatPlayers[i];
         if (kickedId !== null) {
           this.client.seats.set(kickedId, { seat: null });
