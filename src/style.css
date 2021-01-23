@@ -93,11 +93,18 @@
     left: 0;
     bottom: 0;
     width: 0%;
-    background: #fff2ca;
-    transition: width 600ms;
+    transition: width 1s;
 }
 .btn-progress-text {
     position: relative;
+}
+
+#deal .btn-progress {
+    background: #fff2ca;
+}
+
+.kick .btn-progress {
+    background: rgb(90, 98, 104);
 }
 
 .seat-buttons {
