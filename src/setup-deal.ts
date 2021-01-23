@@ -64,6 +64,29 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
     ],
   },
 
+  FOUR_PLAYER_DEMO: {
+    INITIAL: [
+      {
+        ranges: [
+          ['wall.1.0', 0, 34],
+          ['wall.1.0', 1, 34],
+          ['wall.1.0', 2, 34],
+          ['wall.1.0', 3, 34],
+        ]
+      },
+    ],
+    UNSHUFFLED: [
+      {
+        ranges: [
+          ['wall.1.0', 0, 34],
+          ['wall.1.0', 1, 34],
+          ['wall.1.0', 2, 34],
+          ['wall.1.0', 3, 34],
+        ]
+      },
+    ]
+  },
+
   THREE_PLAYER: {
     INITIAL: [
       {

@@ -206,7 +206,7 @@ export class World {
     this.checkPushes();
 
     const back = 1 - this.conditions.back;
-    const conditions = { ...this.conditions, back, gameType, fives, points };
+    const conditions = { ...this.conditions, back, gameType, fives, points, dealType };
 
     let match = this.client.match.get(0);
     let honba;
@@ -221,7 +221,7 @@ export class World {
     match = {dealer: this.seat, honba, conditions};
 
     this.updateConditions(conditions);
-    this.setup.deal(this.seat, gameType, dealType);
+    this.setup.deal(this.seat);
 
     this.client.transaction(() => {
       this.client.match.set(0, match!);

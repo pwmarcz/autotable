@@ -26,7 +26,7 @@ export class Setup {
     this.addTiles(conditions);
     this.addSticks(conditions.gameType, conditions.points);
     this.addMarker();
-    this.deal(0, conditions.gameType, DealType.INITIAL);
+    this.deal(0);
   }
 
   private wallSlots(): Array<Slot> {
@@ -36,13 +36,19 @@ export class Setup {
 
   private addTiles(conditions: Conditions): void {
     const wallSlots = this.wallSlots().map(slot => slot.name);
-    shuffle(wallSlots);
+    this.maybeShuffle(wallSlots, conditions);
     let j = 0;
     for (let i = 0; i < 136; i++) {
       const tileIndex = this.tileIndex(i, conditions);
       if (tileIndex !== null) {
         this.addThing(ThingType.TILE, tileIndex, wallSlots[j++]);
       }
+    }
+  }
+
+  private maybeShuffle<T>(array: Array<T>, conditions?: Conditions): void {
+    if ((conditions ?? this.conditions).dealType !== DealType.UNSHUFFLED) {
+      shuffle(array);
     }
   }
 
@@ -127,7 +133,9 @@ export class Setup {
     return tileIndex;
   }
 
-  deal(seat: number, gameType: GameType, dealType: DealType): void {
+  deal(seat: number): void {
+    const gameType = this.conditions.gameType;
+    const dealType = this.conditions.dealType;
     // console.log('deal', gameType, dealType);
 
     const roll = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1);
@@ -146,7 +154,8 @@ export class Setup {
       thing.prepareMove();
     }
 
-    shuffle(tiles);
+    this.maybeShuffle(tiles);
+
     for (const part of dealParts) {
       this.dealPart(part, tiles, roll, seat);
     }
@@ -162,7 +171,7 @@ export class Setup {
     }
     if (dealPart.tiles !== undefined) {
       const searched = [...dealPart.tiles];
-      shuffle(searched);
+      this.maybeShuffle(searched);
 
       for (let i = 0; i < searched.length; i++) {
         // HACK: typeIndex includes back color

@@ -41,12 +41,14 @@ export enum DealType {
   INITIAL = 'INITIAL',
   WINDS = 'WINDS',
   HANDS = 'HANDS',
+  UNSHUFFLED = 'UNSHUFFLED',
 }
 
 export type Fives = '000' | '111' | '121';
 
 export enum GameType {
   FOUR_PLAYER = 'FOUR_PLAYER',
+  FOUR_PLAYER_DEMO = 'FOUR_PLAYER_DEMO',
   THREE_PLAYER = 'THREE_PLAYER',
   BAMBOO = 'BAMBOO',
   MINEFIELD = 'MINEFIELD',
@@ -59,6 +61,7 @@ interface GameTypeMeta {
 
 export const GAME_TYPES: Record<GameType, GameTypeMeta> = {
   FOUR_PLAYER: { points: '25', seats: [0, 1, 2, 3]},
+  FOUR_PLAYER_DEMO: { points: '25', seats: [0, 1, 2, 3]},
   THREE_PLAYER: { points: '35', seats: [0, 1, 2]},
   BAMBOO: { points: '100', seats: [0, 2]},
   MINEFIELD: { points: '25', seats: [0, 2]},
@@ -71,11 +74,18 @@ export interface Conditions {
   back: number; // 0 or 1
   fives: Fives;
   points: Points;
+  dealType: DealType;
 }
 
 export namespace Conditions {
   export function initial(): Conditions {
-    return { gameType: GameType.FOUR_PLAYER, back: 0, fives: '111', points: '25' };
+    return {
+      gameType: GameType.FOUR_PLAYER,
+      back: 0,
+      fives: '111',
+      points: '25',
+      dealType: DealType.INITIAL
+    };
   }
 
   export function equals(a: Conditions, b: Conditions): boolean {
@@ -83,7 +93,13 @@ export namespace Conditions {
   }
 
   export function describe(ts: Conditions): string {
-    const game = {'FOUR_PLAYER': '4p', 'THREE_PLAYER': '3p', 'BAMBOO': 'b', 'MINEFIELD': 'm'}[ts.gameType];
+    const game = {
+      'FOUR_PLAYER': '4p',
+      'FOUR_PLAYER_DEMO': 'demo',
+      'THREE_PLAYER': '3p',
+      'BAMBOO': 'b',
+      'MINEFIELD': 'm',
+    }[ts.gameType];
     const fives = {'000': 'no red', '111': '1-1-1', '121': '1-2-1'}[ts.fives];
     return `${game}, ${fives}`;
   }
