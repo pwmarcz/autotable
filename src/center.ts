@@ -105,9 +105,9 @@ export class Center {
     if (this.dealer !== null)
     {
       this.winds[this.dealer % 4] = "E";
-      this.winds[(this.dealer+1) % 4] = "S";
+      this.winds[(this.dealer+1) % 4] = "N";
       this.winds[(this.dealer+2) % 4] = "W";
-      this.winds[(this.dealer+3) % 4] = "N";
+      this.winds[(this.dealer+3) % 4] = "S";
     }
    
     for (let i = 0; i < 4; i++) {
@@ -166,9 +166,9 @@ export class Center {
     }
 
     this.ctx.textAlign = 'center';
-    this.ctx.font = '28px Verdana, Arial';
+    this.ctx.font = '32px Verdana, Arial';
     this.ctx.fillStyle = '#888';
-    this.ctx.fillText(text, 0, 80);
+    this.ctx.fillText(text, 0, 75);
   }
 
   drawScore(score: number | null): void {
