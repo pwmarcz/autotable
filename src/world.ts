@@ -69,7 +69,8 @@ export class World {
 
   toggleDealer(): void {
     const match = this.client.match.get(0) ?? { dealer: 3, honba: 0, conditions: Conditions.initial()};
-    match.dealer = (match.dealer - 1) % 4;
+    match.dealer = (match.dealer - 1) % 4; //LG EDIT change direction
+    if (match.dealer<0) match.dealer = 3; //LG EDIT catch % not working for negative values
     this.client.match.set(0, match);
   }
 
