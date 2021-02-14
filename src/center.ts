@@ -10,6 +10,7 @@ export class Center {
 
   scores: Array<number | null> = new Array(5).fill(null);
   nicks: Array<string | null> = new Array(4).fill(null);
+  winds: Array<string | null> = new Array(4).fill(null);
   dealer: number | null = null;
   honba = 0;
 
@@ -100,14 +101,23 @@ export class Center {
       }
     }
 
+    //set up winds based on current dealer (LG Edit)
+    if (this.dealer !== null)
+    {
+      this.winds[this.dealer % 4] = "E";
+      this.winds[(this.dealer+1) % 4] = "S";
+      this.winds[(this.dealer+2) % 4] = "W";
+      this.winds[(this.dealer+3) % 4] = "N";
+    }
+   
     for (let i = 0; i < 4; i++) {
 
       //LGEdit new altered name rendering
       this.drawNickLars(this.nicks[i],textSize);
-      if (this.dealer === i)
+      if (this.dealer !== null && this.winds[i] !== null)
       {
         //draw wind marker for this player
-        this.drawWindLars('E');
+        this.drawWindLars(this.winds[i]);
       }
       /*
       //Original center rendering
@@ -156,9 +166,9 @@ export class Center {
     }
 
     this.ctx.textAlign = 'center';
-    this.ctx.font = '20px Verdana, Arial';
+    this.ctx.font = '28px Verdana, Arial';
     this.ctx.fillStyle = '#888';
-    this.ctx.fillText(text, 0, 70);
+    this.ctx.fillText(text, 0, 80);
   }
 
   drawScore(score: number | null): void {
