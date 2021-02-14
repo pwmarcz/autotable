@@ -284,12 +284,11 @@ function fixupSlots(slots: Array<Slot>, gameType: GameType): void {
     if (slot.name.startsWith('discard.2.5')) {
       slot.linkDesc.push = `discard.extra.0@${slot.seat}`;
     }
-    if (slot.group === 'wall' &&
-        slot.indexes[0] !== 0  && slot.indexes[1] === 0) { //LG Edit , removed && slot.indexes[0] !== 18 to show shadown under slot 18
+    if (slot.group === 'wall' && slot.indexes[0] !== 0  && slot.indexes[1] === 0) { //LG Edit , removed && slot.indexes[0] !== 18 to show shadown under slot 18
       slot.drawShadow = false; //LG Edit , don't draw shadow under wall slots
     }
     if (slot.group === 'meld' && slot.indexes[0] > 0) {
-      slot.linkDesc.requires = `meld.${slot.indexes[0]-1}.1@${slot.seat}`;
+      //slot.linkDesc.requires = `meld.${slot.indexes[0]-1}.1@${slot.seat}`; //LG Edit, remove special rules for meld slots
     }
     if (slot.group === 'wall.open' && slot.indexes[0] === 1 && slot.indexes[1] === 16) {
       slot.linkDesc.shiftRight = `wall.open.0.0@${slot.seat}`;
