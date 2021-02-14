@@ -104,6 +104,11 @@ export class Center {
 
       //LGEdit new altered name rendering
       this.drawNickLars(this.nicks[i],textSize);
+      if (this.dealer === i)
+      {
+        //draw wind marker for this player
+        this.drawWindLars('E');
+      }
       /*
       //Original center rendering
       this.drawScore(this.scores[i]);
@@ -136,6 +141,24 @@ export class Center {
     this.ctx.textAlign = 'center';
     this.ctx.font = textSize+'px Verdana, Arial';
     this.ctx.fillText(text, 0, 120);
+  }
+
+  drawWindLars(wind: string | null): void {
+    let text;
+    if (wind === null) {
+      text = '';
+    } 
+    else if (wind === '') {
+      text = '?';
+    } 
+    else {
+      text = wind.substr(0, 1);
+    }
+
+    this.ctx.textAlign = 'center';
+    this.ctx.font = '20px Verdana, Arial';
+    this.ctx.fillStyle = '#888';
+    this.ctx.fillText(text, 0, 70);
   }
 
   drawScore(score: number | null): void {
@@ -171,6 +194,8 @@ export class Center {
     this.ctx.fillStyle = '#afa';
     this.ctx.fillText(text, 0, 55);
   }
+
+
 
   drawDealer(): void {
     this.ctx.fillStyle = '#a60';
