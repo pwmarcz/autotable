@@ -9,7 +9,7 @@ ICONS = img/icon-16.auto.png img/icon-32.auto.png img/icon-96.auto.png
 
 .PHONY: parcel
 parcel: files
-	node run-parcel.js
+	./node_modules/.bin/parcel index.html blog.html
 
 .PHONY: server
 server:
