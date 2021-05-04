@@ -24,8 +24,5 @@
     "popper.js": "^1.16.1",
     "qs": "^6.9.4",
     "three": "^0.127.0"
-  },
-  "resolutions": {
-    "node-forge": "0.10.0"
   }
 }
