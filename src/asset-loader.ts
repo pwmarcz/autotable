@@ -1,7 +1,7 @@
 // @ts-ignore
-import jpg from '../img/*.jpg';
+import tableJpg from 'url:../img/table.jpg';
 // @ts-ignore
-import glbModels from '../img/models.auto.glb';
+import glbModels from 'url:../img/models.auto.glb';
 
 import { Texture, Mesh, TextureLoader, Material, LinearEncoding,
    MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, RepeatWrapping } from 'three';
@@ -53,7 +53,7 @@ export class AssetLoader {
 
   loadAll(): Promise<void> {
     return Promise.all([
-      this.loadTexture(jpg['table'], 'table'),
+      this.loadTexture(tableJpg, 'table'),
       this.loadModels(glbModels),
       (document as any).fonts.load('40px "Segment7Standard"'),
     ]).then(() => {

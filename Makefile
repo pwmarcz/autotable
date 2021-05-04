@@ -9,7 +9,7 @@ ICONS = img/icon-16.auto.png img/icon-32.auto.png img/icon-96.auto.png
 
 .PHONY: parcel
 parcel: files
-	./node_modules/.bin/parcel index.html blog.html
+	./node_modules/.bin/parcel --no-hmr index.html about.html
 
 .PHONY: server
 server:
@@ -39,7 +39,7 @@ img/models.auto.glb: img/models.blend $(TEXTURES)
 .PHONY: build
 build: files
 	rm -rf build
-	./node_modules/.bin/parcel build *.html --public-url . --cache-dir .cache/build/ --out-dir build/ --no-source-maps
+	./node_modules/.bin/parcel build *.html --public-url . --cache-dir .cache/build/ --dist-dir build/ --no-source-maps
 
 .PHONY: build-server
 build-server:
