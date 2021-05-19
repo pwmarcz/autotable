@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -14,7 +12,7 @@
    viewBox="0 0 8.4666664 8.466667"
    version="1.1"
    id="svg8"
-   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   inkscape:version="1.0.2 (1.0.2+r75+1)"
    sodipodi:docname="icon.svg">
   <defs
      id="defs2" />
@@ -25,18 +23,19 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="22.627417"
-     inkscape:cx="23.255726"
-     inkscape:cy="14.965876"
+     inkscape:zoom="36.446121"
+     inkscape:cx="16.695742"
+     inkscape:cy="15.544432"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="true"
      units="px"
-     inkscape:window-width="1600"
-     inkscape:window-height="1116"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
-     inkscape:window-maximized="1">
+     inkscape:window-width="1920"
+     inkscape:window-height="996"
+     inkscape:window-x="0"
+     inkscape:window-y="28"
+     inkscape:window-maximized="1"
+     inkscape:document-rotation="0">
     <inkscape:grid
        type="xygrid"
        id="grid4568" />
@@ -49,7 +48,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -85,9 +84,9 @@
     <rect
        style="fill:#c8c8c8;fill-opacity:1;fill-rule:evenodd;stroke-width:0;stroke-linejoin:round"
        id="rect4570"
-       width="1.5604573"
+       width="1.5875"
        height="0.26459566"
-       x="3.2020428"
+       x="3.4395833"
        y="293.56039"
        ry="0" />
   </g>
