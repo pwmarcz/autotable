@@ -40,7 +40,11 @@ export class MainView {
 
     this.dummyObject = new Mesh(new PlaneBufferGeometry(0, 0, 0));
 
-    this.renderer = new WebGLRenderer({ antialias: false });
+    this.renderer = new WebGLRenderer({
+      antialias: false,
+      // Apparently needed for OutlinePass not to cause glitching on some browsers.
+      logarithmicDepthBuffer: true,
+     });
     this.main.appendChild(this.renderer.domElement);
 
     this.setupLights();
