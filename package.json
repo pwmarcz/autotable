@@ -4,16 +4,16 @@
   "author": "Paweł Marczewski <pwmarcz@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@parcel/transformer-image": "2.0.0-beta.2",
+    "@parcel/transformer-image": "2.0.0",
     "@types/events": "^3.0.0",
     "@types/jquery": "^3.3.38",
     "@types/qs": "^6.9.2",
-    "@types/three": "^0.127.1",
+    "@types/three": "^0.133.1",
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
     "eslint": "^6.8.0",
     "express": "^4.17.1",
-    "parcel": "^2.0.0-beta.2",
+    "parcel": "^2.0.0",
     "typescript": "^4.0"
   },
   "dependencies": {
@@ -23,6 +23,6 @@
     "normalize.css": "^8.0.1",
     "popper.js": "^1.16.1",
     "qs": "^6.9.4",
-    "three": "^0.127.0"
+    "three": "^0.133.0"
   }
 }
