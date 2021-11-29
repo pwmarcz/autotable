@@ -1,4 +1,4 @@
-import { Vector3 } from "three";
+import { Euler, Vector3, Quaternion } from "three";
 
 export function shuffle<T>(arr: Array<T>): void {
   for (let i = arr.length - 1; i > 0; i--) {
@@ -86,6 +86,18 @@ export function round3(vec: Vector3, factor: number): void {
   vec.x = Math.round(vec.x * factor) / factor;
   vec.y = Math.round(vec.y * factor) / factor;
   vec.z = Math.round(vec.z * factor) / factor;
+}
+
+export function rotZ(rot: Euler, n: number): Euler {
+  return new Euler(rot.x, rot.y, rot.z + n * Math.PI / 2);
+}
+
+const EPS = 0.05;
+
+export function rotEquals(rot1: Euler, rot2: Euler) {
+  return (Math.abs(rot1.x - rot2.x) < EPS &&
+          Math.abs(rot1.y - rot2.y) < EPS &&
+          Math.abs(rot1.z - rot2.z) < EPS);
 }
 
 export function clamp(val: number, min: number, max: number): number {

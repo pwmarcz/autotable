@@ -1,7 +1,7 @@
 import { ThingType, Place, Size } from "./types";
 import { Vector3, Vector2, Euler, Quaternion } from "three";
 import { Thing } from "./thing";
-import { round3 } from "./utils";
+import { rotZ, round3 } from "./utils";
 
 
 interface SlotLinks {
@@ -57,6 +57,9 @@ export class Slot {
   links: SlotLinks;
   linkDesc: SlotLinkDesc;
 
+  // Array of corresponding slots
+  bySeat: Array<Slot> | null = null;
+
   // Can select and filp multiple of this kind
   canFlipMultiple: boolean;
 
@@ -67,7 +70,8 @@ export class Slot {
   // for tiles lying down, even though the tiles are standing by default)
   shadowRotation: number;
 
-  // Rotate a tile hovered over this slot. Used for hand.
+  // Rotate a tile hovered over this slot (if holding a single tile), and
+  // dropped tiles (always). Used for hand.
   rotateHeld: boolean;
 
   constructor(params: {
@@ -186,11 +190,7 @@ export class Slot {
     dir.applyQuaternion(quat);
     this.direction = new Vector2(dir.x, dir.y);
 
-    this.rotations = this.rotations.map(rot => {
-      const q = new Quaternion().setFromEuler(rot);
-      q.premultiply(quat);
-      return new Euler().setFromQuaternion(q);
-    });
+    this.rotations = this.rotations.map(rot => rotZ(rot, seat));
 
     this.places = this.rotations.map(this.makePlace.bind(this));
 
