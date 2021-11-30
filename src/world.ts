@@ -110,6 +110,7 @@ export class World {
         thingInfo.heldRotation.x,
         thingInfo.heldRotation.y,
         thingInfo.heldRotation.z,
+        thingInfo.heldRotation.w,
       );
 
       const shiftSlot = thingInfo.shiftSlotName ? this.slots.get(thingInfo.shiftSlotName)! : null;
@@ -189,6 +190,7 @@ export class World {
           x: thing.heldRotation.x,
           y: thing.heldRotation.y,
           z: thing.heldRotation.z,
+          w: thing.heldRotation.w,
       },
       shiftSlotName: thing.shiftSlot?.name ?? null,
     };

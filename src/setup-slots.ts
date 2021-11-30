@@ -1,16 +1,16 @@
-import { Vector3, Vector2, Euler } from "three";
+import { Vector3, Vector2, Euler, Quaternion } from "three";
 import { Slot } from "./slot";
 import { Size, ThingType, GameType } from "./types";
 
 const WORLD_SIZE = 174;
 
 const Rotation = {
-  FACE_UP: new Euler(0, 0, 0),
-  FACE_UP_SIDEWAYS: new Euler(0, 0, Math.PI / 2),
-  STANDING: new Euler(Math.PI / 2, 0, 0),
-  FACE_DOWN: new Euler(Math.PI, 0, 0),
-  FACE_DOWN_SIDEWAYS: new Euler(Math.PI, 0, Math.PI / 2),
-  FACE_DOWN_REVERSE: new Euler(Math.PI, 0, Math.PI),
+  FACE_UP: new Quaternion().setFromEuler(new Euler(0, 0, 0)),
+  FACE_UP_SIDEWAYS: new Quaternion().setFromEuler(new Euler(0, 0, Math.PI / 2)),
+  STANDING: new Quaternion().setFromEuler(new Euler(Math.PI / 2, 0, 0)),
+  FACE_DOWN: new Quaternion().setFromEuler(new Euler(Math.PI, 0, 0)),
+  FACE_DOWN_SIDEWAYS: new Quaternion().setFromEuler(new Euler(Math.PI, 0, Math.PI / 2)),
+  FACE_DOWN_REVERSE: new Quaternion().setFromEuler(new Euler(Math.PI, 0, Math.PI)),
 };
 
 type SlotOp = (slots: Array<Slot>) => Array<Slot>;

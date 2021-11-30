@@ -1,4 +1,4 @@
-import { Euler } from "three";
+import { Quaternion } from "three";
 import { ThingType, Place } from "./types";
 import { Slot } from "./slot";
 
@@ -11,7 +11,7 @@ export class Thing {
 
   claimedBy: number | null;
   // used when claimedBy !== null:
-  readonly heldRotation: Euler;
+  readonly heldRotation: Quaternion;
   shiftSlot: Slot | null;
 
   // For animation
@@ -27,7 +27,7 @@ export class Thing {
     this.slot = slot;
     this.rotationIndex = 0;
     this.claimedBy = null;
-    this.heldRotation = new Euler();
+    this.heldRotation = new Quaternion();
     this.shiftSlot = null;
 
     this.lastShiftSlot = null;

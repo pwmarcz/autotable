@@ -1,6 +1,6 @@
 import { Slot } from "./slot";
 import { Thing } from "./thing";
-import { rotEquals, rotZ } from "./utils";
+import { rotEquals, SEAT_ROTATIONS } from "./utils";
 
 type SlotOp = (slot: Slot) => Slot | null;
 
@@ -82,9 +82,9 @@ export class Movement {
       } else if (!slot.rotateHeld) {
         const allHeldRotations = [
           thing.heldRotation,
-          rotZ(thing.heldRotation, 1),
-          rotZ(thing.heldRotation, 2),
-          rotZ(thing.heldRotation, 3),
+          thing.heldRotation.clone().premultiply(SEAT_ROTATIONS[1]),
+          thing.heldRotation.clone().premultiply(SEAT_ROTATIONS[2]),
+          thing.heldRotation.clone().premultiply(SEAT_ROTATIONS[3]),
         ];
       find:
         for (let i = 0; i < slot.rotations.length; i++) {

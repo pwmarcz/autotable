@@ -1,7 +1,7 @@
 import { ThingType, Place, Size } from "./types";
-import { Vector3, Vector2, Euler, Quaternion } from "three";
+import { Vector3, Vector2, Quaternion } from "three";
 import { Thing } from "./thing";
-import { round3 } from "./utils";
+import { round3, SEAT_ROTATIONS } from "./utils";
 
 
 interface SlotLinks {
@@ -36,7 +36,7 @@ export class Slot {
   direction: Vector2;
 
   // Permitted rotations for things in this slot
-  rotations: Array<Euler>;
+  rotations: Array<Quaternion>;
 
   // Coordinates of this slot, e.g. 'wall.1.2@3' has indexes [1, 2]
   indexes: Array<number> = [];
@@ -77,7 +77,7 @@ export class Slot {
     type?: ThingType;
     origin: Vector3;
     direction?: Vector2;
-    rotations: Array<Euler>;
+    rotations: Array<Quaternion>;
     links?: SlotLinkDesc;
     canFlipMultiple?: boolean;
     drawShadow?: boolean;
@@ -165,16 +165,14 @@ export class Slot {
   }
 
   rotate(seat: number, worldWidth: number): void {
-    const rotation = seat * Math.PI / 2;
-
-    const quat = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), rotation);
+    const seatRotation = SEAT_ROTATIONS[seat];
 
     const pos = new Vector3(
       this.origin.x - worldWidth / 2,
       this.origin.y - worldWidth / 2,
       this.origin.z,
     );
-    pos.applyQuaternion(quat);
+    pos.applyQuaternion(seatRotation);
     this.origin = new Vector3(
       pos.x + worldWidth / 2,
       pos.y + worldWidth / 2,
@@ -184,26 +182,22 @@ export class Slot {
     round3(this.origin, 16);
 
     const dir = new Vector3(this.direction.x, this.direction.y, 0);
-    dir.applyQuaternion(quat);
+    dir.applyQuaternion(seatRotation);
     this.direction = new Vector2(dir.x, dir.y);
 
-    this.rotations = this.rotations.map(rot => {
-      const q = new Quaternion().setFromEuler(rot);
-      q.premultiply(quat);
-      return new Euler().setFromQuaternion(q);
-    });
+    this.rotations = this.rotations.map(rot => rot.clone().premultiply(seatRotation));
 
     this.places = this.rotations.map(this.makePlace.bind(this));
 
     this.seat = seat;
   }
 
-  makePlace(rotation: Euler): Place {
+  makePlace(rotation: Quaternion): Place {
     const dim = Size[this.type];
 
-    const xv = new Vector3(0, 0, dim.z).applyEuler(rotation);
-    const yv = new Vector3(0, dim.y, 0).applyEuler(rotation);
-    const zv = new Vector3(dim.x, 0, 0).applyEuler(rotation);
+    const xv = new Vector3(0, 0, dim.z).applyQuaternion(rotation);
+    const yv = new Vector3(0, dim.y, 0).applyQuaternion(rotation);
+    const zv = new Vector3(dim.x, 0, 0).applyQuaternion(rotation);
     const maxx = Math.max(Math.abs(xv.x), Math.abs(yv.x), Math.abs(zv.x));
     const maxy = Math.max(Math.abs(xv.y), Math.abs(yv.y), Math.abs(zv.y));
     const maxz = Math.max(Math.abs(xv.z), Math.abs(yv.z), Math.abs(zv.z));

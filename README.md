@@ -107,7 +107,7 @@ Some terminology:
 - **slot** - a space that can be occupied by a thing
     - **slot name** - a string identifying the slot in game
 - **seat** - table side (0..3)
-- thing **rotation** - a 3D orientation, usually represented by Euler angles
+- thing **rotation** - a 3D orientation, represented by a quaternion
 - **place** - information about thing's position, rotation, and dimensions
 - **shift** - moving things that currently occupy the destination when dragging; used e.g. when sorting tiles in hand and swapping them
 - **collection** - a key-value dictionary stored on the server, a game state consists of various collections

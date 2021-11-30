@@ -1,4 +1,11 @@
-import { Euler, Vector3, Quaternion } from "three";
+import { Vector3, Quaternion } from "three";
+
+export const SEAT_ROTATIONS = [
+  new Quaternion(),
+  new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), 1 * (Math.PI / 2)),
+  new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), 2 * (Math.PI / 2)),
+  new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), 3 * (Math.PI / 2)),
+]
 
 export function shuffle<T>(arr: Array<T>): void {
   for (let i = arr.length - 1; i > 0; i--) {
@@ -88,19 +95,13 @@ export function round3(vec: Vector3, factor: number): void {
   vec.z = Math.round(vec.z * factor) / factor;
 }
 
-export function rotZ(rot: Euler, n: number): Euler {
-  let nq = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), n * Math.PI / 2);
-  let q = new Quaternion().setFromEuler(rot);
-  q.premultiply(nq);
-  return new Euler().setFromQuaternion(q);
-}
-
 const EPS = 0.05;
 
-export function rotEquals(rot1: Euler, rot2: Euler) {
+export function rotEquals(rot1: Quaternion, rot2: Quaternion) {
   return (Math.abs(rot1.x - rot2.x) < EPS &&
           Math.abs(rot1.y - rot2.y) < EPS &&
-          Math.abs(rot1.z - rot2.z) < EPS);
+          Math.abs(rot1.z - rot2.z) < EPS &&
+          Math.abs(rot1.w - rot2.w) < EPS);
 }
 
 export function clamp(val: number, min: number, max: number): number {

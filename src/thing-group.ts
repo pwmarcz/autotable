@@ -1,6 +1,7 @@
-import { Vector3, Euler, Mesh, Group, Material, InstancedMesh, Matrix4, BufferGeometry, MeshLambertMaterial, InstancedBufferGeometry, InstancedBufferAttribute } from "three";
+import { Vector3, Mesh, Group, Material, InstancedMesh, Matrix4, BufferGeometry, MeshLambertMaterial, InstancedBufferGeometry, InstancedBufferAttribute, Quaternion } from "three";
 import { AssetLoader } from "./asset-loader";
 import { ThingType } from "./types";
+import { rotEquals } from "./utils";
 
 const TILE_DU = 32 / 256;
 const TILE_DV = 40 / 256;
@@ -29,12 +30,12 @@ export abstract class ThingGroup {
     return false;
   }
 
-  setSimple(index: number, position: Vector3, rotation: Euler): void {}
+  setSimple(index: number, position: Vector3, rotation: Quaternion): void {}
 
-  setCustom(index: number, position: Vector3, rotation: Euler): Mesh {
+  setCustom(index: number, position: Vector3, rotation: Quaternion): Mesh {
     const mesh = this.meshes[index - this.startIndex];
     mesh.position.copy(position);
-    mesh.rotation.copy(rotation);
+    mesh.setRotationFromQuaternion(rotation);
     return mesh;
   }
 
@@ -124,25 +125,25 @@ attribute vec3 offset;
     this.group.add(this.instancedMesh);
   }
 
-  setSimple(index: number, position: Vector3, rotation: Euler): void {
+  setSimple(index: number, position: Vector3, rotation: Quaternion): void {
     const i = index - this.startIndex;
     const mesh = this.meshes[i];
-    if (!mesh.visible && mesh.position.equals(position) && mesh.rotation.equals(rotation)) {
+    if (!mesh.visible && mesh.position.equals(position) && rotEquals(mesh.quaternion, rotation)) {
       return;
     }
     mesh.position.copy(position);
-    mesh.rotation.copy(rotation);
+    mesh.setRotationFromQuaternion(rotation);
     mesh.updateMatrix();
     mesh.visible = false;
     this.instancedMesh.setMatrixAt(i, mesh.matrix);
     this.instancedMesh.instanceMatrix.needsUpdate = true;
   }
 
-  setCustom(index: number, position: Vector3, rotation: Euler): Mesh {
+  setCustom(index: number, position: Vector3, rotation: Quaternion): Mesh {
     const i = index - this.startIndex;
     const mesh = this.meshes[i];
     mesh.position.copy(position);
-    mesh.rotation.copy(rotation);
+    mesh.setRotationFromQuaternion(rotation);
     mesh.visible = true;
     this.instancedMesh.setMatrixAt(i, this.zero);
     this.instancedMesh.instanceMatrix.needsUpdate = true;
