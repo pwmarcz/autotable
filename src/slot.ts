@@ -1,7 +1,7 @@
 import { ThingType, Place, Size } from "./types";
 import { Vector3, Vector2, Euler, Quaternion } from "three";
 import { Thing } from "./thing";
-import { rotZ, round3 } from "./utils";
+import { round3 } from "./utils";
 
 
 interface SlotLinks {
@@ -56,9 +56,6 @@ export class Slot {
   // Slots related to this one - first as strings, then as references
   links: SlotLinks;
   linkDesc: SlotLinkDesc;
-
-  // Array of corresponding slots
-  bySeat: Array<Slot> | null = null;
 
   // Can select and filp multiple of this kind
   canFlipMultiple: boolean;
@@ -190,7 +187,11 @@ export class Slot {
     dir.applyQuaternion(quat);
     this.direction = new Vector2(dir.x, dir.y);
 
-    this.rotations = this.rotations.map(rot => rotZ(rot, seat));
+    this.rotations = this.rotations.map(rot => {
+      const q = new Quaternion().setFromEuler(rot);
+      q.premultiply(quat);
+      return new Euler().setFromQuaternion(q);
+    });
 
     this.places = this.rotations.map(this.makePlace.bind(this));
 

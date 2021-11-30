@@ -89,7 +89,10 @@ export function round3(vec: Vector3, factor: number): void {
 }
 
 export function rotZ(rot: Euler, n: number): Euler {
-  return new Euler(rot.x, rot.y, rot.z + n * Math.PI / 2);
+  let nq = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), n * Math.PI / 2);
+  let q = new Quaternion().setFromEuler(rot);
+  q.premultiply(nq);
+  return new Euler().setFromQuaternion(q);
 }
 
 const EPS = 0.05;
