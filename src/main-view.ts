@@ -1,12 +1,17 @@
-import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneBufferGeometry } from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneBufferGeometry, WebGLRenderTarget, LinearFilter, RGBAFormat, ShaderMaterial, UniformsUtils, Uniform } from 'three';
+import { EffectComposer, FullScreenQuad } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
+import { CopyShader } from 'three/examples/jsm/shaders/CopyShader';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import { World } from './world';
 
 const RATIO = 1.5;
+
+export const LAYER_DEFAULT = 0;
+export const LAYER_INSTANCED = 1;
+export const LAYER_LIGHT = 2;
 
 export class MainView {
   private main: HTMLElement;
@@ -58,17 +63,23 @@ export class MainView {
   }
 
   private setupLights(): void {
-    this.viewGroup.add(new AmbientLight(0x888888));
+    const ambientLight = new AmbientLight(0x888888);
+    ambientLight.layers.set(LAYER_LIGHT);
+    this.viewGroup.add(ambientLight);
+
     const topLight = new DirectionalLight(0x777777);
     topLight.position.set(0, 0, 10000);
+    topLight.layers.set(LAYER_LIGHT);
     this.viewGroup.add(topLight);
 
     const frontLight = new DirectionalLight(0x222222);
     frontLight.position.set(0, -10000, 0);
+    frontLight.layers.set(LAYER_LIGHT);
     this.viewGroup.add(frontLight);
 
     const sideLight = new DirectionalLight(0x222222);
     sideLight.position.set(-10000, -10000, 0);
+    sideLight.layers.set(LAYER_LIGHT);
     this.viewGroup.add(sideLight);
   }
 
@@ -81,12 +92,17 @@ export class MainView {
     }
 
     this.camera = this.makeCamera(this.perspective);
+    this.camera.layers.mask = (1 << LAYER_DEFAULT) | (1 << LAYER_LIGHT);
+
     this.viewGroup.add(this.camera);
     this.composer = new EffectComposer(this.renderer);
+    const instancedPass = new InstancedPass(w, h, this.scene, this.camera);
     const renderPass = new RenderPass(this.scene, this.camera);
+    renderPass.clear = false;
     this.outlinePass = new OutlinePass(new Vector2(w, h), this.scene, this.camera);
     this.outlinePass.visibleEdgeColor.setHex(0xffff99);
     this.outlinePass.hiddenEdgeColor.setHex(0x333333);
+    this.composer.addPass(instancedPass);
     this.composer.addPass(renderPass);
     this.composer.addPass(this.outlinePass);
 
@@ -209,5 +225,97 @@ export class MainView {
 
       this.setupRendering();
     }
+  }
+}
+
+const CopyDepthShader = {
+	uniforms: {
+		'tDiffuse': { value: null },
+		'tDepth': { value: null }
+	},
+
+	vertexShader: /* glsl */`
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+		}`,
+
+	fragmentShader: /* glsl */`
+
+		uniform sampler2D tDiffuse;
+    uniform sampler2D tDepth;
+
+		varying vec2 vUv;
+
+		void main() {
+			gl_FragColor = texture2D( tDiffuse, vUv );
+			gl_FragDepth = texture2D( tDepth, vUv );
+		}`
+
+};
+
+class InstancedPass extends RenderPass {
+  private renderTarget: WebGLRenderTarget;
+  private fsQuad: FullScreenQuad;
+
+  constructor(width: number, height: number, scene: Scene, camera: Camera) {
+    super(scene, camera);
+    const pars = { minFilter: LinearFilter, magFilter: LinearFilter, format: RGBAFormat }
+    this.renderTarget = new WebGLRenderTarget(width, height, pars);
+    const uniforms =  {
+      'tDiffuse': {value: this.renderTarget.texture},
+      'tDepth': {value: this.renderTarget.depthTexture},
+    }
+    
+    const material = new ShaderMaterial({
+      uniforms: uniforms,
+      vertexShader: CopyDepthShader.vertexShader,
+			fragmentShader: CopyDepthShader.fragmentShader
+    });
+    this.fsQuad = new FullScreenQuad(material);
+  }
+
+  setSize(width: number, height: number): void {
+    this.renderTarget.setSize(width, height);
+  }
+
+  dispose(): void {
+    this.renderTarget.dispose();
+  }
+
+  render(
+    renderer: WebGLRenderer, 
+    writeBuffer: WebGLRenderTarget, 
+    readBuffer: WebGLRenderTarget,
+    deltaTime: number,
+    maskActive: boolean
+  ): void {
+    const modified = true;
+    this.scene.traverseVisible((obj: Object3D): void => {
+      if (obj.layers.mask & (1 << LAYER_INSTANCED)) {
+        
+      }
+    })
+    if (modified) {
+      renderer.setRenderTarget(this.renderTarget);
+      renderer.setClearAlpha(0);
+      renderer.clear();
+      renderer.clearDepth();
+      const mask = this.camera.layers.mask;
+      this.camera.layers.mask = (1 << LAYER_INSTANCED) | (1 << LAYER_LIGHT);
+      try {
+        renderer.render(this.scene, this.camera);
+      } finally {
+        this.camera.layers.mask = mask;
+        this.camera.layers.mask =  (1 << LAYER_DEFAULT) | (1 << LAYER_LIGHT);
+      }
+    }
+    renderer.setRenderTarget(readBuffer);
+		this.fsQuad.render(renderer);
   }
 }

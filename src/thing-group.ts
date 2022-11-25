@@ -1,5 +1,6 @@
 import { Vector3, Mesh, Group, Material, InstancedMesh, Matrix4, BufferGeometry, MeshLambertMaterial, InstancedBufferGeometry, InstancedBufferAttribute, Quaternion } from "three";
 import { AssetLoader } from "./asset-loader";
+import { LAYER_INSTANCED } from "./main-view";
 import { ThingType } from "./types";
 import { rotEquals } from "./utils";
 
@@ -110,6 +111,7 @@ attribute vec3 offset;
     const geometry = new InstancedBufferGeometry().copy(origMesh.geometry as BufferGeometry);
     geometry.setAttribute('offset', new InstancedBufferAttribute(data, 3));
     const instancedMesh = new InstancedMesh(geometry, material, params.length);
+    instancedMesh.layers.set(LAYER_INSTANCED);
     return instancedMesh;
   }
 
