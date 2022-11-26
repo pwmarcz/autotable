@@ -1,4 +1,4 @@
-import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneBufferGeometry, WebGLRenderTarget, LinearFilter, RGBAFormat, ShaderMaterial, UniformsUtils, Uniform } from 'three';
+import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneBufferGeometry, WebGLRenderTarget, LinearFilter, RGBAFormat, ShaderMaterial, UniformsUtils, Uniform, Texture, DepthTexture, Color } from 'three';
 import { EffectComposer, FullScreenQuad } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
@@ -99,6 +99,7 @@ export class MainView {
     const instancedPass = new InstancedPass(w, h, this.scene, this.camera);
     const renderPass = new RenderPass(this.scene, this.camera);
     renderPass.clear = false;
+    renderPass.clearColor = new Color("#f00");
     this.outlinePass = new OutlinePass(new Vector2(w, h), this.scene, this.camera);
     this.outlinePass.visibleEdgeColor.setHex(0xffff99);
     this.outlinePass.hiddenEdgeColor.setHex(0x333333);
@@ -254,7 +255,8 @@ const CopyDepthShader = {
 
 		void main() {
 			gl_FragColor = texture2D( tDiffuse, vUv );
-			gl_FragDepth = texture2D( tDepth, vUv );
+      float depth = texture2D( tDepth, vUv ).x;
+			gl_FragDepthEXT = depth;
 		}`
 
 };
@@ -262,11 +264,19 @@ const CopyDepthShader = {
 class InstancedPass extends RenderPass {
   private renderTarget: WebGLRenderTarget;
   private fsQuad: FullScreenQuad;
+  private needsRedraw: number = 10;
 
   constructor(width: number, height: number, scene: Scene, camera: Camera) {
     super(scene, camera);
-    const pars = { minFilter: LinearFilter, magFilter: LinearFilter, format: RGBAFormat }
+    const depthTexture = new DepthTexture(width, height);
+    const pars = {
+      minFilter: LinearFilter,
+      magFilter: LinearFilter,
+      format: RGBAFormat,
+      depthTexture
+    }
     this.renderTarget = new WebGLRenderTarget(width, height, pars);
+    
     const uniforms =  {
       'tDiffuse': {value: this.renderTarget.texture},
       'tDepth': {value: this.renderTarget.depthTexture},
@@ -301,11 +311,10 @@ class InstancedPass extends RenderPass {
         
       }
     })
-    if (modified) {
+    if (this.needsRedraw > 0) {
       renderer.setRenderTarget(this.renderTarget);
       renderer.setClearAlpha(0);
       renderer.clear();
-      renderer.clearDepth();
       const mask = this.camera.layers.mask;
       this.camera.layers.mask = (1 << LAYER_INSTANCED) | (1 << LAYER_LIGHT);
       try {
@@ -314,8 +323,11 @@ class InstancedPass extends RenderPass {
         this.camera.layers.mask = mask;
         this.camera.layers.mask =  (1 << LAYER_DEFAULT) | (1 << LAYER_LIGHT);
       }
+
+      this.needsRedraw--;
     }
     renderer.setRenderTarget(readBuffer);
+    renderer.copyFramebufferToTexture;
 		this.fsQuad.render(renderer);
   }
 }

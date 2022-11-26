@@ -6,6 +6,7 @@ import { AssetLoader } from "./asset-loader";
 import { Center } from "./center";
 import { ThingParams, ThingGroup, TileThingGroup, StickThingGroup, MarkerThingGroup } from "./thing-group";
 import { ThingType, Place } from "./types";
+import { LAYER_INSTANCED } from "./main-view";
 
 export interface Render {
   type: ThingType;
@@ -56,6 +57,7 @@ export class ObjectView {
       depthWrite: false,
     });
     this.shadowObject = new InstancedMesh(plane, material, MAX_SHADOWS);
+    this.shadowObject.layers.set(LAYER_INSTANCED);
     this.shadowObject.visible = true;
     this.mainGroup.add(this.shadowObject);
 
@@ -100,6 +102,7 @@ export class ObjectView {
   private addStatic(): void {
     const tableMesh = this.assetLoader.makeTable();
     tableMesh.position.set(World.WIDTH / 2, World.WIDTH / 2, 0);
+    tableMesh.layers.set(LAYER_INSTANCED);
     this.mainGroup.add(tableMesh);
     this.mainGroup.add(this.center.mesh);
 
