@@ -1,4 +1,4 @@
-import { Group, Mesh, Vector3, MeshBasicMaterial, MeshLambertMaterial, Object3D, PlaneBufferGeometry, InstancedMesh } from "three";
+import { Group, Mesh, Vector3, MeshBasicMaterial, MeshLambertMaterial, Object3D, PlaneGeometry, InstancedMesh } from "three";
 
 import { World } from "./world";
 import { Client } from "./client";
@@ -48,7 +48,7 @@ export class ObjectView {
     this.thingGroups.set(ThingType.STICK, new StickThingGroup(this.assetLoader, this.mainGroup));
     this.thingGroups.set(ThingType.MARKER, new MarkerThingGroup(this.assetLoader, this.mainGroup));
 
-    const plane = new PlaneBufferGeometry(1, 1, 1);
+    const plane = new PlaneGeometry(1, 1, 1);
     let material = new MeshBasicMaterial({
       transparent: true,
       opacity: 0.1,

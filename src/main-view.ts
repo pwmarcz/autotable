@@ -1,4 +1,4 @@
-import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneBufferGeometry } from 'three';
+import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneGeometry } from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
@@ -32,13 +32,13 @@ export class MainView {
     this.main = document.getElementById('main')!;
 
     this.scene = new Scene();
-    this.scene.autoUpdate = false;
+    this.scene.matrixWorldAutoUpdate = false;
     this.viewGroup = new Group();
     this.viewGroup.position.set(World.WIDTH/2, World.WIDTH/2, 0);
     this.scene.add(this.mainGroup);
     this.scene.add(this.viewGroup);
 
-    this.dummyObject = new Mesh(new PlaneBufferGeometry(0, 0, 0));
+    this.dummyObject = new Mesh(new PlaneGeometry(0, 0, 0));
 
     this.renderer = new WebGLRenderer({
       antialias: false,

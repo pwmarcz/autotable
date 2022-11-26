@@ -8,7 +8,7 @@
     "@types/events": "^3.0.0",
     "@types/jquery": "^3.3.38",
     "@types/qs": "^6.9.2",
-    "@types/three": "^0.133.1",
+    "@types/three": "^0.146.0",
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
     "eslint": "^6.8.0",
@@ -23,6 +23,6 @@
     "normalize.css": "^8.0.1",
     "popper.js": "^1.16.1",
     "qs": "^6.9.4",
-    "three": "^0.133.0"
+    "three": "^0.146.0"
   }
 }
