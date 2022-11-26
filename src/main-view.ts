@@ -202,12 +202,14 @@ export class MainView {
         renderWidth = Math.floor(this.width);
         renderHeight = Math.floor(this.width / RATIO);
       }
+      renderWidth -= renderWidth % 2;
+      renderHeight -= renderHeight % 2;
+
       this.main.style.width = `${renderWidth}px`;
       this.main.style.height = `${renderHeight}px`;
       this.renderer.setSize(renderWidth, renderHeight);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
-
-      this.setupRendering();
+      this.composer.setSize(renderWidth, renderHeight);
     }
   }
 }
