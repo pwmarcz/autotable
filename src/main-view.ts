@@ -1,7 +1,15 @@
-import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneGeometry } from 'three';
+import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneGeometry, WebGLRenderTarget, LinearFilter } from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
+import { SavePass } from 'three/examples/jsm/postprocessing/SavePass';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
+
+import { CopyShader } from 'three/examples/jsm/shaders/CopyShader';
+import { BlendShader } from 'three/examples/jsm/shaders/BlendShader';
+
+
+
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import { World } from './world';
@@ -88,7 +96,35 @@ export class MainView {
     this.outlinePass.visibleEdgeColor.setHex(0xffff99);
     this.outlinePass.hiddenEdgeColor.setHex(0x333333);
     this.composer.addPass(renderPass);
+
+    const renderTargetParameters = {
+      minFilter: LinearFilter,
+      magFilter: LinearFilter,
+      stencilBuffer: false
+    };
+    
+    // save pass
+    const savePass = new SavePass(
+      new WebGLRenderTarget(
+        w, h, 
+        renderTargetParameters
+      )
+    );
+
+    // blend pass
+    const blendPass = new ShaderPass(BlendShader, "tDiffuse1");
+    blendPass.uniforms["tDiffuse2"].value = savePass.renderTarget.texture;
+    blendPass.uniforms["mixRatio"].value = 0.7;
+
+    // output pass
+    const outputPass = new ShaderPass(CopyShader);
+
+
     this.composer.addPass(this.outlinePass);
+
+    this.composer.addPass(blendPass);
+    this.composer.addPass(savePass);
+    this.composer.addPass(outputPass);
 
     // Force OutlinePass to precompile shadows, otherwise there is a pause when
     // you first select something.
