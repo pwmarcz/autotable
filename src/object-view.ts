@@ -1,4 +1,5 @@
-import { Group, Mesh, Vector3, MeshBasicMaterial, MeshLambertMaterial, Object3D, PlaneGeometry, InstancedMesh } from "three";
+import { Group, Mesh, Vector3, MeshBasicMaterial, MeshLambertMaterial, Object3D, PlaneGeometry, InstancedMesh, BufferGeometry } from "three";
+import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 
 import { World } from "./world";
 import { Client } from "./client";
@@ -106,6 +107,9 @@ export class ObjectView {
     tableMesh.updateMatrixWorld();
     this.center.mesh.updateMatrixWorld();
 
+    const tray = this.assetLoader.makeTray();
+    tray.updateMatrixWorld();
+    const geometries: Array<BufferGeometry> = [];
     for (let i = 0; i < 4; i++) {
       for (let j = 0; j < 6; j++) {
         const trayPos = new Vector3(
@@ -115,16 +119,22 @@ export class ObjectView {
         );
         trayPos.applyAxisAngle(new Vector3(0, 0, 1), Math.PI * i / 2);
 
-        const tray = this.assetLoader.makeTray();
-        tray.rotation.z = Math.PI * i / 2;
-        tray.position.set(
+        const geometry = tray.geometry.clone();
+
+        geometry.rotateZ(Math.PI * i / 2);
+        geometry.translate(
           trayPos.x + World.WIDTH / 2,
           trayPos.y + World.WIDTH / 2,
-          0);
-        this.mainGroup.add(tray);
-        tray.updateMatrixWorld();
+          0
+        );
+
+        geometries.push(geometry);
       }
     }
+    tray.geometry = mergeBufferGeometries(geometries);
+    tray.position.set(0, 0, 0);
+    this.mainGroup.add(tray);
+    tray.updateMatrixWorld();
   }
 
   updateScores(scores: Array<number | null>): void {
