@@ -158,18 +158,17 @@ export class ObjectView {
       const material = obj.material as MeshLambertMaterial;
       const wasTransparent = material.transparent;
 
-      material.emissive.setHex(0);
-      material.color.setHex(0xeeeeee);
+      material.emissive.set(0.0, 0.0, 0.0);
       material.transparent = false;
       material.depthTest = true;
       obj.renderOrder = 0;
 
       if (thing.hovered) {
-        material.emissive.setHex(0x111111);
+        material.emissive.set(0.05, 0.05, 0.05);
       }
 
       if (thing.bottom) {
-        material.color.setHex(0xbbbbbb);
+        material.color.set(0.8, 0.8, 0.8);
       }
 
       if (thing.selected) {

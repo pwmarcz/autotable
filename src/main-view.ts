@@ -1,10 +1,12 @@
-import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneGeometry } from 'three';
+import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneGeometry, LinearSRGBColorSpace, SRGBColorSpace, ColorManagement, Color } from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
+import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import { World } from './world';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
 
 const RATIO = 1.5;
 
@@ -44,7 +46,8 @@ export class MainView {
       antialias: false,
       // Apparently needed for OutlinePass not to cause glitching on some browsers.
       logarithmicDepthBuffer: true,
-     });
+    });
+    this.renderer.useLegacyLights = false;
     this.main.appendChild(this.renderer.domElement);
 
     this.setupLights();
@@ -58,16 +61,17 @@ export class MainView {
   }
 
   private setupLights(): void {
-    this.viewGroup.add(new AmbientLight(0x888888));
-    const topLight = new DirectionalLight(0x777777);
+    const white = 0xffffff;
+    this.viewGroup.add(new AmbientLight(white, 1.45));
+    const topLight = new DirectionalLight(white, 1.45);
     topLight.position.set(0, 0, 10000);
     this.viewGroup.add(topLight);
 
-    const frontLight = new DirectionalLight(0x222222);
+    const frontLight = new DirectionalLight(white, 0.45);
     frontLight.position.set(0, -10000, 0);
     this.viewGroup.add(frontLight);
 
-    const sideLight = new DirectionalLight(0x222222);
+    const sideLight = new DirectionalLight(white, 0.45);
     sideLight.position.set(-10000, -10000, 0);
     this.viewGroup.add(sideLight);
   }
@@ -89,7 +93,8 @@ export class MainView {
     this.outlinePass.hiddenEdgeColor.setHex(0x333333);
     this.composer.addPass(renderPass);
     this.composer.addPass(this.outlinePass);
-
+    // const gammaCorrectionPass = new ShaderPass(GammaCorrectionShader);
+    // this.composer.addPass(gammaCorrectionPass);
     // Force OutlinePass to precompile shadows, otherwise there is a pause when
     // you first select something.
     this.outlinePass.selectedObjects.push(this.dummyObject);

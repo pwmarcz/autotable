@@ -4,7 +4,7 @@ import tableJpg from 'url:../img/table.jpg';
 import glbModels from 'url:../img/models.auto.glb';
 
 import { Texture, Mesh, TextureLoader, Material, LinearEncoding,
-   MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, RepeatWrapping } from 'three';
+   MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, RepeatWrapping, LinearSRGBColorSpace, SRGBColorSpace } from 'three';
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { World } from './world';
 import { Size } from './types';
@@ -17,7 +17,7 @@ export class AssetLoader {
   makeTable(): Mesh {
     const tableGeometry = new PlaneGeometry(
       World.WIDTH + Size.TILE.y, World.WIDTH + Size.TILE.y);
-    const tableMaterial = new MeshLambertMaterial({ color: 0xeeeeee, map: this.textures.table });
+    const tableMaterial = new MeshLambertMaterial({ map: this.textures.table });
     const tableMesh = new Mesh(tableGeometry, tableMaterial);
     return tableMesh;
   }
@@ -28,7 +28,7 @@ export class AssetLoader {
 
   makeTray(): Mesh {
     const mesh = this.cloneMesh(this.meshes.tray);
-    (mesh.material as MeshStandardMaterial).color.setHex(0x363636);
+    (mesh.material as MeshStandardMaterial).color.set(0.22, 0.22, 0.22);
     return mesh;
   }
 
@@ -60,7 +60,6 @@ export class AssetLoader {
       this.textures.table.wrapS = RepeatWrapping;
       this.textures.table.wrapT = RepeatWrapping;
       this.textures.table.repeat.set(3, 3);
-      (this.meshes.tile.material as MeshStandardMaterial).color.setHex(0xeeeeee);
     });
   }
 
@@ -94,6 +93,7 @@ export class AssetLoader {
   processTexture(texture: Texture): Texture {
     texture.flipY = false;
     texture.anisotropy = 4;
+    texture.colorSpace = LinearSRGBColorSpace;
     return texture;
   }
 
@@ -110,7 +110,7 @@ export class AssetLoader {
     const standard = material as MeshStandardMaterial;
     const map = standard.map;
     if (map !== null) {
-      map.encoding = LinearEncoding;
+      map.colorSpace = LinearSRGBColorSpace;
       map.anisotropy = 4;
     }
     return new MeshLambertMaterial({map});
