@@ -68,7 +68,7 @@ export class AssetLoader {
     const loader = new TextureLoader();
     return new Promise(resolve => {
       loader.load(url, (texture: Texture) => {
-        this.textures[name] = this.processTexture(texture);;
+        this.textures[name] = this.processTexture(texture);
         resolve();
       });
     });

@@ -50,7 +50,7 @@ export class MainView {
     this.setupLights();
     this.setupRendering();
 
-    this.stats = Stats();
+    this.stats = new Stats();
     this.stats.dom.style.left = 'auto';
     this.stats.dom.style.right = '0';
     const full = document.getElementById('full')!;

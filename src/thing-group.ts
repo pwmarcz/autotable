@@ -90,7 +90,7 @@ attribute vec3 offset;
 `;
     const uvChunk = this.getUvChunk();
     material.onBeforeCompile = shader => {
-      console.log(shader.vertexShader);
+      // console.log(shader.vertexShader);
       shader.vertexShader = shader.vertexShader
         .replace('#include <common>', paramChunk)
         .replace('#include <uv_vertex>', uvChunk);
@@ -108,7 +108,8 @@ attribute vec3 offset;
       data[3 * i + 2] = v.z;
     }
 
-    const geometry = new InstancedBufferGeometry().copy(origMesh.geometry as BufferGeometry);
+    // the cast to InstancedBufferGeometry is a lie, but the copy works
+    const geometry = new InstancedBufferGeometry().copy(origMesh.geometry as InstancedBufferGeometry);
     geometry.setAttribute('offset', new InstancedBufferAttribute(data, 3));
     const instancedMesh = new InstancedMesh(geometry, material, params.length);
     return instancedMesh;
