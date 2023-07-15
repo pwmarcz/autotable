@@ -90,6 +90,7 @@ attribute vec3 offset;
 `;
     const uvChunk = this.getUvChunk();
     material.onBeforeCompile = shader => {
+      console.log(shader.vertexShader);
       shader.vertexShader = shader.vertexShader
         .replace('#include <common>', paramChunk)
         .replace('#include <uv_vertex>', uvChunk);
@@ -161,11 +162,11 @@ export class TileThingGroup extends InstancedThingGroup {
   getUvChunk(): string {
     return `
 #include <uv_vertex>
-if (vUv.x <= ${TILE_DU} && vUv.y <= ${TILE_DV}) {
-  vUv.x += offset.x;
-  vUv.y += offset.y;
-} else if (vUv.y >= ${4*TILE_DV}) {
-  vUv.y += offset.z;
+if (vMapUv.x <= ${TILE_DU} && vMapUv.y <= ${TILE_DV}) {
+  vMapUv.x += offset.x;
+  vMapUv.y += offset.y;
+} else if (vMapUv.y >= ${4*TILE_DV}) {
+  vMapUv.y += offset.z;
 }
 `;
   }
@@ -209,7 +210,7 @@ export class StickThingGroup extends InstancedThingGroup {
   getUvChunk(): string {
     return `
 #include <uv_vertex>
-vUv += offset.xy;
+vMapUv += offset.xy;
 `;
   }
 
