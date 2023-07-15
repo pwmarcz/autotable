@@ -187,7 +187,7 @@ const START: Record<string, Slot> = {
     group: `discard`,
     origin: new Vector3(69 + 6 * Size.TILE.x, 60 - 2 * Size.TILE.y, 0),
     direction: new Vector2(1, 1),
-    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS],
+    rotations: [Rotation.FACE_UP, Rotation.FACE_UP_SIDEWAYS, Rotation.FACE_DOWN, Rotation.FACE_DOWN_SIDEWAYS],
   }),
 
   'tray': new Slot({
