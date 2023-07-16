@@ -112,6 +112,7 @@ attribute vec3 offset;
     const geometry = new InstancedBufferGeometry().copy(origMesh.geometry as InstancedBufferGeometry);
     geometry.setAttribute('offset', new InstancedBufferAttribute(data, 3));
     const instancedMesh = new InstancedMesh(geometry, material, params.length);
+    instancedMesh.frustumCulled = false;
     return instancedMesh;
   }
 
