@@ -146,8 +146,10 @@ export class MainView {
         this.camera.position.add(dist);
       }
       if (zoom > 0 && mouse2) {
-        this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.6;
-        this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.6;
+        // NOTE: with multiplier larger than 0.5 it's possible to look at left 
+        // or right player's tiles!
+        this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.5;
+        this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.5;
       }
     }
   }
