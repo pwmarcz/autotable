@@ -68,7 +68,7 @@ export class Game {
     return entries;
   }
 
-  private update(entries: Array<Entry>): void {
+  private update(client: Client, entries: Array<Entry>): void {
     if (!this.checkUnique(entries)) {
       this.sendAll({type: 'UPDATE', entries: this.allEntries(), full: true});
       return;
@@ -97,6 +97,17 @@ export class Game {
       if (kind === 'perPlayer') {
         this.perPlayer.set(key as string, value);
       }
+    }
+    if (entries.length > 1) {
+      const counter: Map<string, number> = new Map();
+      for (const [kind, key, value] of entries) {
+        counter.set(kind, (counter.get(kind) ?? 0) + 1);
+      }
+      let summary = '';
+      for (const [kind, num] of counter.entries()) {
+        summary += ` ${kind} ${num}`;
+      }
+      console.log(`[${this.gameId}.${client.playerId}] update:${summary}`);
     }
     this.sendAll({type: 'UPDATE', entries, full: false});
   }
@@ -164,7 +175,7 @@ export class Game {
       }
     }
     if (toUpdate.length > 0) {
-      this.update(toUpdate);
+      this.update(client, toUpdate);
     }
     if (this.clients.size === 0) {
       this.expiryTime = new Date().getTime() + EXPIRY_TIME;
@@ -186,7 +197,7 @@ export class Game {
   onMessage(client: Client, message: Message): void {
     switch (message.type) {
       case 'UPDATE':
-        this.update(message.entries);
+        this.update(client, message.entries);
         break;
     }
   }
