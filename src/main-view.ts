@@ -212,11 +212,14 @@ export class MainView {
       renderWidth -= renderWidth % 2;
       renderHeight -= renderHeight % 2;
 
+      const pixelRatio = Math.min(window.devicePixelRatio, 3);
+
       this.main.style.width = `${renderWidth}px`;
       this.main.style.height = `${renderHeight}px`;
       this.renderer.setSize(renderWidth, renderHeight);
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
+      this.renderer.setPixelRatio(pixelRatio);
       this.composer.setSize(renderWidth, renderHeight);
+      this.composer.setPixelRatio(pixelRatio);
     }
   }
 }
