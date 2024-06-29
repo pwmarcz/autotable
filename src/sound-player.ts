@@ -2,22 +2,28 @@ import { Client } from "./client";
 import { SoundInfo, SoundType } from "./types";
 
 class Channel {
-  private element: HTMLAudioElement;
+  private elements: Record<string, HTMLAudioElement>;
   // TODO intensity
   private panner: StereoPannerNode;
   private gainer: GainNode;
   playing: boolean = false;
 
-  constructor(audioContext: AudioContext) {
-    this.element = document.createElement('audio');
-    this.element.onended = () => {
-      this.element.currentTime = 0;
-      this.playing = false;
-    };
+  constructor(audioContext: AudioContext, urls: string[]) {    
     this.gainer = audioContext.createGain();
     this.panner = audioContext.createStereoPanner();
-    const track = audioContext.createMediaElementSource(this.element);
-    track.connect(this.gainer).connect(this.panner).connect(audioContext.destination);
+    this.elements = {};
+    for (const url of urls) {
+      const element = document.createElement('audio');
+      element.src = url;
+      element.pause();
+      element.onended = () => {
+        element.currentTime = 0;
+        this.playing = false;
+      };
+      const track = audioContext.createMediaElementSource(element);
+      track.connect(this.gainer).connect(this.panner).connect(audioContext.destination);
+      this.elements[url] = element;
+    }
   }
 
   gain(gain: number): void {
@@ -29,8 +35,7 @@ class Channel {
   }
 
   play(url: string): void {
-    this.element.src = url;
-    this.element.play();
+    this.elements[url].play();
     this.playing = true;
   }
 }
@@ -44,16 +49,19 @@ export class SoundPlayer {
 
   constructor(client: Client) {
     this.audioContext = new AudioContext();
-    this.channels = [];
-    for (let i = 0; i < 8; i++) {
-      this.channels.push(new Channel(this.audioContext));
-    }
     this.client = client;
     this.client.sound.on('update', this.onUpdate.bind(this));
     this.urls = {
       [SoundType.DISCARD]: this.getSource('sound-discard'),
       [SoundType.STICK]: this.getSource('sound-stick'),
     };
+    this.channels = [];
+    for (let i = 0; i < 8; i++) {
+      this.channels.push(new Channel(this.audioContext, [
+        this.urls[SoundType.DISCARD],
+        this.urls[SoundType.STICK],
+      ]));
+    }
   }
 
   play(type: SoundType, side: number | null): void {
