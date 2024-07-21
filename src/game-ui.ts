@@ -51,6 +51,7 @@ export class GameUi {
 
     this.setupEvents();
     this.setupDealButton();
+    this.setupResetPointsButton();
   }
 
   private setupEvents(): void {
@@ -192,6 +193,17 @@ export class GameUi {
 
       this.world.deal(dealType, gameType, fives, points);
       this.resetDealType();
+      this.hideSetup();
+    });
+  }
+
+  private setupResetPointsButton(): void {
+    const buttonElement = document.getElementById('reset-points')! as HTMLButtonElement;
+
+    this.setupProgressButton(buttonElement, 600, () => {
+      const points = this.elements.points.value as Points;
+
+      this.world.resetPoints(points);
       this.hideSetup();
     });
   }

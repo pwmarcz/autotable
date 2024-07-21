@@ -139,9 +139,9 @@ export class World {
     }
   }
 
-  updateConditions(conditions: Conditions): void {
+  updateConditions(conditions: Conditions, replacePoints: boolean = false): void {
     this.conditions = conditions;
-    this.setup.replace(conditions);
+    this.setup.replace(conditions, replacePoints);
     this.setupView();
   }
 
@@ -227,6 +227,25 @@ export class World {
 
     this.client.transaction(() => {
       this.client.match.set(0, match!);
+      this.sendUpdate(true);
+    });
+  }
+
+  resetPoints(points: Points): void {
+    for (const thing of this.things.values()) {
+      thing.release();
+    }
+    this.selected.splice(0);
+    this.checkPushes();
+
+    const conditions = { ...this.conditions, points };
+    this.updateConditions(conditions, true);
+
+    let match = this.client.match.get(0)!;
+    match = { ...match, conditions };
+
+    this.client.transaction(() => {
+      this.client.match.set(0, match);
       this.sendUpdate(true);
     });
   }

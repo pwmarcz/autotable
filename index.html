@@ -35,7 +35,7 @@
         <div class="seat-buttons">
             <div class="seat-button seat-button-0">
                 <button class="take-seat btn btn-primary">Take seat</button>
-                <button class="kick btn btn-dark" style="display: none"
+                <button class="kick btn btn-dark btn-progress-main" style="display: none"
                         data-toggle="tooltip" data-placement="top"
                         title="Click and hold to unseat">
                     <div class="btn-progress"></div>
@@ -44,7 +44,7 @@
             </div>
             <div class="seat-button seat-button-1">
                 <button class="take-seat btn btn-primary">Take seat</button>
-                <button class="kick btn btn-dark" style="display: none"
+                <button class="kick btn btn-dark btn-progress-main" style="display: none"
                         data-toggle="tooltip" data-placement="top"
                         title="Click and hold to unseat">
                     <div class="btn-progress"></div>
@@ -53,7 +53,7 @@
             </div>
             <div class="seat-button seat-button-2">
                 <button class="take-seat btn btn-primary">Take seat</button>
-                <button class="kick btn btn-dark" style="display: none"
+                <button class="kick btn btn-dark btn-progress-main" style="display: none"
                         data-toggle="tooltip" data-placement="top"
                         title="Click and hold to unseat">
                     <div class="btn-progress"></div>
@@ -62,7 +62,7 @@
             </div>
             <div class="seat-button seat-button-3">
                 <button class="take-seat btn btn-primary">Take seat</button>
-                <button class="kick btn btn-dark" style="display: none"
+                <button class="kick btn btn-dark btn-progress-main" style="display: none"
                         data-toggle="tooltip" data-placement="top"
                         title="Click and hold to unseat">
                     <div class="btn-progress"></div>
@@ -73,7 +73,7 @@
 
         <div id="sidebar" class="collapsed container text-light">
             <div class="d-flex">
-                <button class="btn btn-warning btn-sm w-100" id="deal">
+                <button class="btn btn-warning btn-sm w-100 btn-progress-main" id="deal">
                     <div class="btn-progress"></div>
                     <span class="btn-progress-text">Deal</span>
                 </button>
@@ -108,14 +108,23 @@
                     <option value="111" selected>1-1-1</option>
                     <option value="121">1-2-1</option>
                 </select>
-                <select class="dark-select form-control form-control-sm mt-2" id="points">
-                    <option disabled value="">Starting points:</option>
-                    <option value="25" selected>25k</option>
-                    <option value="30">30k</option>
-                    <option value="35">35k</option>
-                    <option value="40">40k</option>
-                    <option value="100" selected>100k</option>
-                </select>
+                <div class="mt-2 d-flex">
+                    <select class="dark-select form-control form-control-sm mr-2 w-100" id="points">
+                        <option disabled value="">Starting points:</option>
+                        <option value="25" selected>25k</option>
+                        <option value="30">30k</option>
+                        <option value="35">35k</option>
+                        <option value="40">40k</option>
+                        <option value="100" selected>100k</option>
+                    </select>
+                    <button class="btn btn-dark flex-shrink-1 btn-sm btn-progress-main" id="reset-points"
+                        data-toggle="tooltip" data-placement="top"
+                        title="Click and hold to reset point sticks"
+                    >
+                        <div class="btn-progress"></div>
+                        <span class="btn-progress-text">Reset</span>
+                    </button>
+                </div>
                 <br>
             </div>
 

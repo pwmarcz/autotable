@@ -52,12 +52,17 @@ export class Setup {
     }
   }
 
-  replace(conditions: Conditions): void {
+  replace(conditions: Conditions, replacePoints: boolean): void {
     // console.log('replace', conditions);
 
     const whatReplace: Record<ThingType, boolean> = {
-      TILE: true,
+      TILE: (
+        conditions.gameType !== this.conditions.gameType ||
+        conditions.back !== this.conditions.back || 
+        conditions.fives !== this.conditions.fives
+      ),
       STICK: (
+        replacePoints ||
         conditions.gameType !== this.conditions.gameType ||
         conditions.points !== this.conditions.points
       ),

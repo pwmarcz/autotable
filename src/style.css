@@ -86,7 +86,7 @@
 
 #center { display: none; }
 
-#deal { position: relative; }
+.btn-progress-main { position: relative; }
 .btn-progress {
     position: absolute;
     top: 0;
@@ -99,11 +99,11 @@
     position: relative;
 }
 
-#deal .btn-progress {
+.btn-warning .btn-progress {
     background: #fff2ca;
 }
 
-.kick .btn-progress {
+.btn-dark .btn-progress {
     background: rgb(90, 98, 104);
 }
 
