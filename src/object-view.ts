@@ -158,6 +158,7 @@ export class ObjectView {
       const material = obj.material as MeshLambertMaterial;
       const wasTransparent = material.transparent;
 
+      material.color.set(1.0, 1.0, 1.0);
       material.emissive.set(0.0, 0.0, 0.0);
       material.transparent = false;
       material.depthTest = true;
