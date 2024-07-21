@@ -349,12 +349,16 @@ export class World {
 
   private canSelect(thing: Thing, otherSelected: Array<Thing>): boolean {
     const upSlot = thing.slot.links.up;
-    if (upSlot) {
-      if (upSlot.thing !== null &&
-        otherSelected.indexOf(upSlot.thing) === -1) {
-
-        return false;
+    if (upSlot && upSlot.thing !== null) {
+      if (otherSelected.indexOf(upSlot.thing) !== -1) {
+        // the player is also selecting the tile above, let them pick it up
+        return true;
       }
+      if (upSlot.thing.claimedBy !== null) {
+        // someone else is holding this tile
+        return true;
+      }
+      return false;
     }
     return true;
   }
@@ -509,6 +513,7 @@ export class World {
       return;
     }
 
+    const sourceSlots = [];
     let discardSide = null;
     let hasStick = false;
     for (const thing of this.movement.things()) {
@@ -520,11 +525,12 @@ export class World {
       } else if (target.group === 'riichi') {
         hasStick = true;
       }
+      sourceSlots.push(source);
     }
 
     this.movement.apply();
     this.checkPushes();
-    this.finishDrop();
+    this.finishDrop(sourceSlots);
 
     if (discardSide !== null) {
       this.soundPlayer.play(SoundType.DISCARD, discardSide);
@@ -535,22 +541,43 @@ export class World {
   }
 
   private dropInPlace(): void {
-    this.finishDrop();
+    this.finishDrop([]);
   }
 
-  private finishDrop(): void {
+  private finishDrop(sourceSlots: Array<Slot>): void {
+    const targetSlots = [];
     for (const thing of this.things.values()) {
       if (thing.claimedBy === this.seat) {
         thing.release();
+        targetSlots.push(thing.slot);
       }
     }
-
     this.selected.splice(0);
     this.heldMouse = null;
     this.movement = null;
 
+    for (const slot of sourceSlots) {
+      if (slot.links.up) {
+        this.dropDown(slot.links.up);
+      }
+    }
+    for (const slot of targetSlots) {
+      this.dropDown(slot);
+    }
+
     this.sendUpdate();
     this.sendMouse();
+  }
+
+  private dropDown(slot: Slot): void {
+    const thing = slot.thing;
+    if (thing && thing.claimedBy === null) {
+      const downSlot = slot.links.down;
+      if (downSlot && downSlot.thing === null) {
+        thing.prepareMove();
+        thing.moveTo(downSlot);
+      }
+    }
   }
 
   private canDrop(): boolean {
