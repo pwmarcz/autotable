@@ -108,8 +108,7 @@ attribute vec3 offset;
       data[3 * i + 2] = v.z;
     }
 
-    // the cast to InstancedBufferGeometry is a lie, but the copy works
-    const geometry = new InstancedBufferGeometry().copy(origMesh.geometry as InstancedBufferGeometry);
+    const geometry = new BufferGeometry().copy(origMesh.geometry);
     geometry.setAttribute('offset', new InstancedBufferAttribute(data, 3));
     const instancedMesh = new InstancedMesh(geometry, material, params.length);
     instancedMesh.frustumCulled = false;
