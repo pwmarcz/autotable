@@ -100,7 +100,10 @@ attribute vec3 offset;
     material.defines = material.defines ?? {};
     material.defines.THING_TYPE = origMesh.name;
 
-    const data = new Float32Array(params.length * 3);
+    // Weird bug: in Firefox Android, the last instance is not being rendered.
+    const extra = 1;
+
+    const data = new Float32Array((params.length + extra) * 3);
     for (let i = 0; i < params.length; i++) {
       const v = this.getOffset(params[i].typeIndex);
       data[3 * i] = v.x;
@@ -108,11 +111,14 @@ attribute vec3 offset;
       data[3 * i + 2] = v.z;
     }
 
-    // the cast to InstancedBufferGeometry is a lie, but the copy works
-    const geometry = new InstancedBufferGeometry().copy(origMesh.geometry as InstancedBufferGeometry);
+    const geometry = new BufferGeometry().copy(origMesh.geometry);
     geometry.setAttribute('offset', new InstancedBufferAttribute(data, 3));
-    const instancedMesh = new InstancedMesh(geometry, material, params.length);
+    const instancedMesh = new InstancedMesh(geometry, material, params.length + extra);
     instancedMesh.frustumCulled = false;
+    for (let i = 0; i < extra; i++) {
+      instancedMesh.setMatrixAt(params.length + i, this.zero);
+    }
+    instancedMesh.instanceMatrix.needsUpdate = true;
     return instancedMesh;
   }
 
