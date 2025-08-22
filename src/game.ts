@@ -9,6 +9,7 @@ import { Group } from "three";
 import { ClientUi } from "./client-ui";
 import { SoundPlayer } from "./sound-player";
 import { GameUi } from './game-ui';
+import { TileVariant } from "./types";
 
 export class Game {
   private assetLoader: AssetLoader;
@@ -26,6 +27,7 @@ export class Game {
 
   settings: {
     perspective: HTMLInputElement;
+    tileLabels: HTMLInputElement;
     benchmark: HTMLInputElement;
     muted: HTMLInputElement;
     sticky: HTMLInputElement;
@@ -51,6 +53,7 @@ export class Game {
 
     this.settings = {
       perspective: document.getElementById('perspective') as HTMLInputElement,
+      tileLabels: document.getElementById('tile-labels') as HTMLInputElement,
       benchmark: document.getElementById('benchmark') as HTMLInputElement,
       muted: document.getElementById('muted') as HTMLInputElement,
       sticky: document.getElementById('sticky') as HTMLInputElement,
@@ -72,6 +75,9 @@ export class Game {
 
   private updateSettings(): void {
     this.mainView.setPerspective(this.settings.perspective.checked);
+    this.objectView.setTileVariant(
+      this.settings.tileLabels.checked ? TileVariant.LABELS : TileVariant.NO_LABELS
+    );
     this.benchmark = this.settings.benchmark.checked;
     this.soundPlayer.muted = this.settings.muted.checked;
     this.mouseUi.sticky = this.settings.sticky.checked;
@@ -79,6 +85,7 @@ export class Game {
 
   start(): void {
     this.clientUi.start();
+    this.updateSettings();
     this.mainLoop();
   }
 
@@ -156,6 +163,10 @@ export class Game {
         this.settings.perspective.checked = !this.settings.perspective.checked;
         this.updateSettings();
         break;
+      case 'l':
+        this.settings.tileLabels.checked = !this.settings.tileLabels.checked;
+        this.updateSettings();
+        break;  
     }
   }
 

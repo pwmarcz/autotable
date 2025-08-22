@@ -20,10 +20,10 @@ files: img/models.auto.glb $(ICONS)
 
 img/tiles.auto.png: img/tiles.svg
 	inkscape $< --actions 'select-by-id:layer2; object-set-attribute:style, display:none' \
-		--export-filename=$@ --export-width=1024 --export-background=#ffffff --export-background-opacity=1
+		--export-filename=$@ --export-width=512 --export-background=#ffffff --export-background-opacity=1
 
 img/tiles-labels.auto.png: img/tiles.svg
-	inkscape $< --export-filename=$@ --export-width=1024 --export-background=#ffffff --export-background-opacity=1
+	inkscape $< --export-filename=$@ --export-width=512 --export-background=#ffffff --export-background-opacity=1
 
 img/sticks.auto.png: img/sticks.svg
 	inkscape $< --export-filename=$@ --export-width=256 --export-height=512

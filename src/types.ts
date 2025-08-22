@@ -124,3 +124,8 @@ export interface SoundInfo {
 export interface SeatInfo {
   seat: number | null;
 }
+
+export enum TileVariant {
+  NO_LABELS = 'NO_LABELS',
+  LABELS = 'LABELS',
+}

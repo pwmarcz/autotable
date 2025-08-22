@@ -1,10 +1,12 @@
 // @ts-ignore
 import tableJpg from 'url:../img/table.jpg';
 // @ts-ignore
+import tilesLabelsPng from 'url:../img/tiles-labels.auto.png';
+// @ts-ignore
 import glbModels from 'url:../img/models.auto.glb';
 
-import { Texture, Mesh, TextureLoader, Material, LinearEncoding,
-   MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, RepeatWrapping, LinearSRGBColorSpace, SRGBColorSpace } from 'three';
+import { Texture, Mesh, TextureLoader, Material,
+   MeshStandardMaterial, MeshLambertMaterial, PlaneGeometry, RepeatWrapping, LinearSRGBColorSpace } from 'three';
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 import { World } from './world';
 import { Size } from './types';
@@ -54,6 +56,7 @@ export class AssetLoader {
   loadAll(): Promise<void> {
     return Promise.all([
       this.loadTexture(tableJpg, 'table'),
+      this.loadTexture(tilesLabelsPng, 'tilesLabels'),
       this.loadModels(glbModels),
       (document as any).fonts.load('40px "Segment7Standard"'),
     ]).then(() => {

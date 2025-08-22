@@ -1,6 +1,6 @@
-import { Vector3, Mesh, Group, Material, InstancedMesh, Matrix4, BufferGeometry, MeshLambertMaterial, InstancedBufferGeometry, InstancedBufferAttribute, Quaternion } from "three";
+import { Vector3, Mesh, Group, Material, InstancedMesh, Matrix4, BufferGeometry, MeshLambertMaterial, InstancedBufferGeometry, InstancedBufferAttribute, Quaternion, Texture } from "three";
 import { AssetLoader } from "./asset-loader";
-import { ThingType } from "./types";
+import { ThingType, TileVariant } from "./types";
 import { rotEquals } from "./utils";
 
 const TILE_DU = 32 / 256;
@@ -156,6 +156,35 @@ attribute vec3 offset;
 
 export class TileThingGroup extends InstancedThingGroup {
   protected name: string = 'tile';
+  
+  private textures: Record<TileVariant, Texture>;
+  private tileVariant: TileVariant = TileVariant.NO_LABELS;
+
+  constructor(assetLoader: AssetLoader, group: Group) {
+    super(assetLoader, group);
+    const tileMaterial = this.assetLoader.meshes.tile.material as MeshLambertMaterial;
+    this.textures = {
+      [TileVariant.NO_LABELS]: tileMaterial.map!,
+      [TileVariant.LABELS]: this.assetLoader.textures.tilesLabels,
+    }
+  }
+
+  setVariant(tileVariant: TileVariant): void {
+    if (this.tileVariant === tileVariant) return;
+
+    const texture = this.textures[tileVariant];
+    
+    for (const mesh of this.meshes) {
+      this.updateTexture(mesh, texture);
+    }
+    this.updateTexture(this.instancedMesh, texture);
+    this.tileVariant = tileVariant;
+  }
+
+  private updateTexture(mesh: Mesh, texture: Texture): void {
+    (mesh.material as MeshLambertMaterial).map = texture;
+    (mesh.material as MeshLambertMaterial).needsUpdate = true;
+  }
 
   getOriginalMesh(): Mesh {
     return this.assetLoader.meshes.tile;

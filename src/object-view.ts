@@ -6,7 +6,7 @@ import { Client } from "./client";
 import { AssetLoader } from "./asset-loader";
 import { Center } from "./center";
 import { ThingParams, ThingGroup, TileThingGroup, StickThingGroup, MarkerThingGroup } from "./thing-group";
-import { ThingType, Place } from "./types";
+import { ThingType, Place, TileVariant } from "./types";
 
 export interface Render {
   type: ThingType;
@@ -210,5 +210,10 @@ export class ObjectView {
       this.mainGroup.add(obj);
       obj.updateMatrixWorld();
     }
+  }
+
+  setTileVariant(tileVariant: TileVariant) {
+    const tileThingGroup = this.thingGroups.get(ThingType.TILE) as TileThingGroup;
+    tileThingGroup.setVariant(tileVariant);
   }
 }
