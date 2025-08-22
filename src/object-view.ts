@@ -1,5 +1,5 @@
 import { Group, Mesh, Vector3, MeshBasicMaterial, MeshLambertMaterial, Object3D, PlaneGeometry, InstancedMesh, BufferGeometry } from "three";
-import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 
 import { World } from "./world";
 import { Client } from "./client";
@@ -131,7 +131,7 @@ export class ObjectView {
         geometries.push(geometry);
       }
     }
-    tray.geometry = mergeBufferGeometries(geometries);
+    tray.geometry = mergeGeometries(geometries);
     tray.position.set(0, 0, 0);
     this.mainGroup.add(tray);
     tray.updateMatrixWorld();
