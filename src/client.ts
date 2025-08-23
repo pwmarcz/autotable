@@ -77,7 +77,7 @@ export class Collection<K extends string | number, V> {
   private pending: Map<K, V | null> = new Map();
   private events: EventEmitter = new EventEmitter();
   private options: CollectionOptions;
-  private intervalId: NodeJS.Timeout | null = null;
+  private intervalId: number | null = null;
   private lastUpdate: number = 0;
 
   constructor(

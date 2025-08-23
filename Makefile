@@ -41,7 +41,7 @@ img/models.auto.glb: img/models.blend $(TEXTURES)
 	blender $< --background --python export.py -- $@
 
 .PHONY: build
-build: files
+build: files check
 	rm -rf build
 	./node_modules/.bin/parcel build *.html --public-url . --cache-dir .cache/build/ --dist-dir build/ --no-source-maps
 
@@ -65,6 +65,10 @@ release-server: build-server
 	ssh $(SERVER) 'cd autotable/server && yarn'
 	ssh $(SERVER) 'sudo systemctl restart autotable-server.service'
 
-.PHONY:
+.PHONY: test
 test:
 	cd server && yarn test
+
+.PHONY: check
+check:
+	./node_modules/.bin/tsc --noEmit

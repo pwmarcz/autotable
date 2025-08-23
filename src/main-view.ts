@@ -1,7 +1,7 @@
 import { Scene, Camera, WebGLRenderer, Vector2, Vector3, Group, AmbientLight, DirectionalLight, PerspectiveCamera, OrthographicCamera, Mesh, Object3D, PlaneGeometry } from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
-import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import { World } from './world';
@@ -45,13 +45,12 @@ export class MainView {
       // Apparently needed for OutlinePass not to cause glitching on some browsers.
       logarithmicDepthBuffer: true,
     });
-    this.renderer.useLegacyLights = false;
     this.main.appendChild(this.renderer.domElement);
 
     this.setupLights();
     this.setupRendering();
 
-    this.stats = new Stats();
+    this.stats = new Stats(); // @ts-ignore
     this.stats.dom.style.left = 'auto';
     this.stats.dom.style.right = '0';
     const full = document.getElementById('full')!;
@@ -144,7 +143,7 @@ export class MainView {
         this.camera.position.add(dist);
       }
       if (zoom > 0 && mouse2) {
-        // NOTE: with multiplier larger than 0.5 it's possible to look at left 
+        // NOTE: with multiplier larger than 0.5 it's possible to look at left
         // or right player's tiles!
         this.camera.position.x += mouse2.x * zoom * World.WIDTH * 0.5;
         this.camera.position.y += mouse2.y * zoom * World.WIDTH * 0.5;

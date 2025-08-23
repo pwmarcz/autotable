@@ -2,9 +2,9 @@
     "compilerOptions": {
         "strict": true,
         "target": "es6",
-        "lib": ["dom", "es6", "es2015.promise"],
+        "lib": ["dom", "es6", "es2017"],
         "esModuleInterop": true,
-        "moduleResolution": "node"
+        "moduleResolution": "bundler"
     },
     "references": [
         { "path": "server" }

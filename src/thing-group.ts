@@ -96,9 +96,7 @@ attribute vec3 offset;
         .replace('#include <uv_vertex>', uvChunk);
     };
 
-    // Fix cache conflict: https://github.com/mrdoob/three.js/issues/19377
-    material.defines = material.defines ?? {};
-    material.defines.THING_TYPE = origMesh.name;
+    material.customProgramCacheKey = () => origMesh.name;
 
     // Weird bug: in Firefox Android, the last instance is not being rendered.
     const extra = 1;
@@ -162,7 +160,7 @@ attribute vec3 offset;
 
 export class TileThingGroup extends InstancedThingGroup {
   protected name: string = 'tile';
-  
+
   private textures: Record<TileVariant, Texture>;
   private tileVariant: TileVariant = TileVariant.NO_LABELS;
 
@@ -179,7 +177,7 @@ export class TileThingGroup extends InstancedThingGroup {
     if (this.tileVariant === tileVariant) return;
 
     const texture = this.textures[tileVariant];
-    
+
     for (const mesh of this.meshes) {
       this.updateTexture(mesh, texture);
     }
