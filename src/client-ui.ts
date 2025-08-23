@@ -1,5 +1,3 @@
-import qs from 'qs';
-
 import { Client } from "./client";
 import { Game } from './base-client';
 
@@ -46,18 +44,21 @@ export class ClientUi {
   }
 
   getUrlState(): string | null {
-    const query = window.location.search.substr(1);
-    const q = qs.parse(query) as any;
-    return q.gameId ?? null;
+    const q = new URLSearchParams(window.location.search);
+    return q.get('gameId');
   }
 
   setUrlState(gameId: string | null): void {
-    const query = window.location.search.substr(1);
-    const q = qs.parse(query) as any;
-    q.gameId = gameId ?? undefined;
-    const newQuery = qs.stringify(q);
-    if (newQuery !== query) {
-      history.pushState(undefined, '', '?' + qs.stringify(q));
+    const query = window.location.search;
+    const q = new URLSearchParams(query);
+    if (gameId !== null) {
+      q.set('gameId', gameId);
+    } else {
+      q.delete('gameId');
+    }
+    const newQuery = q.toString();
+    if (newQuery !== query.substring(1)) {
+      history.pushState(undefined, '', newQuery ? '?' + newQuery : "");
     }
   }
 

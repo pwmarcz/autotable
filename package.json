@@ -7,7 +7,6 @@
     "@parcel/transformer-image": "2.0.0",
     "@types/events": "^3.0.0",
     "@types/jquery": "^3.3.38",
-    "@types/qs": "^6.9.2",
     "@types/three": "^0.154.0",
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
@@ -22,7 +21,6 @@
     "jquery": "^3.5.1",
     "normalize.css": "^8.0.1",
     "popper.js": "^1.16.1",
-    "qs": "^6.9.4",
     "three": "^0.179.0"
   }
 }
