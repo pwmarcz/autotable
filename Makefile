@@ -43,7 +43,7 @@ img/models.auto.glb: img/models.blend $(TEXTURES)
 .PHONY: build
 build: files check
 	rm -rf build
-	./node_modules/.bin/parcel build *.html --public-url . --cache-dir .cache/build/ --dist-dir build/ --no-source-maps
+	./node_modules/.bin/parcel build *.html --public-url . --cache-dir .cache/build/ --dist-dir build/
 
 .PHONY: build-server
 build-server:
