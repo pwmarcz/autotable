@@ -200,8 +200,7 @@ export class TileThingGroup extends InstancedThingGroup {
     return `
 #include <uv_vertex>
 if (vMapUv.x <= ${TILE_DU} && vMapUv.y <= ${TILE_DV}) {
-  vMapUv.x += offset.x;
-  vMapUv.y += offset.y;
+  vMapUv += offset.xy;
 } else if (vMapUv.y >= ${4*TILE_DV}) {
   vMapUv.y += offset.z;
 }
