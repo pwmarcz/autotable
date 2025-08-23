@@ -1,5 +1,4 @@
-/* eslint no-console: 0 */
-
+34
 import WebSocket from 'ws';
 import { Client, Game, randomString } from './game';
 import { Message } from './protocol';
@@ -31,7 +30,7 @@ export class Server {
           console.debug(`recv ${data}`);
         }
 
-        const message = JSON.parse(data as string) as Message;
+        const message = JSON.parse(data.toString()) as Message;
 
         try {
           this.onMessage(client, message);
