@@ -18,7 +18,6 @@
     "bootstrap": "^4.4.1",
     "events": "^3.1.0",
     "jquery": "^3.5.1",
-    "normalize.css": "^8.0.1",
     "popper.js": "^1.16.1",
     "three": "^0.179.0"
   }
