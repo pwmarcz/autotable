@@ -71,7 +71,7 @@ abstract class InstancedThingGroup extends ThingGroup {
   abstract getUvChunk(): string;
   abstract getOffset(typeIndex: number): Vector3;
 
-  canSetSimple(): boolean {
+  override canSetSimple(): boolean {
     return true;
   }
 
@@ -120,7 +120,7 @@ attribute vec3 offset;
     return instancedMesh;
   }
 
-  replace(startIndex: number, params: Array<ThingParams>): void {
+  override replace(startIndex: number, params: Array<ThingParams>): void {
     super.replace(startIndex, params);
 
     if (this.instancedMesh !== null) {
@@ -132,7 +132,7 @@ attribute vec3 offset;
     this.group.add(this.instancedMesh);
   }
 
-  setSimple(index: number, position: Vector3, rotation: Quaternion): void {
+  override setSimple(index: number, position: Vector3, rotation: Quaternion): void {
     const i = index - this.startIndex;
     const mesh = this.meshes[i];
     if (!mesh.visible && mesh.position.equals(position) && rotEquals(mesh.quaternion, rotation)) {
@@ -146,7 +146,7 @@ attribute vec3 offset;
     this.instancedMesh.instanceMatrix.needsUpdate = true;
   }
 
-  setCustom(index: number, position: Vector3, rotation: Quaternion): Mesh {
+  override setCustom(index: number, position: Vector3, rotation: Quaternion): Mesh {
     const i = index - this.startIndex;
     const mesh = this.meshes[i];
     mesh.position.copy(position);

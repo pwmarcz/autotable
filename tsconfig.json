@@ -4,7 +4,8 @@
         "target": "es6",
         "lib": ["dom", "es6", "es2017"],
         "esModuleInterop": true,
-        "moduleResolution": "bundler"
+        "moduleResolution": "bundler",
+        "noImplicitOverride": true
     },
     "references": [
         { "path": "server" }

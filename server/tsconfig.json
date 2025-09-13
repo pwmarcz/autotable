@@ -7,7 +7,8 @@
       "moduleResolution": "node",
       "sourceMap": true,
       "outDir": "dist",
-      "composite": true
+      "composite": true,
+      "noImplicitOverride": true,
     },
     "lib": ["es2015"],
   }
