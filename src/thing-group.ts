@@ -175,14 +175,22 @@ export class TileThingGroup extends InstancedThingGroup {
 
   setVariant(tileVariant: TileVariant): void {
     if (this.tileVariant === tileVariant) return;
+    this.tileVariant = tileVariant;
+    this.updateMeshTileVariant();
+  }
 
-    const texture = this.textures[tileVariant];
+  override replace(startIndex: number, params: Array<ThingParams>): void {
+    super.replace(startIndex, params);
+    this.updateMeshTileVariant();
+  }
+
+  updateMeshTileVariant(): void {
+    const texture = this.textures[this.tileVariant];
 
     for (const mesh of this.meshes) {
       this.updateTexture(mesh, texture);
     }
     this.updateTexture(this.instancedMesh, texture);
-    this.tileVariant = tileVariant;
   }
 
   private updateTexture(mesh: Mesh, texture: Texture): void {
