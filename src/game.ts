@@ -61,6 +61,7 @@ export class Game {
 
 
     this.setupEvents();
+    document.getElementById('loading')!.style.visibility = 'hidden';
   }
 
   private setupEvents(): void {
@@ -166,7 +167,7 @@ export class Game {
       case 'l':
         this.settings.tileLabels.checked = !this.settings.tileLabels.checked;
         this.updateSettings();
-        break;  
+        break;
     }
   }
 
