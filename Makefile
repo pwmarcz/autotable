@@ -38,7 +38,7 @@ img/icon-%.auto.png: img/icon.svg
 	inkscape $< --export-filename=$@ --export-width=$*
 
 img/models.auto.glb: img/models.blend $(TEXTURES)
-	blender $< --background --python export.py -- $@
+	blender $(abspath $<) --background --python $(abspath export.py) -- $(abspath $@)
 
 .PHONY: build
 build: files check

@@ -19,4 +19,4 @@ if len(argv) != 1:
     exit(1)
 
 target_file = argv[0]
-bpy.ops.export_scene.gltf(filepath=target_file, export_apply=True, export_colors=False)
+bpy.ops.export_scene.gltf(filepath=target_file, export_apply=True)
