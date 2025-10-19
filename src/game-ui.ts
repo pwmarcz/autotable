@@ -52,6 +52,7 @@ export class GameUi {
     this.setupEvents();
     this.setupDealButton();
     this.setupResetPointsButton();
+    this.setupModal();
   }
 
   private setupEvents(): void {
@@ -255,6 +256,35 @@ export class GameUi {
   private hideSetup(): void {
     // @ts-ignore
     $('#setup-group').collapse('hide');
+  }
+
+  private setupModal(): void {
+    const modalBody = document.querySelector('#viewer-modal .modal-body')!;
+
+    const links = document.querySelectorAll('.show-modal');
+    const embeds: Array<HTMLEmbedElement> = [];
+    for (let i = 0; i < links.length; i++) {
+      const link = links[i] as HTMLAnchorElement;
+      const embed = document.createElement('embed');
+      embed.type = 'application/pdf';
+      embed.src = link.href + '#navpanes=0';
+      embed.style.display = 'none';
+      modalBody.appendChild(embed);
+      embeds.push(embed);
+    }
+
+    for (let i = 0; i < links.length; i++) {
+      const link = links[i] as HTMLAnchorElement;
+      link.addEventListener('click', (e) => {
+        for (let j = 0; j < embeds.length; j++) {
+          embeds[j].style.display = i == j ? 'block': 'none';
+        }
+
+        // @ts-ignore
+        $('#viewer-modal').modal();
+        e.preventDefault();
+      });
+    }
   }
 
 }

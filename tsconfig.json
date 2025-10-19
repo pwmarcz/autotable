@@ -2,7 +2,7 @@
     "compilerOptions": {
         "strict": true,
         "target": "es6",
-        "lib": ["dom", "es6", "es2017"],
+        "lib": ["DOM", "DOM.Iterable", "es6", "es2017"],
         "esModuleInterop": true,
         "moduleResolution": "bundler",
         "noImplicitOverride": true

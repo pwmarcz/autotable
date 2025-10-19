@@ -164,3 +164,8 @@
 .collapsing {
 	transition:height 0.2s ease !important;
 }
+
+.modal embed {
+    width: 100%;
+    min-height: 85vh;
+}
