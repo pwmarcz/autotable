@@ -78,7 +78,7 @@ export class Center {
         this.shouldDrawDice = false;
         this.dirty = true;
         this.draw();
-      }, 2000);
+      }, 1000);
     }
   }
 
