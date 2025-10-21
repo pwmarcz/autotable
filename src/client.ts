@@ -5,7 +5,7 @@ import { EventEmitter } from 'events';
 import { Entry } from '../server/protocol';
 
 import { BaseClient, Game } from './base-client';
-import { ThingInfo, MatchInfo, MouseInfo, SoundInfo, SeatInfo } from './types';
+import { ThingInfo, MatchInfo, MouseInfo, SoundInfo, SeatInfo, DiceInfo } from './types';
 
 
 export class Client extends BaseClient {
@@ -15,6 +15,7 @@ export class Client extends BaseClient {
   nicks: Collection<string, string>;
   mouse: Collection<string, MouseInfo>;
   sound: Collection<number, SoundInfo>;
+  dice: Collection<number, DiceInfo>;
 
   seat: number | null = 0;
   seatPlayers: Array<string | null> = new Array(4).fill(null);
@@ -30,6 +31,7 @@ export class Client extends BaseClient {
     this.nicks = new Collection('nicks', this, { perPlayer: true });
     this.mouse = new Collection('mouse', this, { rateLimit: 100, perPlayer: true });
     this.sound = new Collection('sound', this, { ephemeral: true });
+    this.dice = new Collection('dice', this, { ephemeral: true });
     this.seats.on('update', this.onSeats.bind(this));
   }
 

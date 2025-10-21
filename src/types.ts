@@ -125,6 +125,11 @@ export interface SeatInfo {
   seat: number | null;
 }
 
+export interface DiceInfo {
+  dice: [number, number];
+  state: 'ignore' | 'rolled';
+}
+
 export enum TileVariant {
   NO_LABELS = 'NO_LABELS',
   LABELS = 'LABELS',

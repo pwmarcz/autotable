@@ -7,7 +7,7 @@ import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
 import { SoundPlayer } from "./sound-player";
-import { Conditions, ThingInfo, SoundType, Fives, Place, ThingType, Size, DealType, GameType, Points } from "./types";
+import { Conditions, ThingInfo, SoundType, Fives, Place, ThingType, Size, DealType, GameType, Points, DiceInfo } from "./types";
 import { Slot } from "./slot";
 import { Thing } from "./thing";
 
@@ -64,6 +64,7 @@ export class World {
     this.client.seats.on('update', this.onSeat.bind(this));
     this.client.things.on('update', this.onThings.bind(this));
     this.client.match.on('update', this.onMatch.bind(this));
+    this.client.dice.on('update', this.onDice.bind(this));
     this.sendUpdate();
   }
 
@@ -137,6 +138,15 @@ export class World {
       // Prevent selection persisting after deal
       this.selected.splice(0);
     }
+  }
+
+  private onDice(): void {
+    const diceInfo = this.client.dice.get(0);
+    if (!diceInfo) {
+      return;
+    }
+
+    this.objectView;
   }
 
   updateConditions(conditions: Conditions, replacePoints: boolean = false): void {
@@ -223,10 +233,12 @@ export class World {
     match = {dealer: this.seat, honba, conditions};
 
     this.updateConditions(conditions);
-    this.setup.deal(this.seat);
+    const dice = this.setup.deal(this.seat);
+    const diceInfo: DiceInfo = {dice, state: this.setup.usesDice() ? 'rolled': 'ignore'};
 
     this.client.transaction(() => {
       this.client.match.set(0, match!);
+      this.client.dice.set(0, diceInfo);
       this.sendUpdate(true);
     });
   }

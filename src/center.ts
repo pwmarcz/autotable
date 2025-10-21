@@ -1,6 +1,7 @@
 import { AssetLoader } from "./asset-loader";
 import { Mesh, CanvasTexture, Vector2, MeshLambertMaterial } from "three";
 import { Client } from "./client";
+import { DiceInfo } from "./types";
 
 export class Center {
   mesh: Mesh;
@@ -12,6 +13,10 @@ export class Center {
   nicks: Array<string | null> = new Array(4).fill(null);
   dealer: number | null = null;
   honba = 0;
+  diceInfo: DiceInfo = {dice: [1, 1], state: 'ignore'};
+  shouldDrawDice = false;
+
+  diceImg: HTMLImageElement;
 
   client: Client;
 
@@ -40,6 +45,9 @@ export class Center {
     this.client.nicks.on('update', this.update.bind(this));
     this.client.match.on('update', this.update.bind(this));
     this.client.seats.on('update', this.update.bind(this));
+    this.client.dice.on('update', this.updateDice.bind(this));
+
+    this.diceImg = document.getElementById('dice-img')! as HTMLImageElement;
 
     client.on('disconnect', this.update.bind(this));
   }
@@ -59,6 +67,19 @@ export class Center {
     this.honba = this.client.match.get(0)?.honba ?? 0;
 
     this.dirty = true;
+  }
+
+  updateDice(): void {
+    this.diceInfo = this.client.dice.get(0) ?? {dice: [1, 1], state: 'ignore'};
+    if (this.diceInfo.state == 'rolled') {
+      this.shouldDrawDice = true;
+      this.dirty = true;
+      setTimeout(() => {
+        this.shouldDrawDice = false;
+        this.dirty = true;
+        this.draw();
+      }, 2000);
+    }
   }
 
   setScores(scores: Array<number | null>): void {
@@ -96,7 +117,12 @@ export class Center {
       }
       this.ctx.rotate(-Math.PI / 2);
     }
-    this.ctx.rotate(Math.PI/4);
+
+    if (this.shouldDrawDice) {
+      this.ctx.rotate(Math.PI / 4);
+      this.drawDice();
+    }
+
     this.texture.needsUpdate = true;
   }
 
@@ -142,5 +168,29 @@ export class Center {
       this.ctx.font = '40px Segment7Standard, monospace';
       this.ctx.fillText('' + this.honba, -90, 100);
     }
+  }
+
+  drawDice(): void {
+    let [a, b] = this.diceInfo.dice;
+
+    // Animate
+    // const t = Math.floor(new Date().getTime() / 100);
+    // a = t % 6 + 1;
+    // // https://en.wikipedia.org/wiki/Linear_congruential_generator
+    // b = (t * 1664525 + 1013904223) % 6 + 1;
+
+    this.drawDie(a, -44, -20, 40);
+    this.drawDie(b, 4, -20, 40);
+  }
+
+  drawDie(n: number, dx: number, dy: number, dstSize: number) {
+    const srcSize = this.diceImg.naturalHeight;
+    this.ctx.drawImage(
+      this.diceImg,
+      (n - 1) * srcSize, 0,
+      srcSize, srcSize,
+      dx, dy,
+      dstSize, dstSize,
+    );
   }
 }

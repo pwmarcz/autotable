@@ -58,7 +58,7 @@ export class Setup {
     const whatReplace: Record<ThingType, boolean> = {
       TILE: (
         conditions.gameType !== this.conditions.gameType ||
-        conditions.back !== this.conditions.back || 
+        conditions.back !== this.conditions.back ||
         conditions.fives !== this.conditions.fives
       ),
       STICK: (
@@ -138,12 +138,16 @@ export class Setup {
     return tileIndex;
   }
 
-  deal(seat: number): void {
+  deal(seat: number): [number, number] {
     const gameType = this.conditions.gameType;
     const dealType = this.conditions.dealType;
     // console.log('deal', gameType, dealType);
 
-    const roll = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1);
+    const dice: [number, number] = [
+      Math.floor(Math.random() * 6 + 1),
+      Math.floor(Math.random() * 6 + 1)
+    ];
+    const roll = dice[0] + dice[1];
     // Debug
     // const roll = (window.ROLL && window.ROLL < 12) ? window.ROLL + 1 : 2;
     // window.ROLL = roll;
@@ -168,6 +172,18 @@ export class Setup {
     if (tiles.length !== 0) {
       throw `bad deal: ${tiles.length} remaining`;
     }
+
+    return dice;
+  }
+
+  usesDice(): boolean {
+    const gameType = this.conditions.gameType;
+    const dealType = this.conditions.dealType;
+    const dealParts = DEALS[gameType][dealType]!;
+    for (const part of dealParts) {
+      if (part.roll) return true;
+    }
+    return false;
   }
 
   private dealPart(dealPart: DealPart, tiles: Array<Thing>, roll: number, seat: number): void {

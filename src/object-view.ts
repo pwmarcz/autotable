@@ -6,7 +6,7 @@ import { Client } from "./client";
 import { AssetLoader } from "./asset-loader";
 import { Center } from "./center";
 import { ThingParams, ThingGroup, TileThingGroup, StickThingGroup, MarkerThingGroup } from "./thing-group";
-import { ThingType, Place, TileVariant } from "./types";
+import { ThingType, Place, TileVariant, DiceInfo } from "./types";
 
 export interface Render {
   type: ThingType;

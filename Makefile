@@ -3,7 +3,7 @@ all: files
 
 SERVER = pwmarcz.pl
 
-TEXTURES = img/sticks.auto.png img/tiles.auto.png img/tiles-labels.auto.png img/center.auto.png img/winds.auto.png
+TEXTURES = img/sticks.auto.png img/tiles.auto.png img/tiles-labels.auto.png img/center.auto.png img/winds.auto.png img/dice.auto.png
 
 ICONS = img/icon-16.auto.png img/icon-32.auto.png img/icon-96.auto.png
 
@@ -33,6 +33,9 @@ img/center.auto.png: img/center.svg
 
 img/winds.auto.png: img/winds.svg
 	inkscape $< --export-filename=$@ --export-width=128 --export-height=64
+
+img/dice.auto.png: img/dice.svg
+	inkscape $< --export-filename=$@ --export-width=384 --export-height=64
 
 img/icon-%.auto.png: img/icon.svg
 	inkscape $< --export-filename=$@ --export-width=$*
