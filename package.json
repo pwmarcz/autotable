@@ -6,8 +6,10 @@
   "license": "MIT",
   "devDependencies": {
     "@types/events": "^3.0.0",
+    "@types/jest": "^26.0.15",
     "@types/jquery": "^3.3.38",
     "@types/qs": "^6.9.2",
+    "@types/ws": "^7.4.0",
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
     "eslint": "^6.8.0",
