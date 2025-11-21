@@ -116,6 +116,16 @@ export class GameUi {
     this.elements.gameType.value = conditions.gameType;
     this.elements.setupDesc.textContent = Conditions.describe(conditions);
 
+    // For learning mode, set player count from match state
+    if (conditions.gameType === GameType.LEARNING && match?.learningPlayerCount !== undefined) {
+      this.elements.learningPlayers.value = match.learningPlayerCount.toString();
+    }
+
+    // Set deal type from conditions
+    if (conditions.dealType) {
+      this.elements.dealType.value = conditions.dealType;
+    }
+
     this.updateVisibility();
     this.updateLearningPlayers();
   }

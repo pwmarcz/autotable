@@ -34,6 +34,7 @@ export class World {
   private movement: Movement | null = null;
   private heldMouse: Vector3 | null = null;
   mouseTracker: MouseTracker;
+  private pendingMoves: Map<number, { slotName: string, rotationIndex: number }> = new Map();
 
   soundPlayer: SoundPlayer;
 
@@ -69,13 +70,13 @@ export class World {
   }
 
   toggleDealer(): void {
-    const match = this.client.match.get(0) ?? { dealer: 3, honba: 0, conditions: Conditions.initial()};
+    const match = this.client.match.get(0) ?? { dealer: 3, honba: 0, conditions: Conditions.initial(), learningPlayerCount: undefined};
     match.dealer = (match.dealer + 1) % 4;
     this.client.match.set(0, match);
   }
 
   toggleHonba(): void {
-    const match = this.client.match.get(0) ?? { dealer: 0, honba: 0, conditions: Conditions.initial()};
+    const match = this.client.match.get(0) ?? { dealer: 0, honba: 0, conditions: Conditions.initial(), learningPlayerCount: undefined};
     match.honba = (match.honba + 1) % 8;
     this.client.match.set(0, match);
   };
@@ -88,12 +89,28 @@ export class World {
     const now = new Date().getTime();
 
     for (const [thingIndex, thingInfo] of entries) {
-      // TODO handle deletion
+      // Handle deletion
       if (thingInfo === null) {
+        // Thing was deleted, remove it if it exists locally
+        if (this.things.has(thingIndex)) {
+          this.things.delete(thingIndex);
+          // Clean up references
+          const selectedIdx = this.selected.findIndex(t => t.index === thingIndex);
+          if (selectedIdx !== -1) {
+            this.selected.splice(selectedIdx, 1);
+          }
+          if (this.hovered && this.hovered.index === thingIndex) {
+            this.hovered = null;
+          }
+        }
         continue;
       }
 
-      const thing = this.things.get(thingIndex)!;
+      const thing = this.things.get(thingIndex);
+      // Skip if thing doesn't exist locally (may have been deleted)
+      if (!thing) {
+        continue;
+      }
       thing.prepareMove();
     }
     for (const [thingIndex, thingInfo] of entries) {
@@ -101,10 +118,35 @@ export class World {
         continue;
       }
 
-      const thing = this.things.get(thingIndex)!;
-      const slot = this.slots.get(thingInfo.slotName)!;
-      thing.moveTo(slot, thingInfo.rotationIndex);
-      thing.sent = true;
+      const thing = this.things.get(thingIndex);
+      // Skip if thing doesn't exist locally (may have been deleted)
+      if (!thing) {
+        continue;
+      }
+
+      const slot = this.slots.get(thingInfo.slotName);
+      if (!slot) {
+        // Slot doesn't exist, skip this update
+        continue;
+      }
+      // If thing is already in the correct slot, skip moving
+      if (thing.slot === slot) {
+        thing.sent = true;
+        this.pendingMoves.delete(thingIndex);
+      } else {
+        // If slot is occupied by a different thing, queue the move for retry
+        // This can happen during initial sync when things arrive out of order
+        if (slot.thing !== null && slot.thing !== thing) {
+          // Slot is occupied - queue this move to retry later
+          this.pendingMoves.set(thingIndex, { slotName: thingInfo.slotName, rotationIndex: thingInfo.rotationIndex });
+          thing.sent = true;
+        } else {
+          // Slot is empty or has this thing already - safe to move
+          thing.moveTo(slot, thingInfo.rotationIndex);
+          thing.sent = true;
+          this.pendingMoves.delete(thingIndex);
+        }
+      }
 
       thing.claimedBy = thingInfo.claimedBy;
       thing.heldRotation.set(
@@ -114,15 +156,61 @@ export class World {
         thingInfo.heldRotation.w,
       );
 
-      const shiftSlot = thingInfo.shiftSlotName ? this.slots.get(thingInfo.shiftSlotName)! : null;
+      const shiftSlot = thingInfo.shiftSlotName ? (this.slots.get(thingInfo.shiftSlotName) ?? null) : null;
       if (thing.shiftSlot !== shiftSlot) {
         thing.lastShiftSlot = thing.shiftSlot;
         thing.lastShiftSlotTime = now;
         thing.shiftSlot = shiftSlot;
       }
     }
+    
+    // Retry pending moves that were skipped due to conflicts
+    this.retryPendingMoves();
+    
     this.checkPushes();
     this.sendUpdate();
+  }
+
+  private retryPendingMoves(): void {
+    // Try to move things that were queued due to slot conflicts
+    const toRemove: Array<number> = [];
+    for (const [thingIndex, moveInfo] of this.pendingMoves.entries()) {
+      const thing = this.things.get(thingIndex);
+      if (!thing) {
+        toRemove.push(thingIndex);
+        continue;
+      }
+      
+      const slot = this.slots.get(moveInfo.slotName);
+      if (!slot) {
+        // Slot still doesn't exist, keep it pending
+        continue;
+      }
+      
+      // If thing is already in the correct slot, remove from pending
+      if (thing.slot === slot) {
+        toRemove.push(thingIndex);
+        continue;
+      }
+      
+      // If slot is now empty, try the move
+      if (slot.thing === null) {
+        // Remove thing from its current slot first
+        if (thing.slot.thing === thing) {
+          thing.slot.thing = null;
+        }
+        thing.moveTo(slot, moveInfo.rotationIndex);
+        toRemove.push(thingIndex);
+      } else if (slot.thing === thing) {
+        // Thing is already in the slot somehow, just remove from pending
+        toRemove.push(thingIndex);
+      }
+      // Otherwise, slot is still occupied by different thing, keep it pending
+    }
+    
+    for (const thingIndex of toRemove) {
+      this.pendingMoves.delete(thingIndex);
+    }
   }
 
   private onMatch(): void {
@@ -132,7 +220,21 @@ export class World {
     }
 
     const conditions = match.conditions;
-    if (!Conditions.equals(conditions, this.conditions)) {
+    
+    // For learning mode, use player count from match state
+    let playerCountChanged = false;
+    if (conditions.gameType === GameType.LEARNING && match.learningPlayerCount !== undefined) {
+      const playerCount = match.learningPlayerCount;
+      const seats = Array.from({length: playerCount}, (_, i) => i);
+      const currentSeats = GAME_TYPES[GameType.LEARNING].seats;
+      if (JSON.stringify(seats) !== JSON.stringify(currentSeats)) {
+        GAME_TYPES[GameType.LEARNING].seats = seats;
+        playerCountChanged = true;
+      }
+    }
+    
+    // If player count changed or conditions changed, update (this will recreate slots)
+    if (playerCountChanged || !Conditions.equals(conditions, this.conditions)) {
       this.updateConditions(conditions);
 
       // Prevent selection persisting after deal
@@ -230,7 +332,12 @@ export class World {
       honba = match.honba;
     }
 
-    match = {dealer: this.seat, honba, conditions};
+    // For learning mode, store player count in match state
+    const learningPlayerCount = gameType === GameType.LEARNING 
+      ? GAME_TYPES[GameType.LEARNING].seats.length 
+      : undefined;
+    
+    match = {dealer: this.seat, honba, conditions, learningPlayerCount};
 
     // For learning mode, only replace points if new players were added
     let replacePoints = false;
@@ -367,6 +474,11 @@ export class World {
       this.movement.move(thing, targetSlot);
     }
 
+    if (held.length === 0) {
+      this.movement = null;
+      return;
+    }
+    
     const relevantThings = [...this.things.values()].filter(thing =>
       thing.type === held[0].type
     );
@@ -627,6 +739,8 @@ export class World {
   updateView(): void {
     this.updateViewThings();
     this.updateViewDropShadows();
+    // Retry any pending moves before calculating scores
+    this.retryPendingMoves();
     this.objectView.updateScores(this.setup.getScores());
   }
 

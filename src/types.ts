@@ -30,6 +30,7 @@ export interface MatchInfo {
   dealer: number;
   honba: number;
   conditions: Conditions;
+  learningPlayerCount?: number; // For LEARNING game type, stores the number of players (1-4)
 }
 
 export interface Game {

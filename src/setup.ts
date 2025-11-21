@@ -113,7 +113,18 @@ export class Setup {
           this.things.delete(thing.index);
           continue;
         }
-        thing.moveTo(slot, thing.rotationIndex);
+        // If thing is already in the correct slot, skip
+        if (thing.slot === slot) {
+          continue;
+        }
+        // If slot is occupied by a different thing, skip - it will be handled by sync
+        if (slot.thing !== null && slot.thing !== thing) {
+          continue;
+        }
+        // Move to slot if it's empty
+        if (slot.thing === null) {
+          thing.moveTo(slot, thing.rotationIndex);
+        }
       }
     }
     this.conditions = conditions;
@@ -453,13 +464,21 @@ export class Setup {
   getScores(): Array<number | null> {
     const scores = new Array(4).fill(-20000);
     scores.push((25000 + 20000) * 4); // remaining
+    // Stick typeIndex: 0=100, 1=500, 2=1000, 3=5000, 4=10000, 5=-10000 (debt)
     const stickScores = [100, 500, 1000, 5000, 10000, 10000];
 
-    for (const slot of this.slots.values()) {
-      if (slot.group === 'tray' && slot.thing !== null) {
-        const score = stickScores[slot.thing.typeIndex];
-        scores[slot.seat!] += score;
-        scores[4] -= score;
+    // Check all things, not just slots, to ensure we find sticks even if slot.thing is out of sync
+    for (const thing of this.things.values()) {
+      if (thing.type === ThingType.STICK) {
+        const slot = thing.slot;
+        if (slot && slot.group === 'tray' && slot.seat !== null) {
+          const typeIndex = thing.typeIndex;
+          if (typeIndex >= 0 && typeIndex < stickScores.length) {
+            const score = stickScores[typeIndex];
+            scores[slot.seat] += score;
+            scores[4] -= score;
+          }
+        }
       }
     }
 
