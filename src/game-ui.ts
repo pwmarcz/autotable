@@ -21,6 +21,7 @@ export class GameUi {
     setupDesc: HTMLElement;
     fives: HTMLSelectElement;
     points: HTMLSelectElement;
+    learningPlayers: HTMLSelectElement;
   }
 
   constructor(client: Client, world: World) {
@@ -40,6 +41,7 @@ export class GameUi {
       setupDesc: document.getElementById('setup-desc') as HTMLElement,
       fives: document.getElementById('fives') as HTMLSelectElement,
       points: document.getElementById('points') as HTMLSelectElement,
+      learningPlayers: document.getElementById('learning-players') as HTMLSelectElement,
     };
     for (let i = 0; i < 4; i++) {
       this.elements.takeSeat[i] = document.querySelector(
@@ -82,6 +84,10 @@ export class GameUi {
     this.elements.gameType.onchange = () => {
       this.updateVisibility();
       this.resetPoints();
+      this.updateLearningPlayers();
+    };
+    this.elements.learningPlayers.onchange = () => {
+      this.updateLearningPlayerCount();
     };
     this.updateSetup();
 
@@ -110,18 +116,69 @@ export class GameUi {
     this.elements.gameType.value = conditions.gameType;
     this.elements.setupDesc.textContent = Conditions.describe(conditions);
 
+    // For learning mode, set player count from match state
+    if (conditions.gameType === GameType.LEARNING && match?.learningPlayerCount !== undefined) {
+      this.elements.learningPlayers.value = match.learningPlayerCount.toString();
+    }
+
+    // Set deal type from conditions
+    if (conditions.dealType) {
+      this.elements.dealType.value = conditions.dealType;
+    }
+
     this.updateVisibility();
+    this.updateLearningPlayers();
+  }
+
+  private updateLearningPlayers(): void {
+    const gameType = this.elements.gameType.value as GameType;
+    if (gameType === GameType.LEARNING) {
+      this.elements.learningPlayers.style.display = 'block';
+      if (!this.elements.learningPlayers.value) {
+        this.elements.learningPlayers.value = '1';
+      }
+      this.updateLearningPlayerCount();
+    } else {
+      this.elements.learningPlayers.style.display = 'none';
+    }
+  }
+
+  private updateLearningPlayerCount(): void {
+    // Don't apply changes immediately - wait for deal button
   }
 
   private updateVisibility(): void {
     const gameType = this.elements.gameType.value as GameType;
+    const isLearning = gameType === GameType.LEARNING;
 
     for (const option of Array.from(this.elements.dealType.querySelectorAll('option'))) {
       const dealType = option.value as DealType;
-      if (DEALS[gameType][dealType] === undefined) {
-        option.style.display = 'none';
+      
+      // Check if this is a learning deal type
+      const isLearningDealType = dealType === DealType.LEARNING_ONE_SUIT_FOUR ||
+                                 dealType === DealType.LEARNING_ONE_SUIT_SEVEN ||
+                                 dealType === DealType.LEARNING_TWO_SUIT_SEVEN ||
+                                 dealType === DealType.LEARNING_TWO_SUIT_TEN ||
+                                 dealType === DealType.LEARNING_THREE_SUIT_TEN ||
+                                 dealType === DealType.LEARNING_TWO_SUIT_THIRTEEN ||
+                                 dealType === DealType.LEARNING_THREE_SUIT_THIRTEEN;
+      
+      if (isLearning) {
+        // When Learning is selected, show only learning deal types
+        if (isLearningDealType) {
+          option.style.display = 'block';
+        } else {
+          option.style.display = 'none';
+        }
       } else {
-        option.style.display = 'block';
+        // When a regular game type is selected, show only regular deal types
+        if (isLearningDealType) {
+          option.style.display = 'none';
+        } else if (DEALS[gameType][dealType] === undefined) {
+          option.style.display = 'none';
+        } else {
+          option.style.display = 'block';
+        }
       }
     }
 
@@ -129,6 +186,8 @@ export class GameUi {
     if (DEALS[gameType][dealType] === undefined) {
       this.resetDealType();
     }
+    
+    this.updateLearningPlayers();
   }
 
   private resetPoints(): void {
@@ -145,6 +204,11 @@ export class GameUi {
         this.elements.dealType.value = dealType;
         break;
       }
+    }
+    
+    // If no deal type was found and it's Learning, default to first learning scenario
+    if (gameType === GameType.LEARNING && !this.elements.dealType.value) {
+      this.elements.dealType.value = DealType.LEARNING_ONE_SUIT_FOUR;
     }
   }
 
@@ -192,8 +256,19 @@ export class GameUi {
       const fives = this.elements.fives.value as Fives;
       const points = this.elements.points.value as Points;
 
+      // Apply learning player count before dealing
+      if (gameType === GameType.LEARNING) {
+        const playerCount = parseInt(this.elements.learningPlayers.value);
+        const seats = Array.from({length: playerCount}, (_, i) => i);
+        GAME_TYPES[GameType.LEARNING].seats = seats;
+      }
+
       this.world.deal(dealType, gameType, fives, points);
-      this.resetDealType();
+      // Only reset deal type if current selection is invalid
+      const currentDealType = this.elements.dealType.value as DealType;
+      if (DEALS[gameType][currentDealType] === undefined) {
+        this.resetDealType();
+      }
       this.hideSetup();
     });
   }

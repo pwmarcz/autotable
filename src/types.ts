@@ -30,6 +30,7 @@ export interface MatchInfo {
   dealer: number;
   honba: number;
   conditions: Conditions;
+  learningPlayerCount?: number; // For LEARNING game type, stores the number of players (1-4)
 }
 
 export interface Game {
@@ -42,6 +43,13 @@ export enum DealType {
   WINDS = 'WINDS',
   HANDS = 'HANDS',
   UNSHUFFLED = 'UNSHUFFLED',
+  LEARNING_ONE_SUIT_FOUR = 'LEARNING_ONE_SUIT_FOUR',
+  LEARNING_ONE_SUIT_SEVEN = 'LEARNING_ONE_SUIT_SEVEN',
+  LEARNING_TWO_SUIT_SEVEN = 'LEARNING_TWO_SUIT_SEVEN',
+  LEARNING_TWO_SUIT_TEN = 'LEARNING_TWO_SUIT_TEN',
+  LEARNING_THREE_SUIT_TEN = 'LEARNING_THREE_SUIT_TEN',
+  LEARNING_TWO_SUIT_THIRTEEN = 'LEARNING_TWO_SUIT_THIRTEEN',
+  LEARNING_THREE_SUIT_THIRTEEN = 'LEARNING_THREE_SUIT_THIRTEEN',
 }
 
 export type Fives = '000' | '111' | '121';
@@ -52,6 +60,7 @@ export enum GameType {
   THREE_PLAYER = 'THREE_PLAYER',
   BAMBOO = 'BAMBOO',
   MINEFIELD = 'MINEFIELD',
+  LEARNING = 'LEARNING',
 }
 
 interface GameTypeMeta {
@@ -65,6 +74,7 @@ export const GAME_TYPES: Record<GameType, GameTypeMeta> = {
   THREE_PLAYER: { points: '35', seats: [0, 1, 2]},
   BAMBOO: { points: '100', seats: [0, 2]},
   MINEFIELD: { points: '25', seats: [0, 2]},
+  LEARNING: { points: '25', seats: [0]},
 };
 
 export type Points = '25' | '30' | '35' | '40' | '100';
@@ -99,6 +109,7 @@ export namespace Conditions {
       'THREE_PLAYER': '3p',
       'BAMBOO': 'b',
       'MINEFIELD': 'm',
+      'LEARNING': 'learn',
     }[ts.gameType];
     const fives = {'000': 'no red', '111': '1-1-1', '121': '1-2-1'}[ts.fives];
     return `${game}, ${fives}`;
