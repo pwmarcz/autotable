@@ -1,6 +1,6 @@
 import { Vector3, Vector2, Euler, Quaternion } from "three";
 import { Slot } from "./slot";
-import { Size, ThingType, GameType } from "./types";
+import { Size, ThingType, GameType, GAME_TYPES } from "./types";
 
 const WORLD_SIZE = 174;
 
@@ -19,7 +19,12 @@ type SlotGroup = Array<SlotOp>;
 export function makeSlots(gameType: GameType): Array<Slot> {
   const slots = [];
 
-  for (const group of SLOT_GROUPS[gameType]) {
+  // For LEARNING, use dynamic seats from GAME_TYPES
+  const slotGroups = gameType === GameType.LEARNING 
+    ? makeLearningSlotGroups(GAME_TYPES[GameType.LEARNING].seats)
+    : SLOT_GROUPS[gameType];
+
+  for (const group of slotGroups) {
     let current: Array<Slot> = [];
     for (const op of group) {
       current = op(current);
@@ -29,6 +34,22 @@ export function makeSlots(gameType: GameType): Array<Slot> {
 
   fixupSlots(slots, gameType);
   return slots;
+}
+
+function makeLearningSlotGroups(seatArray: Array<number>): Array<SlotGroup> {
+  return [
+    [start('hand'), row(14, undefined, {shift: true}), seats(seatArray)],
+    [start('hand.extra'), seats(seatArray)],
+    [start('meld'), column(4), row(4, -Size.TILE.x, {push: true, shift: true}), seats(seatArray)],
+    [start('wall'), row(19), stack(), seats([0, 1, 2, 3])], // Always all 4 seats for wall (size constraints)
+    [start('discard'), column(3, -Size.TILE.y), row(6, undefined, {push: true}), seats(seatArray)],
+    [start('discard.extra'), row(4, undefined, {push: true}), seats(seatArray)],
+
+    [start('tray'), row(6, 24), column(10, -3), seats(seatArray)],
+    [start('payment'), row(8, 3), seats()],
+    [start('riichi'), seats(seatArray)],
+    [start('marker'), seats(seatArray)],
+  ];
 }
 
 function start(name: string): SlotOp {
@@ -296,6 +317,9 @@ export const SLOT_GROUPS: Record<GameType, Array<SlotGroup>> = {
     [start('riichi'), seats([0, 2])],
     [start('marker'), seats([0, 2])],
   ],
+
+  // LEARNING slots are created dynamically in makeLearningSlotGroups()
+  LEARNING: [],
 };
 
 function fixupSlots(slots: Array<Slot>, gameType: GameType): void {

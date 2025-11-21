@@ -7,7 +7,7 @@ import { MouseTracker } from "./mouse-tracker";
 import { Setup } from './setup';
 import { ObjectView, Render } from "./object-view";
 import { SoundPlayer } from "./sound-player";
-import { Conditions, ThingInfo, SoundType, Fives, Place, ThingType, Size, DealType, GameType, Points, DiceInfo } from "./types";
+import { Conditions, ThingInfo, SoundType, Fives, Place, ThingType, Size, DealType, GameType, Points, DiceInfo, GAME_TYPES } from "./types";
 import { Slot } from "./slot";
 import { Thing } from "./thing";
 
@@ -232,7 +232,29 @@ export class World {
 
     match = {dealer: this.seat, honba, conditions};
 
-    this.updateConditions(conditions);
+    // For learning mode, only replace points if new players were added
+    let replacePoints = false;
+    if (gameType === GameType.LEARNING) {
+      const newSeats = GAME_TYPES[GameType.LEARNING].seats;
+      // Check if any new seat doesn't have sticks yet
+      for (const seat of newSeats) {
+        let hasSticks = false;
+        for (const thing of this.things.values()) {
+          if (thing.type === ThingType.STICK) {
+            const slot = thing.slot;
+            if (slot && slot.seat === seat && slot.group === 'tray') {
+              hasSticks = true;
+              break;
+            }
+          }
+        }
+        if (!hasSticks) {
+          replacePoints = true;
+          break;
+        }
+      }
+    }
+    this.updateConditions(conditions, replacePoints);
     const dice = this.setup.deal(this.seat);
     const diceInfo: DiceInfo = {dice, state: this.setup.usesDice() ? 'rolled': 'ignore'};
 

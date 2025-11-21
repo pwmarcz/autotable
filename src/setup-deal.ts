@@ -181,6 +181,114 @@ export const DEALS: Record<GameType, Partial<Record<DealType, Array<DealPart>>>>
       },
     ],
   },
+
+  LEARNING: {
+    LEARNING_ONE_SUIT_FOUR: [
+      {
+        ranges: [
+          ['hand.0', 0, 4],
+        ],
+        rotationIndex: 2,
+        absolute: true,
+      },
+      {
+        ranges: [
+          ['wall.0.0', 0, 32], // One suit: 9 tiles * 4 = 36, minus 4 for hand = 32 remaining
+        ],
+        absolute: true,
+      },
+    ],
+    LEARNING_ONE_SUIT_SEVEN: [
+      {
+        ranges: [
+          ['hand.0', 0, 7],
+        ],
+        rotationIndex: 2,
+        absolute: true,
+      },
+      {
+        ranges: [
+          ['wall.0.0', 0, 29], // One suit: 9 tiles * 4 = 36, minus 7 for hand = 29 remaining
+        ],
+        absolute: true,
+      },
+    ],
+    LEARNING_TWO_SUIT_SEVEN: [
+      {
+        ranges: [
+          ['hand.0', 0, 7],
+        ],
+        rotationIndex: 2,
+        absolute: true,
+      },
+      {
+        ranges: [
+          ['wall.0.0', 0, 65], // Two suits: 18 tiles * 4 = 72, minus 7 for hand = 65 remaining
+        ],
+        absolute: true,
+      },
+    ],
+    LEARNING_TWO_SUIT_TEN: [
+      {
+        ranges: [
+          ['hand.0', 0, 10],
+        ],
+        rotationIndex: 2,
+        absolute: true,
+      },
+      {
+        ranges: [
+          ['wall.0.0', 0, 62], // Two suits: 18 tiles * 4 = 72, minus 10 for hand = 62 remaining
+        ],
+        absolute: true,
+      },
+    ],
+    LEARNING_THREE_SUIT_TEN: [
+      {
+        ranges: [
+          ['hand.0', 0, 10],
+        ],
+        rotationIndex: 2,
+        absolute: true,
+      },
+      {
+        ranges: [
+          ['wall.0.0', 0, 98], // Three suits: 27 tiles * 4 = 108, minus 10 for hand = 98 remaining
+        ],
+        absolute: true,
+      },
+    ],
+    LEARNING_TWO_SUIT_THIRTEEN: [
+      {
+        ranges: [
+          ['hand.0', 0, 13],
+        ],
+        rotationIndex: 2,
+        absolute: true,
+      },
+      {
+        ranges: [
+          ['wall.0.0', 0, 59], // Two suits: 18 tiles * 4 = 72, minus 13 for hand = 59 remaining
+        ],
+        absolute: true,
+      },
+    ],
+    LEARNING_THREE_SUIT_THIRTEEN: [
+      {
+        ranges: [
+          ['hand.0', 0, 13],
+        ],
+        rotationIndex: 2,
+        absolute: true,
+      },
+      {
+        ranges: [
+          ['wall.0.0', 0, 95], // Three suits: 27 tiles * 4 = 108, minus 13 for hand = 95 remaining
+        ],
+        absolute: true,
+      },
+    ],
+  },
 };
 
 export const POINTS: Record<Points, Array<number>> = {
